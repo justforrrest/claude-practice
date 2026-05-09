@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}재고 현황{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>재고 현황</h1>
+    <p>전체 {{ herbs|length }}종 약재</p>
+</div>
+
+<div class="stats">
+    <div class="stat">
+        <div class="stat-label">총 약재 종류</div>
+        <div class="stat-value">{{ herbs|length }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">부족 약재</div>
+        <div class="stat-value {% if low_count > 0 %}red{% endif %}">{{ low_count }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="search-bar">
+        <form method="get" style="display:flex;gap:8px;width:100%;align-items:center;flex-wrap:wrap;">
+            <input name="q" value="{{ search }}" placeholder="약재 검색..." style="max-width:200px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:rgba(255,255,255,0.45);font-size:12px;">
+                <input type="checkbox" name="low" value="1" {% if filter_low == '1' %}checked{% endif %}
+                    onchange="this.form.submit()"
+                    style="width:14px;height:14px;border-radius:4px;padding:0;cursor:pointer;">
+                부족 재고만 보기
+            </label>
+            <button type="submit" class="btn btn-ghost btn-sm">검색</button>
+            {% if search or filter_low %}
+            <a href="/" class="btn btn-ghost btn-sm">초기화</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:40px;">#</th>
+                    <th>약재명</th>
+                    <th style="text-align:right;">현재고 (g)</th>
+                    <th style="text-align:right;">최소기준 (g)</th>
+                    <th style="text-align:right;">1g 단가 (원)</th>
+                    <th style="text-align:right;">재고 금액 (원)</th>
+                    <th style="text-align:center;">상태</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in herbs %}
+                {% set is_low = h.min_stock > 0 and h.stock < h.min_stock %}
+                <tr class="{% if is_low %}low{% endif %}">
+                    <td style="color:rgba(255,255,255,0.2);">{{ loop.index }}</td>
+                    <td class="herb-name">{{ h.name }}</td>
+                    <td class="stock-val" style="text-align:right;{% if is_low %}color:#f87171;font-weight:500;{% endif %}">
+                        {{ '%.0f'|format(h.stock) }}
+                    </td>
+                    <td style="text-align:right;color:rgba(255,255,255,0.35);">
+                        {% if h.min_stock > 0 %}{{ '%.0f'|format(h.min_stock) }}{% else %}—{% endif %}
+                    </td>
+                    <td style="text-align:right;color:rgba(255,255,255,0.45);">
+                        {% if h.unit_price > 0 %}{{ '%.1f'|format(h.unit_price) }}{% else %}—{% endif %}
+                    </td>
+                    <td style="text-align:right;color:rgba(255,255,255,0.45);">
+                        {% if h.unit_price > 0 and h.stock > 0 %}
+                            {{ '{:,.0f}'.format(h.stock * h.unit_price) }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        {% if h.min_stock > 0 %}
+                            {% if is_low %}
+                                <span class="badge badge-red">부족</span>
+                            {% else %}
+                                <span class="badge badge-green">정상</span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color:rgba(255,255,255,0.15);font-size:11px;">미설정</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="empty">검색 결과가 없습니다.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
