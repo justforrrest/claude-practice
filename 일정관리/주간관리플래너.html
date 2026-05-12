@@ -552,8 +552,10 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
       </div>
       <div class="card">
         <div class="section-title" style="font-size:13px;margin-bottom:.5rem;">이번 주 목표</div>
-        <textarea id="wr-goal" readonly placeholder="주간플랜에 목표를 입력하세요" style="margin-bottom:6px;color:var(--text-2);cursor:default;resize:none;min-height:unset;"></textarea>
-        <div id="wr-avail-container" style="margin-top:.5rem;margin-bottom:.75rem;"></div>
+        <div style="display:flex;gap:12px;align-items:stretch;margin-bottom:.75rem;">
+          <textarea id="wr-goal" readonly placeholder="주간플랜에 목표를 입력하세요" style="flex:1;color:var(--text-2);cursor:default;resize:none;min-height:unset;"></textarea>
+          <div id="wr-avail-container" style="flex-shrink:0;overflow-y:auto;"></div>
+        </div>
         <div class="emotion-section">
           <div class="emotion-card" style="border-color:#F5C4B3;">
             <div class="emotion-card-header">
@@ -1502,7 +1504,7 @@ function renderWR(){
   const wEntry=getWeeklyEntry(wk);
   const wGoal=(wEntry.goals||[]).join('\n').trim();
   const goalEl=document.getElementById('wr-goal');goalEl.value=wGoal;
-  const goalAutoH=()=>{goalEl.style.height='auto';goalEl.style.height=goalEl.scrollHeight+'px';};goalAutoH();
+  goalEl.style.height='auto';goalEl.style.minHeight=goalEl.scrollHeight+'px';
   const availContainer=document.getElementById('wr-avail-container');availContainer.innerHTML='';
   const availWrap=document.createElement('div');availWrap.className='avail-wrap';
   const availTitleRow=document.createElement('div');availTitleRow.className='avail-title-row';
