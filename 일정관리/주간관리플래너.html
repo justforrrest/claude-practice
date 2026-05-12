@@ -1393,7 +1393,6 @@ function renderWeekly(){
 document.getElementById('w-prev').onclick=()=>{currentWeekDate.setDate(currentWeekDate.getDate()-7);wCalDate=new Date(currentWeekDate);renderWeekly();};
 document.getElementById('w-next').onclick=()=>{currentWeekDate.setDate(currentWeekDate.getDate()+7);wCalDate=new Date(currentWeekDate);renderWeekly();};
 
-document.getElementById('w-save').onclick=async()=>{await save(KEYS.weekly,weeklyData);};
 let _autoSaveTimer=null;
 document.addEventListener('input',()=>{
   clearTimeout(_autoSaveTimer);
@@ -1493,7 +1492,6 @@ function renderWR(){
 }
 document.getElementById('wr-prev').onclick=()=>{currentWRDate.setDate(currentWRDate.getDate()-7);renderWR();};
 document.getElementById('wr-next').onclick=()=>{currentWRDate.setDate(currentWRDate.getDate()+7);renderWR();};
-document.getElementById('wr-save').onclick=async()=>{await save(KEYS.wreview,wrData);};
 
 /* ══ MONTHLY REVIEW ══ */
 function sliderGrad(c,val){const p=Number(val)*10;return `linear-gradient(to right,${c} 0%,${c} ${p}%,${c}28 ${p}%,${c}28 100%)`;}
@@ -1575,7 +1573,6 @@ function drawRadar(entry){
   ctx.font='600 12px Inter,sans-serif';ctx.fillStyle=textColor;ctx.textAlign='center';ctx.textBaseline='middle';
   angles.forEach((a,i)=>{const lx=cx+Math.cos(a)*(r+26),ly=cy+Math.sin(a)*(r+26);ctx.fillText(entry.qnames[i]||'',lx,ly);});
 }
-document.getElementById('m-save').onclick=async()=>{await save(KEYS.monthly,mData);};
 
 (async()=>{
   // 모든 데이터를 병렬로 로드
