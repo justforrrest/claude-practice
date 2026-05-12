@@ -1272,26 +1272,13 @@ async function saveWeekTemplate(){
 }
 function renderLineList(container,arr,placeholder){
   container.innerHTML='';
-  arr.forEach((val,i)=>{
-    const row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:flex-start;gap:4px;margin-bottom:2px;';
-    const inp=document.createElement('textarea');inp.rows=1;inp.value=val;
-    inp.placeholder=i===0?placeholder:'';
-    inp.style.cssText='flex:1;font-size:13px;background:transparent;border:none;outline:none;color:var(--text-1);font-family:var(--font-sans);border-bottom:1px solid var(--border);padding:2px 0;resize:none;overflow:hidden;line-height:1.5;';
-    const autoResize=()=>{inp.style.height='auto';inp.style.height=inp.scrollHeight+'px';};
-    autoResize();
-    inp.addEventListener('input',()=>{arr[i]=inp.value;autoResize();});
-    inp.addEventListener('keydown',e=>{
-      if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();arr.splice(i+1,0,'');renderLineList(container,arr,placeholder);container.children[i+1].querySelector('textarea').focus();}
-      else if(e.key==='Backspace'&&inp.value===''&&arr.length>1){e.preventDefault();arr.splice(i,1);renderLineList(container,arr,placeholder);if(i>0)container.children[i-1].querySelector('textarea').focus();}
-    });
-    const del=document.createElement('button');del.type='button';del.textContent='×';
-    del.style.cssText='background:none;border:none;cursor:pointer;color:var(--text-3);font-size:14px;padding:0 2px;line-height:1;opacity:0;transition:opacity .15s;flex-shrink:0;margin-top:3px;';
-    row.addEventListener('mouseenter',()=>{if(arr.length>1)del.style.opacity='1';});
-    row.addEventListener('mouseleave',()=>{del.style.opacity='0';});
-    del.addEventListener('click',()=>{if(arr.length>1){arr.splice(i,1);renderLineList(container,arr,placeholder);}});
-    row.appendChild(inp);row.appendChild(del);container.appendChild(row);
-  });
+  const inp=document.createElement('textarea');inp.rows=1;inp.value=arr.join('\n');
+  inp.placeholder=placeholder;
+  inp.style.cssText='width:100%;font-size:13px;background:transparent;border:none;outline:none;color:var(--text-1);font-family:var(--font-sans);border-bottom:1px solid var(--border);padding:2px 0;resize:none;overflow:hidden;line-height:1.5;';
+  const autoResize=()=>{inp.style.height='auto';inp.style.height=inp.scrollHeight+'px';};
+  autoResize();
+  inp.addEventListener('input',()=>{arr.splice(0,arr.length,...inp.value.split('\n'));autoResize();});
+  container.appendChild(inp);
 }
 function renderWeekly(){
   const ws=getWeekStart(currentWeekDate);const we=new Date(ws);we.setDate(we.getDate()+6);
