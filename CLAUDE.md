@@ -27,6 +27,17 @@ python -m http.server 8080
 - **단일 파일 구조**: 각 페이지는 HTML 1개 파일에 `<style>`과 `<script>`가 인라인으로 포함된 자급자족(self-contained) 구조입니다.
 - **외부 의존성**: Google Fonts (Inter)만 CDN으로 로드하며, JS 라이브러리는 사용하지 않습니다.
 
+## Git & GitHub
+
+`일정관리/주간관리플래너.html` 파일을 수정할 때는 반드시 수정 완료 후 GitHub에 push한다:
+
+```powershell
+cd "C:\Users\feelw\OneDrive\문서\★HOME PC★\claude-practice"
+git add 일정관리/주간관리플래너.html
+git commit -m "커밋 메시지"
+git push origin master
+```
+
 ## Design System (Linear Style)
 
 프로젝트는 Linear(linear.app) 디자인 언어를 따릅니다:
