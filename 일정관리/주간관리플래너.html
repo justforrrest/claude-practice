@@ -619,8 +619,12 @@ function setSyncStatus(t){const el=document.getElementById('sync-status');if(el)
 
 /* localStorage + Firestore */
 async function load(key){
-  try{const doc=await db.collection('users').doc(getSyncCode()).collection('data').doc(key).get();if(doc.exists){const val=doc.data().value;localStorage.setItem(key,JSON.stringify(val));console.log('[load] Firebase OK:',key,val);return val;}else{console.warn('[load] Firebase 문서 없음:',key);}}catch(e){console.error('[load] Firebase 오류:',key,e);}
-  try{const v=localStorage.getItem(key);const parsed=v?JSON.parse(v):null;console.log('[load] localStorage:',key,parsed);return parsed;}catch(e){return null;}
+  try{const doc=await db.collection('users').doc(getSyncCode()).collection('data').doc(key).get();if(doc.exists){const val=doc.data().value;localStorage.setItem(key,JSON.stringify(val));return val;}}catch(e){}
+  try{
+    const v=localStorage.getItem(key);const parsed=v?JSON.parse(v):null;
+    if(parsed){try{await db.collection('users').doc(getSyncCode()).collection('data').doc(key).set({value:parsed,ts:Date.now()});}catch(e){}}
+    return parsed;
+  }catch(e){return null;}
 }
 async function save(key,val){
   try{localStorage.setItem(key,JSON.stringify(val));setStatus('저장됨 ✓');}catch(e){setStatus('저장 실패');return;}
