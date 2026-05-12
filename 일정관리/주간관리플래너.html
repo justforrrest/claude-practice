@@ -512,9 +512,6 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
         </div>
         <div class="week-grid" id="week-grid"></div>
       </div>
-      <div style="display:flex;justify-content:flex-end;">
-        <button class="btn-primary" id="w-save">저장</button>
-      </div>
     </div>
 
     <!-- WEEKLY REVIEW -->
@@ -553,9 +550,6 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
         <label class="field-label">다음에 시도할 방법 (HOW)</label>
         <textarea id="wr-how"></textarea>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:.5rem;">
-        <button class="btn-primary" id="wr-save">저장</button>
-      </div>
     </div>
 
     <!-- MONTHLY REVIEW -->
@@ -572,12 +566,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
           <canvas id="radar-canvas" width="300" height="300"></canvas>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;">
-        <button class="btn-primary" id="m-save">저장</button>
-      </div>
     </div>
-
-    <div class="status" id="status-bar">불러오는 중...</div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:6px 10px;background:var(--surface-2);border-radius:8px;font-size:12px;border:1px solid var(--border);">
       <div style="display:flex;align-items:center;gap:8px;color:var(--text-2);">
@@ -592,6 +581,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
           <input type="file" id="import-input" accept=".json" style="display:none;">
         </label>
         <button class="btn-primary" id="global-save" style="font-size:12px;padding:5px 14px;">저장</button>
+        <span id="status-bar" style="font-size:11px;color:var(--text-3);padding-left:6px;border-left:1px solid var(--border-2);">불러오는 중...</span>
       </div>
     </div>
     </div><!-- /#app -->
