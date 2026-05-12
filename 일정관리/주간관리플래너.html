@@ -406,6 +406,22 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
     <div style="margin-bottom:1.25rem;">
       <h2 style="font-size:14px;font-weight:600;color:var(--text-2);">주간관리 통합플래너</h2>
     </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:6px 10px;background:var(--surface-2);border-radius:8px;font-size:12px;border:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:8px;color:var(--text-2);">
+        <span style="color:var(--text-3);">☁ 동기화 코드</span>
+        <strong id="sync-code-display" style="color:var(--violet);letter-spacing:3px;font-size:13px;"></strong>
+        <button class="btn-sm" id="sync-change-btn" style="font-size:11px;padding:2px 8px;">다른 기기 연결</button>
+        <span id="sync-status" style="color:var(--text-3);font-size:11px;"></span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="btn-sm" id="export-btn">⬆ 내보내기</button>
+        <label class="btn-sm" style="cursor:pointer;margin:0;">⬇ 가져오기
+          <input type="file" id="import-input" accept=".json" style="display:none;">
+        </label>
+        <button class="btn-primary" id="global-save" style="font-size:12px;padding:5px 14px;">저장</button>
+        <span id="status-bar" style="font-size:11px;color:var(--text-3);padding-left:6px;border-left:1px solid var(--border-2);">불러오는 중...</span>
+      </div>
+    </div>
     <div id="app">
 
     <div class="tabs">
@@ -568,22 +584,6 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
       </div>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:6px 10px;background:var(--surface-2);border-radius:8px;font-size:12px;border:1px solid var(--border);">
-      <div style="display:flex;align-items:center;gap:8px;color:var(--text-2);">
-        <span style="color:var(--text-3);">☁ 동기화 코드</span>
-        <strong id="sync-code-display" style="color:var(--violet);letter-spacing:3px;font-size:13px;"></strong>
-        <button class="btn-sm" id="sync-change-btn" style="font-size:11px;padding:2px 8px;">다른 기기 연결</button>
-        <span id="sync-status" style="color:var(--text-3);font-size:11px;"></span>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <button class="btn-sm" id="export-btn">⬆ 내보내기</button>
-        <label class="btn-sm" style="cursor:pointer;margin:0;">⬇ 가져오기
-          <input type="file" id="import-input" accept=".json" style="display:none;">
-        </label>
-        <button class="btn-primary" id="global-save" style="font-size:12px;padding:5px 14px;">저장</button>
-        <span id="status-bar" style="font-size:11px;color:var(--text-3);padding-left:6px;border-left:1px solid var(--border-2);">불러오는 중...</span>
-      </div>
-    </div>
     </div><!-- /#app -->
   </div><!-- /.app-card -->
 </div><!-- /.page-wrap -->
