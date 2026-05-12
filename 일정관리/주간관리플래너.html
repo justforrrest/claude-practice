@@ -1282,6 +1282,42 @@ function buildAvailTable(entry,onCounts){
   const freeCnt=freeRow.insertCell();freeCnt.className='avail-count';freeCnt.textContent=emptyCount;
   return table;
 }
+function buildWRAvailTable(wEntry,wrEntry,onCounts){
+  const stripParens=s=>s.replace(/\s*\(.*?\)\s*/g,'').trim();
+  const counts={};let emptyCount=0;
+  wEntry.grid.forEach(day=>day.forEach(v=>{
+    if(v&&v.trim()){const k=stripParens(v.trim());if(k)counts[k]=(counts[k]||0)+1;else emptyCount++;}
+    else emptyCount++;
+  }));
+  if(onCounts)onCounts(counts);
+  if(!wrEntry.blockExec)wrEntry.blockExec=Array(8).fill('');
+  const table=document.createElement('table');table.className='avail-table';
+  const thead=table.createTHead();const hr=thead.insertRow();
+  ['블럭명','계획','실행'].forEach(t=>{const th=document.createElement('th');th.textContent=t;hr.appendChild(th);});
+  const tbody=table.createTBody();
+  const execInpStyle='border:none;background:transparent;outline:none;font-size:11px;font-weight:600;color:var(--text-1);width:100%;font-family:var(--font-sans);text-align:center;';
+  for(let i=0;i<7;i++){
+    const row=tbody.insertRow();
+    const name=(wEntry.blockNames[i]||'').trim();
+    const nameTd=row.insertCell();nameTd.className='avail-name';nameTd.style.background=matchKeywordColor(name)||'';
+    nameTd.textContent=name||'';
+    const cntTd=row.insertCell();cntTd.className='avail-count';cntTd.textContent=name?(counts[name]||0):'';
+    const execTd=row.insertCell();execTd.className='avail-practice';
+    const inp=document.createElement('input');inp.type='text';inp.value=wrEntry.blockExec[i]||'';inp.placeholder='-';inp.style.cssText=execInpStyle;
+    inp.addEventListener('input',()=>{wrEntry.blockExec[i]=inp.value;});
+    inp.addEventListener('blur',()=>save(KEYS.wreview,wrData));
+    execTd.appendChild(inp);
+  }
+  const freeRow=tbody.insertRow();
+  const freeLbl=freeRow.insertCell();freeLbl.className='avail-name';freeLbl.style.cssText='font-style:italic;color:var(--text-3);';freeLbl.textContent='free';
+  const freeCnt=freeRow.insertCell();freeCnt.className='avail-count';freeCnt.textContent=emptyCount;
+  const freeExecTd=freeRow.insertCell();freeExecTd.className='avail-practice';
+  const freeInp=document.createElement('input');freeInp.type='text';freeInp.value=wrEntry.blockExec[7]||'';freeInp.placeholder='-';freeInp.style.cssText=execInpStyle;
+  freeInp.addEventListener('input',()=>{wrEntry.blockExec[7]=freeInp.value;});
+  freeInp.addEventListener('blur',()=>save(KEYS.wreview,wrData));
+  freeExecTd.appendChild(freeInp);
+  return table;
+}
 async function saveWeekTemplate(){
   const wk=weekKey(currentWeekDate);
   const entry=weeklyData[wk];
@@ -1437,6 +1473,7 @@ document.getElementById('w-color-refresh').onclick=()=>{
 let wrData={};let currentWRDate=new Date();
 function getWREntry(wk){
   if(!wrData[wk]) wrData[wk]={goal:'',bad:'',good:'',how:'',routines:[]};
+  if(!wrData[wk].blockExec) wrData[wk].blockExec=Array(8).fill('');
   return wrData[wk];
 }
 function renderWRGrid(){
@@ -1513,7 +1550,7 @@ function renderWR(){
   availTitleRow.innerHTML=`<span class="avail-title">가용블럭</span><span class="avail-total">/ 42</span>`;
   availWrap.appendChild(availTitleRow);
   const updateTotal=counts=>{availTitleRow.querySelector('.avail-total').textContent=(42-(counts['업무']||0))+'/42';};
-  availWrap.appendChild(buildAvailTable(wEntry,updateTotal));
+  availWrap.appendChild(buildWRAvailTable(wEntry,entry,updateTotal));
   availContainer.appendChild(availWrap);
   ['bad','good','how'].forEach(k=>{const el=document.getElementById('wr-'+k);el.value=entry[k]||'';el.oninput=()=>{entry[k]=el.value;};});
 }
