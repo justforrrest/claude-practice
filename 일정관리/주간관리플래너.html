@@ -307,13 +307,13 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 
 
 /* ── Weekly Review ── */
-#wr-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:.75rem;}
-.week-col-header{text-align:center;font-size:10px;font-weight:700;color:var(--text-3);padding:2px 0;}
-.week-col-header.sat{color:#3B82F6;}
-.week-col-header.sun{color:#EF4444;}
-.week-day-header{text-align:center;font-size:10px;color:var(--text-2);padding:2px 0;border-bottom:1px solid var(--border);margin-bottom:2px;}
-.week-day-header.sat{color:#3B82F6;}
-.week-day-header.sun{color:#EF4444;}
+#wr-week-grid{display:grid;grid-template-columns:32px repeat(7,1fr);gap:4px;margin-bottom:.75rem;}
+.wr-corner,.wr-row-lbl{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.wr-corner{min-height:44px;}
+.wr-row-lbl{font-size:10px;font-weight:700;color:var(--text-3);min-height:72px;}
+.wr-th{text-align:center;padding:5px 2px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;}
+.wr-th.sat .wk-th-date,.wr-th.sat .wk-th-day{color:var(--sky);}
+.wr-th.sun .wk-th-date,.wr-th.sun .wk-th-day{color:var(--coral);}
 .routine-grid{display:grid;grid-template-columns:auto repeat(7,1fr);gap:3px;align-items:center;margin-bottom:.5rem;}
 .routine-label{font-size:12px;color:var(--text-2);padding-right:6px;}
 .routine-dot{
@@ -1433,18 +1433,18 @@ function renderWRGrid(){
   });
   const grid=document.getElementById('wr-week-grid');
   grid.innerHTML='';
-  DAY_LABELS.forEach((d,i)=>{
-    const el=document.createElement('div');
-    el.className='week-col-header'+(i===5?' sat':i===6?' sun':'');
-    el.textContent=d;grid.appendChild(el);
-  });
+  // 코너
+  const corner=document.createElement('div');corner.className='wr-corner';grid.appendChild(corner);
+  // 헤더 (날짜+요일)
   weekDays.forEach((ds,i)=>{
     const d=new Date(ds+'T00:00:00');
-    const el=document.createElement('div');
-    el.className='week-day-header'+(i===5?' sat':i===6?' sun':'');
-    el.textContent=(d.getMonth()+1)+'/'+(d.getDate());grid.appendChild(el);
+    const th=document.createElement('div');th.className='wr-th'+(i===5?' sat':i===6?' sun':'');
+    th.innerHTML=`<span class="wk-th-date">${d.getMonth()+1}/${d.getDate()}</span><span class="wk-th-day">${DAY_LABELS[i]}</span>`;
+    grid.appendChild(th);
   });
   for(let row=0;row<6;row++){
+    // 행 레이블
+    const lbl=document.createElement('div');lbl.className='wr-row-lbl';lbl.textContent=row+1;grid.appendChild(lbl);
     weekDays.forEach((ds,di)=>{
       const block=dailyData[ds]&&dailyData[ds].blocks?dailyData[ds].blocks[row]:null;
       const dailyKw=(block&&block.kw)?block.kw:'';
