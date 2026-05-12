@@ -630,15 +630,7 @@ async function load(key){
 }
 async function save(key,val){
   try{localStorage.setItem(key,JSON.stringify(val));setStatus('저장됨 ✓');}catch(e){setStatus('저장 실패');return;}
-  try{
-    setSyncStatus('동기화 중...');
-    await db.collection('users').doc(getSyncCode()).collection('data').doc(key).set({value:toFsVal(key,val),ts:Date.now()});
-    setSyncStatus('☁ 동기화됨');
-    if(key===KEYS.weekly)console.log('[save] weekly 저장 성공 ✓');
-  }catch(e){
-    setSyncStatus('오프라인');
-    if(key===KEYS.weekly)console.error('[save] weekly 저장 실패:',e.message);
-  }
+  try{setSyncStatus('동기화 중...');await db.collection('users').doc(getSyncCode()).collection('data').doc(key).set({value:toFsVal(key,val),ts:Date.now()});setSyncStatus('☁ 동기화됨');}catch(e){setSyncStatus('오프라인');}
 }
 
 /* 내보내기 / 가져오기 */
