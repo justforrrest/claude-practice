@@ -551,8 +551,8 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
         <div class="week-grid" id="wr-week-grid"></div>
       </div>
       <div class="card">
-        <label class="field-label">이번 주 목표</label>
-        <input type="text" id="wr-goal" placeholder="목표를 적어보세요" style="margin-bottom:6px;" />
+        <div class="section-title" style="font-size:13px;margin-bottom:.5rem;">이번 주 목표</div>
+        <textarea id="wr-goal" readonly placeholder="주간플랜에 목표를 입력하세요" style="margin-bottom:6px;color:var(--text-2);cursor:default;resize:none;min-height:unset;"></textarea>
         <div class="row2">
           <div>
             <label class="field-label">아쉬웠던 점 (WHY)</label>
@@ -1487,7 +1487,10 @@ function renderWR(){
   document.getElementById('wr-week-label').textContent=(ws.getMonth()+1)+'/'+ws.getDate()+'~'+(we.getMonth()+1)+'/'+we.getDate();
   const entry=getWREntry(wk);
   renderWRGrid();
-  ['goal','bad','good','how'].forEach(k=>{const el=document.getElementById('wr-'+k);el.value=entry[k]||'';el.oninput=()=>{entry[k]=el.value;};});
+  const wGoal=(getWeeklyEntry(wk).goals||[]).join('\n').trim();
+  const goalEl=document.getElementById('wr-goal');goalEl.value=wGoal;
+  const goalAutoH=()=>{goalEl.style.height='auto';goalEl.style.height=goalEl.scrollHeight+'px';};goalAutoH();
+  ['bad','good','how'].forEach(k=>{const el=document.getElementById('wr-'+k);el.value=entry[k]||'';el.oninput=()=>{entry[k]=el.value;};});
 }
 document.getElementById('wr-prev').onclick=()=>{currentWRDate.setDate(currentWRDate.getDate()-7);renderWR();};
 document.getElementById('wr-next').onclick=()=>{currentWRDate.setDate(currentWRDate.getDate()+7);renderWR();};
