@@ -1399,14 +1399,13 @@ let _autoSaveTimer=null;
 document.addEventListener('input',()=>{
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer=setTimeout(async()=>{
-    await Promise.all([
-      save(KEYS.dot,dotData),
-      save(KEYS.daily,dailyData),
-      save(KEYS.weekly,weeklyData),
-      save(KEYS.wreview,wrData),
-      save(KEYS.monthly,mData),
-    ]);
-  },1500);
+    const tab=document.querySelector('.tab.active')?.dataset.tab;
+    if(tab==='dot')await save(KEYS.dot,dotData);
+    else if(tab==='daily')await save(KEYS.daily,dailyData);
+    else if(tab==='weekly')await save(KEYS.weekly,weeklyData);
+    else if(tab==='wreview')await save(KEYS.wreview,wrData);
+    else if(tab==='monthly')await save(KEYS.monthly,mData);
+  },1000);
 });
 document.getElementById('w-save-tpl').onclick=saveWeekTemplate;
 document.getElementById('w-color-refresh').onclick=()=>{
