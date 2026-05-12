@@ -293,7 +293,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 .core-block-item{display:flex;flex-direction:column;margin-bottom:2px;border-bottom:1px dashed var(--border);}
 .core-block-name-row{display:flex;align-items:flex-start;gap:4px;}
 .core-block-num{font-size:12px;font-weight:700;color:var(--text-3);min-width:14px;flex-shrink:0;line-height:1.4;}
-.core-block-name{font-size:13px;font-weight:400;color:var(--text-2);flex:1;min-width:0;border:none;background:transparent;outline:none;font-family:var(--font-sans);line-height:1.4;padding:0;resize:none;overflow:hidden;}
+.core-block-name{font-size:13px;font-weight:400;color:var(--text-2);flex:1;min-width:0;border:none;background:transparent;outline:none;font-family:var(--font-sans);line-height:1.4;padding:0;resize:none;overflow:hidden;min-height:unset;}
 .avail-wrap{flex:1;min-width:0;}
 .avail-title-row{display:flex;align-items:center;justify-content:space-between;padding-bottom:4px;margin-bottom:8px;border-bottom:1.5px solid var(--border-2);}
 .avail-title{font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--text-2);text-transform:uppercase;line-height:1;}
@@ -754,12 +754,8 @@ function renderDot(){
   container.appendChild(monthNav);
 
   const goals=getDotMonth().goals;
-  if(!goals.length){
-    const empty=document.createElement('p');empty.style.cssText='font-size:13px;color:var(--text-3);text-align:center;padding:1rem 0;';
-    empty.textContent='목표를 추가해보세요';container.appendChild(empty);return;
-  }
 
-  // ① 탭바
+  // ① 탭바 (항상 렌더링)
   const tabBar=document.createElement('div');tabBar.className='dot-tabs';
   goals.forEach((goal,gi)=>{
     const tab=document.createElement('button');tab.type='button';tab.className='dot-tab'+(gi===currentDotTab?' active':'');
@@ -791,6 +787,14 @@ function renderDot(){
   const addTabBtn=document.createElement('button');addTabBtn.type='button';addTabBtn.className='dot-tab-add';addTabBtn.textContent='+';
   addTabBtn.onclick=()=>{addDotGoal();currentDotTab=getDotMonth().goals.length-1;save(KEYS.dot,dotData);renderDot();};
   tabBar.appendChild(addTabBtn);
+
+  if(!goals.length){
+    const goalBox=document.createElement('div');goalBox.className='card';goalBox.style.cssText='margin-bottom:.75rem;';
+    goalBox.appendChild(tabBar);
+    const empty=document.createElement('p');empty.style.cssText='font-size:13px;color:var(--text-3);text-align:center;padding:1rem 0;';
+    empty.textContent='+ 버튼으로 목표를 추가해보세요';goalBox.appendChild(empty);
+    container.appendChild(goalBox);return;
+  }
 
   // ── 전체 목표 트레일 (항상 노출)
   const allTrails=document.createElement('div');
@@ -1365,7 +1369,6 @@ function renderWeekly(){
     const nameInp=document.createElement('textarea');nameInp.rows=1;nameInp.className='core-block-name';nameInp.value=cb.name||'';nameInp.placeholder='블럭명';
     const autoResizeName=()=>{nameInp.style.height='auto';nameInp.style.height=nameInp.scrollHeight+'px';};
     nameInp.addEventListener('input',()=>{entry.coreBlocks[ci].name=nameInp.value;autoResizeName();});
-    nameInp.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();}else if(e.key==='Enter'&&e.shiftKey){setTimeout(autoResizeName,0);}});
     nameRow.appendChild(num);nameRow.appendChild(nameInp);
     item.appendChild(nameRow);
     coreWrap.appendChild(item);
