@@ -553,18 +553,29 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
       <div class="card">
         <div class="section-title" style="font-size:13px;margin-bottom:.5rem;">이번 주 목표</div>
         <textarea id="wr-goal" readonly placeholder="주간플랜에 목표를 입력하세요" style="margin-bottom:6px;color:var(--text-2);cursor:default;resize:none;min-height:unset;"></textarea>
-        <div class="row2">
-          <div>
-            <label class="field-label">아쉬웠던 점 (WHY)</label>
-            <textarea id="wr-bad"></textarea>
+        <div class="emotion-section">
+          <div class="emotion-card" style="border-color:#F5C4B3;">
+            <div class="emotion-card-header">
+              <span class="badge badge-bad">BAD</span>
+              <label class="field-label">아쉬웠던 점 (WHY)</label>
+            </div>
+            <textarea id="wr-bad" placeholder="아쉬웠던 점을 적어보세요"></textarea>
           </div>
-          <div>
-            <label class="field-label">좋았던 점 (WHY)</label>
-            <textarea id="wr-good"></textarea>
+          <div class="emotion-card" style="border-color:#C0DD97;">
+            <div class="emotion-card-header">
+              <span class="badge badge-good">GOOD</span>
+              <label class="field-label">좋았던 점 (WHY)</label>
+            </div>
+            <textarea id="wr-good" placeholder="좋았던 점을 적어보세요"></textarea>
+          </div>
+          <div class="emotion-card" style="border-color:#B5D4F4;">
+            <div class="emotion-card-header">
+              <span class="badge badge-next">HOW</span>
+              <label class="field-label">다음에 시도할 방법</label>
+            </div>
+            <textarea id="wr-how" placeholder="다음 주에 시도할 방법을 적어보세요"></textarea>
           </div>
         </div>
-        <label class="field-label">다음에 시도할 방법 (HOW)</label>
-        <textarea id="wr-how"></textarea>
       </div>
     </div>
 
