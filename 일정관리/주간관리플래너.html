@@ -553,6 +553,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
       <div class="card">
         <div class="section-title" style="font-size:13px;margin-bottom:.5rem;">이번 주 목표</div>
         <textarea id="wr-goal" readonly placeholder="주간플랜에 목표를 입력하세요" style="margin-bottom:6px;color:var(--text-2);cursor:default;resize:none;min-height:unset;"></textarea>
+        <div id="wr-avail-container" style="margin-top:.5rem;margin-bottom:.75rem;"></div>
         <div class="emotion-section">
           <div class="emotion-card" style="border-color:#F5C4B3;">
             <div class="emotion-card-header">
@@ -1498,9 +1499,18 @@ function renderWR(){
   document.getElementById('wr-week-label').textContent=(ws.getMonth()+1)+'/'+ws.getDate()+'~'+(we.getMonth()+1)+'/'+we.getDate();
   const entry=getWREntry(wk);
   renderWRGrid();
-  const wGoal=(getWeeklyEntry(wk).goals||[]).join('\n').trim();
+  const wEntry=getWeeklyEntry(wk);
+  const wGoal=(wEntry.goals||[]).join('\n').trim();
   const goalEl=document.getElementById('wr-goal');goalEl.value=wGoal;
   const goalAutoH=()=>{goalEl.style.height='auto';goalEl.style.height=goalEl.scrollHeight+'px';};goalAutoH();
+  const availContainer=document.getElementById('wr-avail-container');availContainer.innerHTML='';
+  const availWrap=document.createElement('div');availWrap.className='avail-wrap';
+  const availTitleRow=document.createElement('div');availTitleRow.className='avail-title-row';
+  availTitleRow.innerHTML=`<span class="avail-title">가용블럭</span><span class="avail-total">/ 42</span>`;
+  availWrap.appendChild(availTitleRow);
+  const updateTotal=counts=>{availTitleRow.querySelector('.avail-total').textContent=(42-(counts['업무']||0))+'/42';};
+  availWrap.appendChild(buildAvailTable(wEntry,updateTotal));
+  availContainer.appendChild(availWrap);
   ['bad','good','how'].forEach(k=>{const el=document.getElementById('wr-'+k);el.value=entry[k]||'';el.oninput=()=>{entry[k]=el.value;};});
 }
 document.getElementById('wr-prev').onclick=()=>{currentWRDate.setDate(currentWRDate.getDate()-7);renderWR();};
