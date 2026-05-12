@@ -1132,12 +1132,13 @@ document.getElementById('d-today').onclick=()=>{currentDailyDate=todayStr();rend
 document.getElementById('d-tomorrow').onclick=()=>{const d=new Date();d.setDate(d.getDate()+1);currentDailyDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');renderDaily();};
 document.getElementById('d-sync-weekly').onclick=()=>{syncWeeklyToDaily(currentDailyDate,true);renderDailyBody();setStatus('주간계획에서 가져왔습니다 ✓');};
 document.getElementById('global-save').onclick=async()=>{
-  const tab=document.querySelector('.tab.active')?.dataset.tab;
-  if(tab==='dot') await save(KEYS.dot,dotData);
-  else if(tab==='daily') await save(KEYS.daily,dailyData);
-  else if(tab==='weekly') await save(KEYS.weekly,weeklyData);
-  else if(tab==='wreview') await save(KEYS.wreview,wrData);
-  else if(tab==='monthly') await save(KEYS.monthly,mData);
+  await Promise.all([
+    save(KEYS.dot,dotData),
+    save(KEYS.daily,dailyData),
+    save(KEYS.weekly,weeklyData),
+    save(KEYS.wreview,wrData),
+    save(KEYS.monthly,mData),
+  ]);
 };
 document.getElementById('export-btn').onclick=exportData;
 document.getElementById('import-input').onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);};
