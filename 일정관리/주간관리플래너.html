@@ -1291,6 +1291,7 @@ function renderLineList(container,arr,placeholder){
 }
 function renderWeekly(){
   const ws=getWeekStart(currentWeekDate);const we=new Date(ws);we.setDate(we.getDate()+6);
+  console.log('[renderWeekly] 현재 주차:',weekKey(currentWeekDate),'보유 주차:',Object.keys(weeklyData));
   const wk=weekKey(currentWeekDate);
   document.getElementById('w-week-label').textContent=(ws.getMonth()+1)+'/'+ws.getDate()+'~'+(we.getMonth()+1)+'/'+we.getDate();
   const entry=getWeeklyEntry(wk);
@@ -1601,7 +1602,8 @@ function drawRadar(entry){
     }
   }
   if(daily) dailyData=daily;
-  if(weekly) weeklyData=weekly;
+  if(weekly){weeklyData=weekly;console.log('[init] weekly 로드됨, 주차 목록:',Object.keys(weekly));}
+  else{console.warn('[init] weekly 데이터 없음 (Firebase+localStorage 모두)');}
   if(wreview) wrData=wreview;
   if(monthly) mData=monthly;
   // 첫 탭 렌더링 (저장된 순서가 있으면 해당 첫 탭, 없으면 주간계획)
