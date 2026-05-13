@@ -466,8 +466,9 @@ function renderStock(){
     </div>
   </div>`;
   const ssEl=document.getElementById('stock-search');
-  ssEl.addEventListener('input',e=>{if(e.isComposing)return;stockSearch=e.target.value;renderStock();});
-  ssEl.addEventListener('compositionend',e=>{stockSearch=e.target.value;renderStock();});
+  const doStockSearch=(val,pos)=>{stockSearch=val;renderStock();const el=document.getElementById('stock-search');if(el){el.focus();el.setSelectionRange(pos,pos);}};
+  ssEl.addEventListener('input',e=>{if(e.isComposing)return;doStockSearch(e.target.value,e.target.selectionStart);});
+  ssEl.addEventListener('compositionend',e=>{const val=e.target.value;doStockSearch(val,val.length);});
   document.getElementById('low-only-btn').addEventListener('click',()=>{showLowOnly=!showLowOnly;renderStock();});
   el.querySelectorAll('[data-st-cho]').forEach(btn=>{
     btn.addEventListener('click',()=>{stockConsonant=btn.dataset.stCho;renderStock();});
@@ -808,8 +809,9 @@ function renderSettings(){
   });
 
   const stSrEl=document.getElementById('settings-search');
-  stSrEl.addEventListener('input',e=>{if(e.isComposing)return;settingsSearch=e.target.value;renderSettings();});
-  stSrEl.addEventListener('compositionend',e=>{settingsSearch=e.target.value;renderSettings();});
+  const doStSearch=(val,pos)=>{settingsSearch=val;renderSettings();const el=document.getElementById('settings-search');if(el){el.focus();el.setSelectionRange(pos,pos);}};
+  stSrEl.addEventListener('input',e=>{if(e.isComposing)return;doStSearch(e.target.value,e.target.selectionStart);});
+  stSrEl.addEventListener('compositionend',e=>{const val=e.target.value;doStSearch(val,val.length);});
 
   document.getElementById('settings-save').addEventListener('click',async()=>{
     el.querySelectorAll('.settings-inp[data-field]').forEach(inp=>{
@@ -996,8 +998,9 @@ function renderPricelist(){
   });
 
   const plSrEl=document.getElementById('pl-search');
-  plSrEl.addEventListener('input',e=>{if(e.isComposing)return;pricelistSearch=e.target.value;renderPricelist();});
-  plSrEl.addEventListener('compositionend',e=>{pricelistSearch=e.target.value;renderPricelist();});
+  const doPlSearch=(val,pos)=>{pricelistSearch=val;renderPricelist();const el=document.getElementById('pl-search');if(el){el.focus();el.setSelectionRange(pos,pos);}};
+  plSrEl.addEventListener('input',e=>{if(e.isComposing)return;doPlSearch(e.target.value,e.target.selectionStart);});
+  plSrEl.addEventListener('compositionend',e=>{const val=e.target.value;doPlSearch(val,val.length);});
 
   document.getElementById('pl-save').addEventListener('click',async()=>{
     el.querySelectorAll('.pl-inp').forEach(inp=>{
