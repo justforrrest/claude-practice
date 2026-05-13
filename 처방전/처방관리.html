@@ -289,10 +289,11 @@ function renderRegister(){
   <div class="card">
     <div class="section-title" style="margin-bottom:.875rem">${isEdit?'처방 수정':'새 처방 등록'}</div>
     <div class="form-row" style="margin-bottom:.75rem">
-      <div class="form-group grow">
+      <div class="form-group" style="min-width:0">
         <label>환자</label>
-        <div style="display:flex;gap:6px"><select id="rx-patient" style="flex:1">${patOpts}</select><button class="btn btn-secondary btn-sm" id="rx-quick-patient" style="white-space:nowrap">+ 신규</button></div>
+        <div style="display:flex;gap:6px"><select id="rx-patient" style="width:130px">${patOpts}</select><button class="btn btn-secondary btn-sm" id="rx-quick-patient" style="white-space:nowrap">+ 신규</button></div>
       </div>
+      <div class="form-group" style="flex:1"></div>
       <div class="form-group"><label>처방일</label><input type="date" id="rx-date" value="${rx?.date||todayStr()}"></div>
       <div class="form-group" style="min-width:70px"><label>총 일수</label><input type="number" id="rx-days" value="${rx?.days||15}" min="1" style="width:80px"></div>
       <div class="form-group" style="min-width:70px"><label>첩수</label><input type="number" id="rx-packs" value="${rx?.packs||20}" min="1" style="width:80px"></div>
