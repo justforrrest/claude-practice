@@ -1099,20 +1099,20 @@ function renderDailyBody(){
 
   const tbody=document.getElementById('block-tbody');tbody.innerHTML='';
   entry.blocks.forEach((b,bi)=>{
-    if(!b.checkouts) b.checkouts=[{text:'',done:false}];
+    if(!b.checkouts || b.checkouts.length===0) b.checkouts=[{text:'',done:false}];
     const kw=(b.kw||'').replace(/"/g,'&quot;');
     const tr=document.createElement('tr');
     const checksHtml=b.checks.map((c,ci)=>`
       <div class="check-row">
         <span class="check-row-dot">•</span>
         <input type="text" value="${c.text.replace(/"/g,'&quot;')}" data-bi="${bi}" data-ci="${ci}" class="check-text" />
-        <button class="check-del-btn" data-bi="${bi}" data-ci="${ci}">×</button>
+        ${b.checks.length>1?`<button class="check-del-btn" data-bi="${bi}" data-ci="${ci}">×</button>`:''}
       </div>`).join('');
     const checkoutsHtml=b.checkouts.map((c,ci)=>`
       <div class="check-row">
         <span class="check-row-dot">•</span>
         <input type="text" value="${c.text.replace(/"/g,'&quot;')}" data-bi="${bi}" data-ci="${ci}" class="checkout-text" />
-        <button class="checkout-del-btn" data-bi="${bi}" data-ci="${ci}">×</button>
+        ${b.checkouts.length>1?`<button class="checkout-del-btn" data-bi="${bi}" data-ci="${ci}">×</button>`:''}
       </div>`).join('');
     tr.innerHTML=`
       <td class="kw-cell"><input class="kw-input${b.kwFromWeekly?' from-weekly':''}" type="text" value="${kw}" data-bi="${bi}" placeholder="키워드" /></td>
@@ -1128,11 +1128,11 @@ function renderDailyBody(){
   });
   tbody.querySelectorAll('.check-text').forEach(inp=>{
     inp.addEventListener('input',()=>{entry.blocks[inp.dataset.bi].checks[inp.dataset.ci].text=inp.value;});
-    inp.addEventListener('keydown',(e)=>{const bi=inp.dataset.bi;if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const nextBi=Number(bi)+1;const rows=document.getElementById('block-tbody').querySelectorAll('tr');if(rows[nextBi]){const ins=rows[nextBi].querySelectorAll('.check-text');if(ins.length)ins[0].focus();}}else if(e.key==='Enter'&&e.shiftKey){e.preventDefault();entry.blocks[bi].checks.push({text:'',done:false});renderDaily();focusLastInput(bi,'.check-text');}else if(e.key==='Backspace'&&inp.value===''){e.preventDefault();const ci=Number(inp.dataset.ci);entry.blocks[bi].checks.splice(ci,1);renderDaily();const tr=document.getElementById('block-tbody').querySelectorAll('tr')[Number(bi)];if(tr){const ins=tr.querySelectorAll('.check-text');if(ins.length)ins[Math.max(0,ci-1)].focus();}}});
+    inp.addEventListener('keydown',(e)=>{const bi=inp.dataset.bi;if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const nextBi=Number(bi)+1;const rows=document.getElementById('block-tbody').querySelectorAll('tr');if(rows[nextBi]){const ins=rows[nextBi].querySelectorAll('.check-text');if(ins.length)ins[0].focus();}}else if(e.key==='Enter'&&e.shiftKey){e.preventDefault();entry.blocks[bi].checks.push({text:'',done:false});renderDaily();focusLastInput(bi,'.check-text');}else if(e.key==='Backspace'&&inp.value===''&&entry.blocks[bi].checks.length>1){e.preventDefault();const ci=Number(inp.dataset.ci);entry.blocks[bi].checks.splice(ci,1);renderDaily();const tr=document.getElementById('block-tbody').querySelectorAll('tr')[Number(bi)];if(tr){const ins=tr.querySelectorAll('.check-text');if(ins.length)ins[Math.max(0,ci-1)].focus();}}});
   });
   tbody.querySelectorAll('.checkout-text').forEach(inp=>{
     inp.addEventListener('input',()=>{entry.blocks[inp.dataset.bi].checkouts[inp.dataset.ci].text=inp.value;});
-    inp.addEventListener('keydown',(e)=>{const bi=inp.dataset.bi;if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const nextBi=Number(bi)+1;const rows=document.getElementById('block-tbody').querySelectorAll('tr');if(rows[nextBi]){const ins=rows[nextBi].querySelectorAll('.checkout-text');if(ins.length)ins[0].focus();}}else if(e.key==='Enter'&&e.shiftKey){e.preventDefault();entry.blocks[bi].checkouts.push({text:'',done:false});renderDaily();focusLastInput(bi,'.checkout-text');}else if(e.key==='Backspace'&&inp.value===''){e.preventDefault();const ci=Number(inp.dataset.ci);entry.blocks[bi].checkouts.splice(ci,1);renderDaily();const tr=document.getElementById('block-tbody').querySelectorAll('tr')[Number(bi)];if(tr){const ins=tr.querySelectorAll('.checkout-text');if(ins.length)ins[Math.max(0,ci-1)].focus();}}});
+    inp.addEventListener('keydown',(e)=>{const bi=inp.dataset.bi;if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const nextBi=Number(bi)+1;const rows=document.getElementById('block-tbody').querySelectorAll('tr');if(rows[nextBi]){const ins=rows[nextBi].querySelectorAll('.checkout-text');if(ins.length)ins[0].focus();}}else if(e.key==='Enter'&&e.shiftKey){e.preventDefault();entry.blocks[bi].checkouts.push({text:'',done:false});renderDaily();focusLastInput(bi,'.checkout-text');}else if(e.key==='Backspace'&&inp.value===''&&entry.blocks[bi].checkouts.length>1){e.preventDefault();const ci=Number(inp.dataset.ci);entry.blocks[bi].checkouts.splice(ci,1);renderDaily();const tr=document.getElementById('block-tbody').querySelectorAll('tr')[Number(bi)];if(tr){const ins=tr.querySelectorAll('.checkout-text');if(ins.length)ins[Math.max(0,ci-1)].focus();}}});
   });
   tbody.querySelectorAll('.add-item-btn').forEach(btn=>{btn.addEventListener('click',()=>{const bi=btn.dataset.bi;entry.blocks[bi].checks.push({text:'',done:false});renderDaily();focusLastInput(bi,'.check-text');});});
   tbody.querySelectorAll('.add-checkout-btn').forEach(btn=>{btn.addEventListener('click',()=>{const bi=btn.dataset.bi;entry.blocks[bi].checkouts.push({text:'',done:false});renderDaily();focusLastInput(bi,'.checkout-text');});});
