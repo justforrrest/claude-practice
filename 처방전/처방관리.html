@@ -868,17 +868,14 @@ function renderHistory(){
   const el=document.getElementById('view-history');
   if(!document.getElementById('hist-q-pat')){
     el.innerHTML=`
-    <div style="margin-bottom:.875rem">
-      <div class="toolbar" style="margin-bottom:6px">
-        <input type="text" id="hist-q-pat" placeholder="환자명" style="width:100px;flex-shrink:0">
-        <input type="text" id="hist-q-dx" placeholder="처방명" style="width:100px;flex-shrink:0">
-        <span id="hist-batch-wrap" style="margin-left:auto"></span>
-      </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
-        <span id="hist-year-wrap" style="display:flex;gap:4px;flex-wrap:wrap"></span>
-        <span id="hist-yr-sep" style="display:none;width:2px;height:20px;background:var(--text-3);border-radius:1px;flex-shrink:0;align-self:center;margin:0 4px"></span>
-        <span id="hist-month-btns" style="display:flex;gap:4px;flex-wrap:wrap"></span>
-      </div>
+    <div class="toolbar" style="flex-wrap:wrap;margin-bottom:.875rem">
+      <input type="text" id="hist-q-pat" placeholder="환자명" style="width:100px;flex-shrink:0">
+      <input type="text" id="hist-q-dx" placeholder="처방명" style="width:100px;flex-shrink:0">
+      <span id="hist-yr-sep" style="display:none;width:2px;height:20px;background:var(--text-3);border-radius:1px;flex-shrink:0;align-self:center"></span>
+      <span id="hist-year-wrap" style="display:flex;gap:4px;flex-wrap:wrap"></span>
+      <span id="hist-yr-sep2" style="display:none;width:2px;height:20px;background:var(--text-3);border-radius:1px;flex-shrink:0;align-self:center"></span>
+      <span id="hist-month-btns" style="display:flex;gap:4px;flex-wrap:wrap"></span>
+      <span id="hist-batch-wrap" style="margin-left:auto"></span>
     </div>
     <div class="card" style="padding:0">
       <div class="tbl-wrap"><table id="hist-table">
@@ -913,13 +910,14 @@ function renderHistory(){
 function renderHistFilters(){
   const yw=document.getElementById('hist-year-wrap');
   const mw=document.getElementById('hist-month-btns');
-  const sep=document.getElementById('hist-yr-sep');
   if(!yw||!mw)return;
   const years=[...new Set(prescriptionsData.map(r=>r.date?.slice(0,4)).filter(Boolean))].sort().reverse();
   yw.innerHTML=years.map(y=>`<button class="btn btn-sm ${histYear===y?'btn-primary':'btn-secondary'}" data-hy="${y}">${y}</button>`).join('');
   const MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
   mw.innerHTML=MONTHS.map(m=>`<button class="btn btn-sm ${histMonth===m?'btn-primary':'btn-secondary'}" data-hm="${m}">${parseInt(m)}월</button>`).join('');
-  if(sep)sep.style.display=years.length?'block':'none';
+  const show=years.length?'block':'none';
+  const s1=document.getElementById('hist-yr-sep');const s2=document.getElementById('hist-yr-sep2');
+  if(s1)s1.style.display=show;if(s2)s2.style.display=show;
 }
 
 function updateHistList(){
