@@ -80,6 +80,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;width:100%;max-width:620px;box-shadow:0 8px 32px rgba(0,0,0,0.14);}
+/* 구분 뱃지 */
+.cat-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.cat-치료{background:#D1FAE5;color:#065F46;}
+.cat-녹용{background:#FEE2E2;color:#991B1B;}
+.cat-건보{background:#FEF9C3;color:#854D0E;}
 /* 환자 인라인 편집 */
 .pat-cell-inp{border:none;background:transparent;font-family:var(--font-sans);font-size:13px;color:inherit;outline:none;width:100%;padding:2px 4px;border-radius:4px;min-width:36px;}
 .pat-cell-inp:focus{background:var(--violet-light);}
@@ -840,7 +845,7 @@ function renderHistory(){
       <tbody>${!list.length?`<tr><td colspan="8" class="empty">처방 이력이 없습니다</td></tr>`:
         list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
           <td>${r.date}</td><td><b>${r.patientName}</b></td>
-          <td>${r.category||'-'}</td>
+          <td>${r.category?`<span class="cat-badge cat-${r.category}">${r.category}</span>`:'-'}</td>
           <td>${r.diagnosis||'-'}</td>
           <td class="num">${r.packs}첩</td>
           <td class="num">${fmtW(r.fees?r.totalPrice:r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
