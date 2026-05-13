@@ -438,7 +438,7 @@ function renderRegister(){
         </div>
         <div class="form-row">
           <div class="form-group grow"><label>메모</label><textarea id="rx-note" placeholder="메모 (선택)" rows="2"
-            style="border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;resize:vertical;">${rx?.note||''}</textarea></div>
+            style="border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;resize:none;overflow:hidden;">${rx?.note||''}</textarea></div>
         </div>
       </div>
 
@@ -559,6 +559,11 @@ function renderRegister(){
     el.addEventListener('input',calcSummary);
     el.addEventListener('focus',e=>e.target.select());
   });
+
+  const noteEl=document.getElementById('rx-note');
+  const autoResize=()=>{noteEl.style.height='auto';noteEl.style.height=noteEl.scrollHeight+'px';};
+  noteEl.addEventListener('input',autoResize);
+  autoResize();
 
   document.getElementById('rx-add-herb').addEventListener('click',()=>addHerbRow('','',true));
 
