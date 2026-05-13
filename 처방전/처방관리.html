@@ -42,6 +42,8 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .btn-sm{padding:4px 10px;font-size:12px;}
 .btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border);}
 .btn-ghost:hover{background:var(--violet-light);color:var(--text-1);}
+.btn-filter{background:#fff;color:var(--text-2);border:1px solid var(--border);}
+.btn-filter:hover{background:var(--violet-light);color:var(--text-1);}
 .btn-del{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:3px 6px;border-radius:4px;transition:all .15s;}
 .btn-del:hover{background:var(--coral-light);color:var(--coral);}
 .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
@@ -503,13 +505,20 @@ function renderRegister(){
           <div class="form-group" style="flex:1"><label>처방일</label><input type="date" id="rx-date" value="${rx?.date||todayStr()}"></div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem;flex-wrap:nowrap;align-items:flex-end">
-          <div class="form-group" style="flex:0 0 auto"><label>구분</label><select id="rx-category" style="width:90px"><option value="">-</option><option value="치료"${(rx?.category||'')==='치료'?' selected':''}>치료</option><option value="녹용"${(rx?.category||'')==='녹용'?' selected':''}>녹용</option><option value="건보"${(rx?.category||'')==='건보'?' selected':''}>건보</option></select></div>
-          <div class="form-group" style="flex:0 0 auto"><label>회차</label><div style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="text" inputmode="numeric" id="rx-session-cur" value="${rx?.sessionCur||''}" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차 /</span><input type="text" inputmode="numeric" id="rx-session-total" value="${rx?.sessionTotal||''}" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차</span></div></div>
+          <div class="form-group" style="flex:0 0 auto"><label>구분</label><select id="rx-category" style="width:62px;padding-right:4px"><option value="">-</option><option value="치료"${(rx?.category||'')==='치료'?' selected':''}>치료</option><option value="녹용"${(rx?.category||'')==='녹용'?' selected':''}>녹용</option><option value="건보"${(rx?.category||'')==='건보'?' selected':''}>건보</option></select></div>
+          <div class="form-group" style="flex:0 0 auto"><label>회차</label><div style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="text" inputmode="numeric" id="rx-session-cur" value="${rx?.sessionCur||''}" placeholder="-" maxlength="1" style="width:28px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차 /</span><input type="text" inputmode="numeric" id="rx-session-total" value="${rx?.sessionTotal||''}" placeholder="-" maxlength="1" style="width:28px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차</span></div></div>
           <div class="form-group grow"><label>처방명</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="감비탕, 소청룡탕 등"></div>
         </div>
-        <div class="form-row" style="margin-bottom:.75rem">
+        <div class="form-row" style="margin-bottom:.75rem;align-items:flex-end;flex-wrap:nowrap">
           <div class="form-group" style="flex:1"><label>첩수</label><input type="number" id="rx-packs" value="${rx?.packs||20}" min="1"></div>
           <div class="form-group" style="flex:1"><label>팩수</label><input type="number" id="rx-total-packs" value="${rx?.totalPacks||45}" min="1"></div>
+          <div class="form-group" style="flex:0 0 auto;min-width:0">
+            <label>총 일수</label>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="text" inputmode="numeric" id="rx-days-display" value="${rx?.days||'-'}" style="width:40px;text-align:center;font-variant-numeric:tabular-nums;">
+              <span style="font-size:13px;color:var(--text-2)">일</span>
+            </div>
+          </div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem;align-items:flex-end;flex-wrap:nowrap;gap:10px">
           <div class="form-group" style="flex:0 0 auto;min-width:0">
@@ -517,13 +526,6 @@ function renderRegister(){
             <div style="display:flex;align-items:center;gap:4px">
               <input type="text" inputmode="numeric" id="rx-freq" value="${rx?.dosageFreq||3}" style="width:40px;text-align:center">
               <span style="font-size:13px;color:var(--text-2)">회</span>
-            </div>
-          </div>
-          <div class="form-group" style="flex:0 0 auto;min-width:0">
-            <label>총 일수</label>
-            <div style="display:flex;align-items:center;gap:4px">
-              <input type="text" inputmode="numeric" id="rx-days-display" value="${rx?.days||'-'}" style="width:40px;text-align:center;font-variant-numeric:tabular-nums;">
-              <span style="font-size:13px;color:var(--text-2)">일</span>
             </div>
           </div>
           <div class="form-group" style="flex:1;min-width:0">
@@ -912,9 +914,9 @@ function renderHistFilters(){
   const mw=document.getElementById('hist-month-btns');
   if(!yw||!mw)return;
   const years=[...new Set(prescriptionsData.map(r=>r.date?.slice(0,4)).filter(Boolean))].sort().reverse();
-  yw.innerHTML=years.map(y=>`<button class="btn btn-sm ${histYear===y?'btn-primary':'btn-secondary'}" data-hy="${y}">${y}</button>`).join('');
+  yw.innerHTML=years.map(y=>`<button class="btn btn-sm ${histYear===y?'btn-primary':'btn-filter'}" data-hy="${y}">${y}</button>`).join('');
   const MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
-  mw.innerHTML=MONTHS.map(m=>`<button class="btn btn-sm ${histMonth===m?'btn-primary':'btn-secondary'}" data-hm="${m}">${parseInt(m)}월</button>`).join('');
+  mw.innerHTML=MONTHS.map(m=>`<button class="btn btn-sm ${histMonth===m?'btn-primary':'btn-filter'}" data-hm="${m}">${parseInt(m)}월</button>`).join('');
   const show=years.length?'block':'none';
   const s1=document.getElementById('hist-yr-sep');const s2=document.getElementById('hist-yr-sep2');
   if(s1)s1.style.display=show;if(s2)s2.style.display=show;
