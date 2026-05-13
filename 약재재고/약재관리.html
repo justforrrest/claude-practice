@@ -939,8 +939,8 @@ function renderSettings(){
       return`<tr>
         <td style="border-right:2px solid var(--border);white-space:nowrap">
           <div style="display:flex;align-items:center">
-            <span class="herb-name-click" data-herb="${h}" style="cursor:pointer;flex:1;text-align:left;font-weight:600;color:var(--text-1)">${h}</span>
             <button class="btn-del herb-del" data-herb="${h}" style="opacity:.45;font-size:13px;flex-shrink:0">×</button>
+            <span class="herb-name-click" data-herb="${h}" style="cursor:pointer;flex:1;text-align:left;font-weight:600;color:var(--text-1)">${h}</span>
           </div>
         </td>
         <td style="border-right:2px solid var(--border)"><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;text-align:left;"></td>
