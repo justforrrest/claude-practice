@@ -46,7 +46,7 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .btn-primary:hover{opacity:.85;}
 .btn-secondary{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
 .btn-secondary:hover{background:var(--violet-light);color:var(--text-1);}
-.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-sm{padding:4px 10px;font-size:12px;}
 .btn-del{background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-3);padding:3px 6px;border-radius:4px;transition:all .15s;}
 .btn-del:hover{background:var(--coral-light);color:var(--coral);}
 .btn-edit{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:3px 5px;border-radius:4px;transition:all .15s;}
@@ -75,7 +75,7 @@ input.settings-inp{border:none;background:transparent;text-align:right;width:76p
 input.settings-inp:focus{border:none;background:transparent;outline:none;box-shadow:none;}
 input.pl-inp{border:none;background:transparent;text-align:right;width:100%;font-family:var(--font-sans);font-size:13px;outline:none;padding:0;color:inherit;-webkit-appearance:none;appearance:none;cursor:text;}
 input.pl-inp:focus{border:none;background:transparent;outline:none;box-shadow:none;}
-.pl-cho-btn{padding:1px 5px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font-sans);background:var(--surface-2);color:var(--text-2);cursor:pointer;transition:background .15s,color .15s;}
+.pl-cho-btn{padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font-sans);background:var(--surface-2);color:var(--text-2);cursor:pointer;transition:background .15s,color .15s;}
 .pl-cho-btn.active{background:var(--violet-d);color:#fff;border-color:var(--violet-d);}
 .settings-inp:focus{border-color:var(--violet-d);outline:none;box-shadow:0 0 0 2px var(--violet-light);}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
@@ -968,14 +968,14 @@ function renderPricelist(){
         <button class="pl-cho-btn${!pricelistConsonant?' active':''}" data-cho="">전체</button>
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${pricelistConsonant===c?' active':''}" data-cho="${c}">${c}</button>`).join('')}
       </div>
-      <input class="search-input" id="pl-search" placeholder="약재명 검색" value="${pricelistSearch}" style="width:120px;min-width:0;flex:none;padding:3px 10px;">
+      <input class="search-input" id="pl-search" placeholder="약재명 검색" value="${pricelistSearch}" style="width:120px;min-width:0;flex:none;padding:4px 10px;">
       <button class="btn btn-primary btn-sm" id="pl-save">저장</button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:.875rem;">
-      ${suppliersData.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--violet-light);border:1px solid rgba(124,58,237,0.25);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--violet-d);font-weight:500;">${s}<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--violet-d);opacity:.6;padding:0 0 0 2px;line-height:1;" title="${DEFAULT_SUPPLIERS.includes(s)?'기본 도매처는 삭제 불가':'삭제'}">${DEFAULT_SUPPLIERS.includes(s)?'':'×'}</button></span>`).join('')}
+      ${suppliersData.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--violet-light);border:1px solid rgba(124,58,237,0.25);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--violet-d);font-weight:500;">${s}<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--violet-d);opacity:.6;padding:0 0 0 2px;line-height:1;" title="${DEFAULT_SUPPLIERS.includes(s)?'기본 도매처는 삭제 불가':'삭제'}">${DEFAULT_SUPPLIERS.includes(s)?'':'×'}</button></span>`).join('')}
       <div style="flex:1;"></div>
-      <input type="text" id="pl-new-sup" placeholder="새 도매처명" style="border:1px solid var(--border-2);border-radius:8px;padding:3px 10px;font-size:13px;font-family:var(--font-sans);outline:none;width:120px;">
-      <button class="btn btn-secondary btn-sm" id="pl-add-sup">+ 추가</button>
+      <input type="text" id="pl-new-sup" placeholder="새 도매처명" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;width:120px;">
+      <button class="btn btn-secondary btn-sm" id="pl-add-sup">추가</button>
     </div>
     <div style="display:flex;gap:2.5rem;align-items:flex-start;">
       <div class="tbl-wrap" style="flex:1;min-width:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table>${thead}<tbody>${makeRows(leftHerbs)}</tbody></table></div>
