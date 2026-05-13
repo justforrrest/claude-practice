@@ -50,7 +50,7 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .form-group{display:flex;flex-direction:column;gap:4px;min-width:110px;}
 .form-group.grow{flex:1;}
 label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;}
-input[type=text],input[type=number],input[type=date],select{border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;}
+input[type=text],input[type=number],input[type=date],select{border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;height:34px;box-sizing:border-box;}
 input:focus,select:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -77,7 +77,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 .rx-table td{padding:4px 6px;}
 .rx-name{border:none !important;background:transparent !important;}
 .rx-name:focus{box-shadow:none !important;}
-.rx-table input[type=text],.rx-table input[type=number]{padding:5px 8px;font-size:13px;}
+.rx-table input[type=text],.rx-table input[type=number]{padding:5px 8px;font-size:13px;height:auto;}
 .rx-table input[type=number]::-webkit-inner-spin-button,.rx-table input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 .rx-table input[type=number]{-moz-appearance:textfield;}
 /* 모달 */
