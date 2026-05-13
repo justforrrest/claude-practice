@@ -44,8 +44,6 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .btn-ghost:hover{background:var(--violet-light);color:var(--text-1);}
 .btn-del{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:3px 6px;border-radius:4px;transition:all .15s;}
 .btn-del:hover{background:var(--coral-light);color:var(--coral);}
-.del-btn{border:1px solid var(--coral)!important;color:var(--text-1);}
-.del-btn:hover{background:var(--coral-light)!important;color:var(--coral);}
 .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
 .form-group{display:flex;flex-direction:column;gap:4px;min-width:110px;}
 .form-group.grow{flex:1;}
@@ -941,7 +939,7 @@ function updateHistList(){
       <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-secondary btn-sm ob-btn" data-rxid="${r.id}">출고 반영</button>`}</td>
       <td style="white-space:nowrap;display:flex;gap:4px">
         <button class="btn btn-secondary btn-sm edit-btn" data-rxid="${r.id}">수정</button>
-        <button class="btn btn-sm del-btn" data-rxid="${r.id}">삭제</button>
+        <button class="btn-del del-btn" data-rxid="${r.id}">삭제</button>
       </td>
     </tr>`).join('');
   tbody.querySelectorAll('.hist-row').forEach(tr=>{
