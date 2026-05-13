@@ -653,6 +653,23 @@ function renderRegister(){
   noteEl.addEventListener('input',autoResize);
   autoResize();
 
+  // 등록 폼 Enter 키 이동
+  const formNav=['rx-patient','rx-date','rx-diagnosis','rx-packs','rx-total-packs','rx-freq','rx-days-display','rx-timing'];
+  formNav.forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('keydown',e=>{
+      if(e.key!=='Enter')return;
+      e.preventDefault();
+      if(i<formNav.length-1){
+        document.getElementById(formNav[i+1])?.focus();
+      } else {
+        const firstHerb=document.querySelector('#rx-herb-tbody tr[data-rid] .rx-name');
+        firstHerb?.focus();
+      }
+    });
+  });
+
   document.getElementById('rx-add-herb').addEventListener('click',()=>addHerbRow('','',true));
 
 
