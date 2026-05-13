@@ -248,7 +248,7 @@ async function save(key,val){
 /* ── 데이터 ── */
 let inboundData=[];
 let outboundData=[];
-let settingsData={prices:{},minStock:{}};
+let settingsData={prices:{},minStock:{},memos:{}};
 let suppliersData=[...DEFAULT_SUPPLIERS];
 const DEFAULT_PRICELIST={
   "가자":{"바른한약":6.67},
@@ -924,7 +924,7 @@ function renderSettings(){
       </div>
     </div>
   ${(()=>{
-    const stHead=`<thead><tr><th style="text-align:center;border-right:2px solid var(--border);width:85px">약재명</th><th class="num">단가 (원/g)</th><th class="num">최소재고 (g)</th></tr></thead>`;
+    const stHead=`<thead><tr><th style="text-align:center;border-right:2px solid var(--border);width:85px">약재명</th><th>메모</th><th class="num">단가 (원/g)</th><th class="num">최소재고 (g)</th></tr></thead>`;
     const stRows=list=>list.map(h=>{
       if(editingHerbName===h)return`<tr style="background:var(--violet-light)">
         <td style="text-align:center;border-right:2px solid var(--border);white-space:nowrap">
@@ -932,6 +932,7 @@ function renderSettings(){
           <button class="btn btn-primary btn-sm herb-rename-save" data-old="${h}" style="margin-left:2px">✓</button>
           <button class="btn btn-secondary btn-sm herb-rename-cancel" style="margin-left:2px">✕</button>
         </td>
+        <td><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" placeholder="메모" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;"></td>
         <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
         <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
       </tr>`;
@@ -942,6 +943,7 @@ function renderSettings(){
             <button class="btn-del herb-del" data-herb="${h}" style="opacity:.45;font-size:13px;flex-shrink:0">×</button>
           </div>
         </td>
+        <td><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" placeholder="메모" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;"></td>
         <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
         <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
       </tr>`;
@@ -966,7 +968,8 @@ function renderSettings(){
     el.querySelectorAll('.settings-inp[data-field]').forEach(inp=>{
       const h=inp.dataset.herb,v=parseFloat(inp.value)||0;
       if(inp.dataset.field==='price')settingsData.prices[h]=v;
-      else settingsData.minStock[h]=v;
+      else if(inp.dataset.field==='min')settingsData.minStock[h]=v;
+      else if(inp.dataset.field==='memo')settingsData.memos[h]=inp.value.trim();
     });
     await save(KEYS.settings,settingsData);
     alert('설정이 저장되었습니다.');
@@ -981,7 +984,8 @@ function renderSettings(){
         el.querySelectorAll('.settings-inp[data-field]').forEach(i=>{
           const h=i.dataset.herb,v=parseFloat(i.value)||0;
           if(i.dataset.field==='price')settingsData.prices[h]=v;
-          else settingsData.minStock[h]=v;
+          else if(i.dataset.field==='min')settingsData.minStock[h]=v;
+          else if(i.dataset.field==='memo')settingsData.memos[h]=i.value.trim();
         });
         await save(KEYS.settings,settingsData);
         renderStock();
@@ -1006,6 +1010,7 @@ function renderSettings(){
       if(data.settings){
         if(data.settings.prices)settingsData.prices={...settingsData.prices,...data.settings.prices};
         if(data.settings.minStock)settingsData.minStock={...settingsData.minStock,...data.settings.minStock};
+        if(data.settings.memos)settingsData.memos={...settingsData.memos,...data.settings.memos};
         await save(KEYS.settings,settingsData);
       }
       alert(`가져오기 완료 — 입고 ${inboundData.length}건, 출고 ${outboundData.length}건`);
@@ -1070,7 +1075,7 @@ async function renameHerb(oldName,newName){
   inboundData=inboundData.map(r=>r.herb===oldName?{...r,herb:newName}:r);
   outboundData=outboundData.map(r=>r.herb===oldName?{...r,herb:newName}:r);
   adjustData=adjustData.map(r=>r.herb===oldName?{...r,herb:newName}:r);
-  ['prices','minStock'].forEach(k=>{
+  ['prices','minStock','memos'].forEach(k=>{
     if(settingsData[k][oldName]!==undefined){settingsData[k][newName]=settingsData[k][oldName];delete settingsData[k][oldName];}
   });
   if(pricelistData[oldName]){pricelistData[newName]=pricelistData[oldName];delete pricelistData[oldName];}
@@ -1335,7 +1340,7 @@ document.getElementById('sync-modal-overlay').addEventListener('click',e=>{
   const[ib,ob,st,sp,pl,hb,adj]=await Promise.all([load(KEYS.inbound),load(KEYS.outbound),load(KEYS.settings),load(KEYS.suppliers),load(KEYS.pricelist),load(KEYS.herbs),load(KEYS.adjust)]);
   if(ib&&Array.isArray(ib))inboundData=ib;
   if(ob&&Array.isArray(ob))outboundData=ob;
-  if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;}
+  if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;if(st.memos)settingsData.memos=st.memos;}
   if(sp&&Array.isArray(sp)&&sp.length>0)suppliersData=sp;
   if(pl&&typeof pl==='object'&&!Array.isArray(pl))pricelistData=pl;
   if(hb&&Array.isArray(hb)&&hb.length>0)herbsData=hb;
