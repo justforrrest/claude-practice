@@ -1753,6 +1753,7 @@ function drawRadar(entry){
   angles.forEach((a,i)=>{const lx=cx+Math.cos(a)*(r+26),ly=cy+Math.sin(a)*(r+26);ctx.fillText(entry.qnames[i]||'',lx,ly);});
 }
 
+initTabDrag();
 (async()=>{
   // 모든 데이터를 병렬로 로드
   const [dot,daily,weekly,wreview,monthly,mplan,tpl,tpo,cw]=await Promise.all([
@@ -1761,7 +1762,6 @@ function drawRadar(entry){
   if(cw) colWidthData=cw;
   if(tpl) weekTemplate=tpl;
   if(tpo) applyTabOrder(tpo);
-  initTabDrag();
   if(dot){
     if(dot.goal!==undefined&&!dot.goals){
       // 구버전1 → 신버전 마이그레이션
