@@ -1282,14 +1282,13 @@ document.getElementById('sync-apply-btn').addEventListener('click',()=>{
 document.getElementById('sync-code-input').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase();});
 document.getElementById('sync-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
 
-/* ── JSON 내보내기 ── */
-document.getElementById('export-btn').addEventListener('click',()=>{
-  const data={patients:patientsData,prescriptions:prescriptionsData,exported:new Date().toISOString()};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`처방관리_${todayStr()}.json`;
-  a.click();URL.revokeObjectURL(a.href);
+/* ── 수동 저장 ── */
+document.getElementById('export-btn').addEventListener('click',async()=>{
+  await Promise.all([
+    save(RX_KEYS.patients,patientsData),
+    save(RX_KEYS.prescriptions,prescriptionsData),
+    save(RX_KEYS.config,rxConfig),
+  ]);
 });
 
 /* ── JSON 가져오기 ── */
