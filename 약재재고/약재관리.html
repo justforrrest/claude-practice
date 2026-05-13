@@ -1030,11 +1030,22 @@ function renderSettings(){
     });
   });
 
-  document.getElementById('export-btn').addEventListener('click',()=>{
+  document.getElementById('export-btn').addEventListener('click',async()=>{
     const data={inbound:inboundData,outbound:outboundData,settings:settingsData};
-    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const json=JSON.stringify(data,null,2);
+    const fileName='herb_data_'+todayStr()+'.json';
+    if(window.showSaveFilePicker){
+      try{
+        const fh=await window.showSaveFilePicker({suggestedName:fileName,types:[{description:'JSON 파일',accept:{'application/json':['.json']}}]});
+        const ws=await fh.createWritable();
+        await ws.write(json);
+        await ws.close();
+        return;
+      }catch(e){if(e.name==='AbortError')return;}
+    }
+    const blob=new Blob([json],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-    a.download='herb_data_'+todayStr()+'.json';a.click();
+    a.download=fileName;a.click();
   });
 
   document.getElementById('import-input').addEventListener('change',async e=>{
