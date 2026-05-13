@@ -853,17 +853,19 @@ async function batchAddFees(){
   alert(`${toUpdate.length}건 처방에 비용을 적용했습니다.`);
 }
 
-let histSearch='';
+let histPatSearch='';
+let histDxSearch='';
 
 function renderHistory(){
   const el=document.getElementById('view-history');
   const list=[...prescriptionsData]
-    .filter(r=>(!histSearch||(r.patientName+r.diagnosis).includes(histSearch)))
+    .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch)))
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
 
   el.innerHTML=`
   <div class="toolbar">
-    <input type="text" id="hist-q" value="${histSearch}" placeholder="환자명·처방명 검색" style="flex:1;min-width:140px">
+    <input type="text" id="hist-q-pat" value="${histPatSearch}" placeholder="환자명 검색" style="flex:1;min-width:100px">
+    <input type="text" id="hist-q-dx" value="${histDxSearch}" placeholder="처방명 검색" style="flex:1;min-width:100px">
     ${prescriptionsData.some(r=>!r.fees)?`<button class="btn btn-secondary btn-sm" id="batch-fees-btn">비용 일괄 적용</button>`:''}
   </div>
   <div class="card" style="padding:0">
@@ -887,9 +889,12 @@ function renderHistory(){
     </table></div>
   </div>`;
 
-  const histQEl=document.getElementById('hist-q');
-  histQEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){histSearch=histQEl.value;renderHistory();focusEnd('hist-q');}});
-  histQEl.addEventListener('input',e=>{if(e.target.value===''){histSearch='';renderHistory();focusEnd('hist-q');}});
+  const histPatEl=document.getElementById('hist-q-pat');
+  histPatEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){histPatSearch=histPatEl.value;renderHistory();focusEnd('hist-q-pat');}});
+  histPatEl.addEventListener('input',e=>{if(e.target.value===''){histPatSearch='';renderHistory();focusEnd('hist-q-pat');}});
+  const histDxEl=document.getElementById('hist-q-dx');
+  histDxEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){histDxSearch=histDxEl.value;renderHistory();focusEnd('hist-q-dx');}});
+  histDxEl.addEventListener('input',e=>{if(e.target.value===''){histDxSearch='';renderHistory();focusEnd('hist-q-dx');}});
   document.getElementById('batch-fees-btn')?.addEventListener('click',batchAddFees);
 
   el.querySelectorAll('.hist-row').forEach(tr=>{
