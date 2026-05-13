@@ -1169,6 +1169,7 @@ function renderDailyBody(){
     const applyBg=v=>{td.style.background=matchKeywordColor(v)||'';};
     applyBg(inp.value);
     inp.addEventListener('input',()=>{const bi=Number(inp.dataset.bi);entry.blocks[bi].kw=inp.value;entry.blocks[bi].kwFromWeekly=false;inp.classList.remove('from-weekly');applyBg(inp.value);});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const bi=Number(inp.dataset.bi);const rows=document.getElementById('block-tbody').querySelectorAll('tr');if(rows[bi]){const first=rows[bi].querySelector('.check-text');if(first)first.focus();}}});
   });
   tbody.querySelectorAll('.check-text').forEach(inp=>{
     inp.addEventListener('input',()=>{entry.blocks[inp.dataset.bi].checks[inp.dataset.ci].text=inp.value;});
