@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>처방 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F4F2FF;--surface:#FFFFFF;--surface-2:#F0EEFF;
+  --border:rgba(0,0,0,0.08);--border-2:rgba(0,0,0,0.12);
+  --violet:#5b21b6;--violet-d:#7c3aed;--violet-light:#EDE9FE;
+  --coral:#EF4444;--coral-light:#FEF2F2;
+  --green:#10B981;--green-light:#D1FAE5;
+  --amber:#F59E0B;--amber-light:#FEF3C7;
+  --text-1:#0f0f10;--text-2:#374151;--text-3:#6b7280;
+  --font-sans:'Inter',sans-serif;--radius:10px;
+}
+body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-height:100vh;padding:1.5rem 1rem;}
+.container{max-width:960px;margin:0 auto;}
+.app-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1.25rem;padding:.875rem 1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.app-title{font-size:15px;font-weight:700;color:var(--text-1);}
+.app-meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-3);flex-wrap:wrap;}
+.sync-code-box{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-weight:600;letter-spacing:1px;color:var(--violet-d);font-size:12px;}
+.tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:1.25rem;}
+.tab{background:none;border:none;padding:8px 16px;font-size:13px;font-family:var(--font-sans);color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;border-radius:6px 6px 0 0;transition:color .15s,background .15s;}
+.tab.active{color:var(--violet-d);border-bottom-color:var(--violet-d);font-weight:600;}
+.tab:not(.active):hover{color:var(--text-1);background:var(--violet-light);}
+.view{display:none;}.view.active{display:block;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.section-title{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.75rem;}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:.875rem;}
+.btn{border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-family:var(--font-sans);cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+.btn-primary{background:var(--violet-d);color:#fff;}
+.btn-primary:hover{opacity:.85;}
+.btn-secondary{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
+.btn-secondary:hover{background:var(--violet-light);color:var(--text-1);}
+.btn-sm{padding:4px 10px;font-size:12px;}
+.btn-del{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:3px 6px;border-radius:4px;transition:all .15s;}
+.btn-del:hover{background:var(--coral-light);color:var(--coral);}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.form-group{display:flex;flex-direction:column;gap:4px;min-width:110px;}
+.form-group.grow{flex:1;}
+label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;}
+input[type=text],input[type=number],input[type=date],select{border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;}
+input:focus,select:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:8px 10px;font-weight:600;color:var(--text-3);font-size:11px;border-bottom:2px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.03em;}
+td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-2);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--surface-2);}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-done{background:var(--green-light);color:#065F46;}
+.empty{text-align:center;color:var(--text-3);padding:2.5rem;font-size:13px;}
+.summary-row{display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;padding:.875rem 1rem;background:var(--surface-2);border-radius:8px;margin-top:.75rem;}
+.summary-item{display:flex;flex-direction:column;gap:2px;}
+.summary-label{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
+.summary-value{font-size:18px;font-weight:700;color:var(--violet-d);}
+.summary-value.big{font-size:22px;}
+/* 약재 자동완성 */
+.herb-ac-wrap{position:relative;}
+.herb-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border-2);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);list-style:none;margin:2px 0 0;padding:4px 0;max-height:180px;overflow-y:auto;z-index:300;display:none;}
+.herb-dropdown.open{display:block;}
+.herb-dropdown li{padding:7px 12px;font-size:13px;cursor:pointer;color:var(--text-1);}
+.herb-dropdown li:hover,.herb-dropdown li.hl{background:var(--violet-light);color:var(--violet-d);}
+/* 처방 약재 테이블 */
+.rx-table td{padding:4px 6px;}
+.rx-table input[type=text],.rx-table input[type=number]{padding:5px 8px;font-size:13px;}
+/* 모달 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;width:100%;max-width:620px;box-shadow:0 8px 32px rgba(0,0,0,0.14);}
+/* 동기화 모달 */
+.sync-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:999;align-items:center;justify-content:center;}
+.sync-modal-overlay.open{display:flex;}
+.sync-modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.14);}
+.sync-modal h3{font-size:15px;font-weight:700;color:var(--text-1);margin-bottom:.5rem;}
+.sync-modal p{font-size:12px;color:var(--text-3);margin-bottom:1rem;line-height:1.6;}
+.sync-modal input{width:100%;border:1px solid var(--border-2);border-radius:8px;padding:9px 12px;font-size:20px;font-family:var(--font-sans);font-weight:700;letter-spacing:4px;text-align:center;text-transform:uppercase;outline:none;color:var(--violet-d);}
+.sync-modal input:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
+.sync-modal-actions{display:flex;gap:8px;margin-top:1rem;}
+.sync-modal-actions .btn{flex:1;}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="app-header">
+    <div class="app-title">처방 관리</div>
+    <div class="app-meta">
+      <span>동기화 코드</span>
+      <span class="sync-code-box" id="sync-code-display">-</span>
+      <button class="btn btn-secondary btn-sm" id="change-sync-btn">코드 변경</button>
+      <span id="sync-status"></span>
+      <span id="status-bar">불러오는 중...</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="register">처방 등록</button>
+    <button class="tab" data-tab="history">처방 이력</button>
+    <button class="tab" data-tab="patients">환자 관리</button>
+  </div>
+
+  <div class="view active" id="view-register"></div>
+  <div class="view" id="view-history"></div>
+  <div class="view" id="view-patients"></div>
+
+</div>
+
+<!-- 처방 상세 모달 -->
+<div class="modal-overlay" id="detail-modal-overlay">
+  <div class="modal" id="detail-modal-content"></div>
+</div>
+
+<!-- 동기화 코드 모달 -->
+<div class="sync-modal-overlay" id="sync-modal-overlay">
+  <div class="sync-modal">
+    <h3>기기 연결</h3>
+    <p>다른 기기의 동기화 코드를 입력하면 같은 데이터를 공유합니다.</p>
+    <input id="sync-code-input" maxlength="6" placeholder="예: AB12CD" autocomplete="off" spellcheck="false">
+    <div class="sync-modal-actions">
+      <button class="btn btn-secondary" id="sync-cancel-btn">취소</button>
+      <button class="btn btn-primary" id="sync-apply-btn">적용</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Firebase ── */
+let db;
+try{
+  firebase.initializeApp({apiKey:"AIzaSyBlmjCfXn80Ybew7xkIPkrqyOBxulWL_aM",authDomain:"weekly-planner-a2f78.firebaseapp.com",projectId:"weekly-planner-a2f78",storageBucket:"weekly-planner-a2f78.firebasestorage.app",messagingSenderId:"497461587642",appId:"1:497461587642:web:9ddbdcf093497aa7495c83"});
+  db=firebase.firestore();
+}catch(e){
+  db={collection:()=>({doc:()=>({get:async()=>({exists:false}),set:async()=>{}})})};
+}
+
+/* ── 동기화 ── */
+function getSyncCode(){let c=localStorage.getItem('b6ix_sync');if(!c){c=Math.random().toString(36).substr(2,3).toUpperCase()+Math.random().toString(36).substr(2,3).toUpperCase();localStorage.setItem('b6ix_sync',c);}return c;}
+function setSyncStatus(t){const el=document.getElementById('sync-status');if(el)el.textContent=t;}
+function setStatus(t){const el=document.getElementById('status-bar');if(el)el.textContent=t;}
+async function load(key){
+  try{const doc=await db.collection('users').doc(getSyncCode()).collection('data').doc(key).get();if(doc.exists){const v=doc.data().value;localStorage.setItem(key,JSON.stringify(v));return v;}}catch(e){}
+  try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;}
+}
+async function save(key,val){
+  try{localStorage.setItem(key,JSON.stringify(val));setStatus('저장됨 ✓');}catch(e){return;}
+  try{setSyncStatus('동기화 중...');await db.collection('users').doc(getSyncCode()).collection('data').doc(key).set({value:val,ts:Date.now()});setSyncStatus('☁ 동기화됨');}catch(e){setSyncStatus('오프라인');}
+}
+
+/* ── 유틸 ── */
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
+function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
+function fmtW(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:0});}
+
+/* ── 데이터 ── */
+let patientsData=[];
+let prescriptionsData=[];
+let herbsData=[];
+let settingsData={prices:{}};
+
+const RX_KEYS={patients:'rx_patients_v1',prescriptions:'rx_prescriptions_v1'};
+const HERB_KEYS={herbs:'herb_herbs_v1',settings:'herb_settings_v1',outbound:'herb_outbound_v1'};
+
+function getPrice(h){return settingsData.prices[h]??0;}
+
+/* ── 처방 등록 상태 ── */
+let rxHerbs=[]; // [{id,herb,qty}]  qty = 첩당g
+let editingRxId=null;
+
+/* ── 약재 자동완성 ── */
+function setupHerbAC(input,dropdown,onSelect){
+  let hlIdx=-1;
+  const filter=()=>{
+    const q=input.value.trim();
+    const matches=q?herbsData.filter(h=>h.includes(q)):herbsData.slice(0,25);
+    dropdown.innerHTML=matches.map(h=>`<li data-herb="${h}">${h}</li>`).join('');
+    hlIdx=-1;
+    dropdown.classList.toggle('open',matches.length>0&&document.activeElement===input);
+  };
+  input.addEventListener('input',filter);
+  input.addEventListener('focus',filter);
+  input.addEventListener('blur',()=>setTimeout(()=>dropdown.classList.remove('open'),160));
+  input.addEventListener('keydown',e=>{
+    const items=dropdown.querySelectorAll('li');
+    if(e.key==='ArrowDown'){hlIdx=Math.min(hlIdx+1,items.length-1);items.forEach((li,i)=>li.classList.toggle('hl',i===hlIdx));e.preventDefault();}
+    else if(e.key==='ArrowUp'){hlIdx=Math.max(hlIdx-1,0);items.forEach((li,i)=>li.classList.toggle('hl',i===hlIdx));e.preventDefault();}
+    else if(e.key==='Enter'&&hlIdx>=0){onSelect(items[hlIdx].dataset.herb);dropdown.classList.remove('open');e.preventDefault();}
+    else if(e.key==='Escape'){dropdown.classList.remove('open');}
+  });
+  dropdown.addEventListener('mousedown',e=>{
+    const li=e.target.closest('li');
+    if(li){onSelect(li.dataset.herb);dropdown.classList.remove('open');}
+  });
+}
+
+/* ── 처방 등록 탭 ── */
+function calcSummary(){
+  const packsEl=document.getElementById('rx-packs');
+  const packs=Number(packsEl?.value||20);
+  const perPack=rxHerbs.reduce((s,r)=>s+getPrice(r.herb)*Number(r.qty||0),0);
+  const totalG=rxHerbs.reduce((s,r)=>s+Number(r.qty||0),0)*packs;
+  const totalW=perPack*packs;
+  const sumEl=document.getElementById('rx-summary');
+  if(sumEl) sumEl.innerHTML=`
+    <div class="summary-item"><span class="summary-label">첩당 합계</span><span class="summary-value">${fmt(rxHerbs.reduce((s,r)=>s+Number(r.qty||0),0))}g</span></div>
+    <div class="summary-item"><span class="summary-label">총 처방량</span><span class="summary-value">${fmt(totalG)}g</span></div>
+    <div class="summary-item"><span class="summary-label">1첩 금액</span><span class="summary-value">${fmtW(perPack)}원</span></div>
+    <div class="summary-item"><span class="summary-label">총 금액</span><span class="summary-value big">${fmtW(totalW)}원</span></div>`;
+}
+
+function attachRowListeners(tr){
+  const rid=tr.dataset.rid;
+  const nameInput=tr.querySelector('.rx-name');
+  const dropdown=tr.querySelector('.herb-dropdown');
+  const qtyInput=tr.querySelector('.rx-qty');
+  const totalGCell=tr.querySelector('.rx-total-g');
+  const priceCell=tr.querySelector('.rx-price');
+
+  const updateCells=()=>{
+    const row=rxHerbs.find(r=>r.id===rid);
+    if(!row)return;
+    const packs=Number(document.getElementById('rx-packs')?.value||20);
+    const qty=Number(row.qty||0);
+    if(totalGCell)totalGCell.textContent=fmt(qty*packs)+'g';
+    if(priceCell)priceCell.textContent=fmtW(getPrice(row.herb)*qty)+'원';
+    calcSummary();
+  };
+
+  setupHerbAC(nameInput,dropdown,(herb)=>{
+    const row=rxHerbs.find(r=>r.id===rid);
+    if(row){row.herb=herb;nameInput.value=herb;}
+    updateCells();
+  });
+  nameInput.addEventListener('blur',()=>{
+    const row=rxHerbs.find(r=>r.id===rid);
+    if(row)row.herb=nameInput.value;
+    updateCells();
+  });
+  qtyInput.addEventListener('input',()=>{
+    const row=rxHerbs.find(r=>r.id===rid);
+    if(row)row.qty=qtyInput.value;
+    updateCells();
+  });
+  tr.querySelector('.rx-del').addEventListener('click',()=>{
+    rxHerbs=rxHerbs.filter(r=>r.id!==rid);
+    tr.remove();
+    calcSummary();
+  });
+}
+
+function addHerbRow(herb='',qty='',focus=false){
+  const id=uid();
+  rxHerbs.push({id,herb,qty});
+  const tbody=document.getElementById('rx-herb-tbody');
+  if(!tbody)return;
+  const packs=Number(document.getElementById('rx-packs')?.value||20);
+  const tr=document.createElement('tr');
+  tr.dataset.rid=id;
+  tr.innerHTML=`
+    <td style="width:28px;color:var(--text-3);font-size:12px;text-align:center">${rxHerbs.length}</td>
+    <td style="min-width:130px"><div class="herb-ac-wrap"><input class="rx-name" type="text" value="${herb}" placeholder="약재명" autocomplete="off"><ul class="herb-dropdown"></ul></div></td>
+    <td style="width:90px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1"></td>
+    <td class="num rx-total-g" style="width:80px">${qty?fmt(Number(qty)*packs)+'g':'-'}</td>
+    <td class="num rx-price" style="width:90px">${herb&&qty?fmtW(getPrice(herb)*Number(qty))+'원':'-'}</td>
+    <td style="width:32px"><button class="btn-del rx-del">×</button></td>`;
+  tbody.appendChild(tr);
+  attachRowListeners(tr);
+  if(focus)setTimeout(()=>tr.querySelector('.rx-name').focus(),30);
+}
+
+function renderRegister(){
+  const el=document.getElementById('view-register');
+  const isEdit=!!editingRxId;
+  const rx=isEdit?prescriptionsData.find(r=>r.id===editingRxId):null;
+  const patOpts=`<option value="">환자 선택</option>`+patientsData.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+
+  el.innerHTML=`
+  <div class="card">
+    <div class="section-title" style="margin-bottom:.875rem">${isEdit?'처방 수정':'새 처방 등록'}</div>
+    <div class="form-row" style="margin-bottom:.75rem">
+      <div class="form-group grow">
+        <label>환자</label>
+        <div style="display:flex;gap:6px"><select id="rx-patient" style="flex:1">${patOpts}</select><button class="btn btn-secondary btn-sm" id="rx-quick-patient" style="white-space:nowrap">+ 신규</button></div>
+      </div>
+      <div class="form-group"><label>처방일</label><input type="date" id="rx-date" value="${rx?.date||todayStr()}"></div>
+      <div class="form-group" style="min-width:70px"><label>첩수</label><input type="number" id="rx-packs" value="${rx?.packs||20}" min="1" style="width:80px"></div>
+      <div class="form-group" style="min-width:70px"><label>제일수</label><input type="number" id="rx-days" value="${rx?.days||15}" min="1" style="width:80px"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group grow"><label>처방명 / 진단</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="예: 감비탕, 소청룡탕, 감기 등"></div>
+      <div class="form-group grow"><label>복용법</label><input type="text" id="rx-dosage" value="${rx?.dosage||''}" placeholder="예: 하루 2회, 식후 30분"></div>
+      <div class="form-group grow"><label>메모</label><input type="text" id="rx-note" value="${rx?.note||''}" placeholder="메모 (선택)"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+      <span class="section-title" style="margin:0">약재 목록</span>
+      <button class="btn btn-secondary btn-sm" id="rx-add-herb">+ 약재 추가</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="rx-table">
+        <thead><tr>
+          <th style="width:28px">#</th>
+          <th>약재명</th>
+          <th class="num" style="width:90px">첩당 (g)</th>
+          <th class="num" style="width:80px">총량 (g)</th>
+          <th class="num" style="width:90px">1첩 금액</th>
+          <th style="width:32px"></th>
+        </tr></thead>
+        <tbody id="rx-herb-tbody"></tbody>
+      </table>
+    </div>
+    <div id="rx-summary" class="summary-row"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    ${isEdit?`<button class="btn btn-secondary" id="rx-cancel">취소</button>`:''}
+    <button class="btn btn-primary" id="rx-save">${isEdit?'수정 저장':'처방 저장'}</button>
+  </div>`;
+
+  // 환자 선택 설정
+  if(rx) document.getElementById('rx-patient').value=rx.patientId||'';
+
+  // 약재 행 초기화 — addHerbRow가 rxHerbs에 push하므로, 먼저 기존 목록 저장 후 clear
+  if(rx && rxHerbs.length===0) rxHerbs=rx.herbs.map(h=>({id:uid(),herb:h.herb,qty:h.qtyPerPack}));
+  const initHerbs=[...rxHerbs];
+  rxHerbs=[];
+  if(initHerbs.length===0) addHerbRow('','',false);
+  else initHerbs.forEach(r=>addHerbRow(r.herb,r.qty,false));
+  calcSummary();
+
+  // 첩수 변경 시 전체 총량 업데이트
+  document.getElementById('rx-packs').addEventListener('input',e=>{
+    const packs=Number(e.target.value||20);
+    document.querySelectorAll('#rx-herb-tbody tr[data-rid]').forEach(tr=>{
+      const row=rxHerbs.find(r=>r.id===tr.dataset.rid);
+      if(!row)return;
+      const qty=Number(row.qty||0);
+      const cell=tr.querySelector('.rx-total-g');
+      if(cell)cell.textContent=qty?fmt(qty*packs)+'g':'-';
+    });
+    calcSummary();
+  });
+
+  document.getElementById('rx-add-herb').addEventListener('click',()=>addHerbRow('','',true));
+
+  document.getElementById('rx-quick-patient').addEventListener('click',()=>{
+    const name=prompt('환자 이름:');
+    if(!name?.trim())return;
+    const p={id:uid(),name:name.trim(),memo:''};
+    patientsData.push(p);
+    save(RX_KEYS.patients,patientsData);
+    renderRegister();
+    setTimeout(()=>document.getElementById('rx-patient').value=p.id,30);
+  });
+
+  document.getElementById('rx-save').addEventListener('click',saveRx);
+  if(isEdit) document.getElementById('rx-cancel').addEventListener('click',()=>{editingRxId=null;rxHerbs=[];renderRegister();});
+}
+
+async function saveRx(){
+  const patientId=document.getElementById('rx-patient').value;
+  const patient=patientsData.find(p=>p.id===patientId);
+  if(!patient){alert('환자를 선택해주세요.');return;}
+  const herbs=rxHerbs.filter(r=>r.herb&&Number(r.qty)>0);
+  if(!herbs.length){alert('약재를 1종 이상 입력해주세요.');return;}
+  const packs=Number(document.getElementById('rx-packs').value)||20;
+  const perPack=herbs.reduce((s,r)=>s+getPrice(r.herb)*Number(r.qty),0);
+  const entry={
+    id:editingRxId||uid(),
+    patientId,patientName:patient.name,
+    date:document.getElementById('rx-date').value,
+    diagnosis:document.getElementById('rx-diagnosis').value.trim(),
+    dosage:document.getElementById('rx-dosage').value.trim(),
+    packs,days:Number(document.getElementById('rx-days').value)||15,
+    herbs:herbs.map(r=>({herb:r.herb,qtyPerPack:Number(r.qty)})),
+    totalPrice:perPack*packs,
+    note:document.getElementById('rx-note').value.trim(),
+    outboundAt:editingRxId?(prescriptionsData.find(r=>r.id===editingRxId)?.outboundAt||null):null,
+  };
+  if(editingRxId) prescriptionsData=prescriptionsData.map(r=>r.id===editingRxId?entry:r);
+  else prescriptionsData.push(entry);
+  await save(RX_KEYS.prescriptions,prescriptionsData);
+  editingRxId=null;rxHerbs=[];
+  alert('처방이 저장되었습니다.');
+  switchTab('history');
+}
+
+/* ── 처방 이력 탭 ── */
+let histPatient='',histSearch='';
+
+function renderHistory(){
+  const el=document.getElementById('view-history');
+  const patOpts=`<option value="">전체 환자</option>`+patientsData.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  const list=[...prescriptionsData]
+    .filter(r=>(!histPatient||r.patientId===histPatient)&&(!histSearch||(r.patientName+r.diagnosis).includes(histSearch)))
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+
+  el.innerHTML=`
+  <div class="toolbar">
+    <select id="hist-pat" style="min-width:120px">${patOpts}</select>
+    <input type="text" id="hist-q" value="${histSearch}" placeholder="환자명·진단 검색" style="flex:1;min-width:140px">
+  </div>
+  <div class="card" style="padding:0">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>날짜</th><th>환자</th><th>처방명 / 진단</th><th class="num">첩수</th><th class="num">총 금액</th><th>출고</th><th></th></tr></thead>
+      <tbody>${!list.length?`<tr><td colspan="7" class="empty">처방 이력이 없습니다</td></tr>`:
+        list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
+          <td>${r.date}</td><td><b>${r.patientName}</b></td>
+          <td>${r.diagnosis||'-'}</td>
+          <td class="num">${r.packs}첩</td>
+          <td class="num">${fmtW(r.totalPrice)}원</td>
+          <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-secondary btn-sm ob-btn" data-rxid="${r.id}">출고 반영</button>`}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-secondary btn-sm edit-btn" data-rxid="${r.id}">수정</button>
+            <button class="btn-del del-btn" data-rxid="${r.id}" style="margin-left:4px">삭제</button>
+          </td>
+        </tr>`).join('')
+      }</tbody>
+    </table></div>
+  </div>`;
+
+  document.getElementById('hist-pat').value=histPatient;
+  document.getElementById('hist-pat').addEventListener('change',e=>{histPatient=e.target.value;renderHistory();});
+  document.getElementById('hist-q').addEventListener('input',e=>{histSearch=e.target.value;renderHistory();});
+
+  el.querySelectorAll('.hist-row').forEach(tr=>{
+    tr.addEventListener('click',e=>{if(!e.target.closest('button'))showDetail(tr.dataset.rxid);});
+  });
+  el.querySelectorAll('.ob-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();reflectOutbound(b.dataset.rxid);}));
+  el.querySelectorAll('.edit-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();editingRxId=b.dataset.rxid;rxHerbs=[];switchTab('register');}));
+  el.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();deleteRx(b.dataset.rxid);}));
+}
+
+function showDetail(id){
+  const rx=prescriptionsData.find(r=>r.id===id);
+  if(!rx)return;
+  const packs=rx.packs;
+  const totalG=rx.herbs.reduce((s,h)=>s+h.qtyPerPack*packs,0);
+  document.getElementById('detail-modal-content').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div>
+        <div style="font-size:16px;font-weight:700">${rx.patientName}</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px">${rx.date}${rx.diagnosis?' · '+rx.diagnosis:''}</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" id="close-detail">닫기</button>
+    </div>
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:.875rem;display:flex;flex-wrap:wrap;gap:12px">
+      ${rx.dosage?`<span>복용법: <b>${rx.dosage}</b></span>`:''}
+      <span>첩수: <b>${rx.packs}첩</b></span>
+      <span>제일수: <b>${rx.days}일</b></span>
+      ${rx.note?`<span>메모: ${rx.note}</span>`:''}
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>#</th><th>약재명</th><th class="num">첩당(g)</th><th class="num">총량(g)</th><th class="num">1첩 금액</th></tr></thead>
+      <tbody>${rx.herbs.map((h,i)=>`<tr>
+        <td style="color:var(--text-3);font-size:12px">${i+1}</td>
+        <td>${h.herb}</td>
+        <td class="num">${h.qtyPerPack}g</td>
+        <td class="num">${fmt(h.qtyPerPack*packs)}g</td>
+        <td class="num">${fmtW(getPrice(h.herb)*h.qtyPerPack)}원</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+    <div class="summary-row" style="margin-top:.875rem">
+      <div class="summary-item"><span class="summary-label">약재 수</span><span class="summary-value">${rx.herbs.length}종</span></div>
+      <div class="summary-item"><span class="summary-label">총 처방량</span><span class="summary-value">${fmt(totalG)}g</span></div>
+      <div class="summary-item"><span class="summary-label">총 금액</span><span class="summary-value big">${fmtW(rx.totalPrice)}원</span></div>
+    </div>`;
+  document.getElementById('detail-modal-overlay').classList.add('open');
+  document.getElementById('close-detail').addEventListener('click',()=>document.getElementById('detail-modal-overlay').classList.remove('open'));
+}
+
+async function reflectOutbound(id){
+  const rx=prescriptionsData.find(r=>r.id===id);
+  if(!rx)return;
+  if(!confirm(`${rx.patientName}의 처방을 약재관리 출고에 반영하시겠습니까?\n약재 ${rx.herbs.length}종 (${rx.packs}첩 기준 총량)`))return;
+  let outbound=await load(HERB_KEYS.outbound)||[];
+  rx.herbs.forEach(h=>{
+    outbound.push({id:uid(),herb:h.herb,qty:h.qtyPerPack*rx.packs,date:rx.date,purpose:'처방',note:`${rx.patientName}${rx.diagnosis?' - '+rx.diagnosis:''}`});
+  });
+  await save(HERB_KEYS.outbound,outbound);
+  prescriptionsData=prescriptionsData.map(r=>r.id===id?{...r,outboundAt:Date.now()}:r);
+  await save(RX_KEYS.prescriptions,prescriptionsData);
+  renderHistory();
+}
+
+async function deleteRx(id){
+  const rx=prescriptionsData.find(r=>r.id===id);
+  if(!confirm(`${rx?.patientName||''}의 처방을 삭제하시겠습니까?`))return;
+  prescriptionsData=prescriptionsData.filter(r=>r.id!==id);
+  await save(RX_KEYS.prescriptions,prescriptionsData);
+  renderHistory();
+}
+
+/* ── 환자 관리 탭 ── */
+function renderPatients(){
+  const el=document.getElementById('view-patients');
+  el.innerHTML=`
+  <div class="card">
+    <div class="section-title">환자 추가</div>
+    <div class="form-row">
+      <div class="form-group grow"><label>이름</label><input type="text" id="pat-name" placeholder="환자 이름"></div>
+      <div class="form-group grow"><label>메모</label><input type="text" id="pat-memo" placeholder="메모 (선택)"></div>
+      <div class="form-group" style="justify-content:flex-end"><button class="btn btn-primary" id="pat-add" style="margin-top:auto">추가</button></div>
+    </div>
+  </div>
+  <div class="card" style="padding:0">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>환자명</th><th class="num">처방 건수</th><th>메모</th><th></th></tr></thead>
+      <tbody>${!patientsData.length?`<tr><td colspan="4" class="empty">등록된 환자가 없습니다</td></tr>`:
+        patientsData.map(p=>{
+          const cnt=prescriptionsData.filter(r=>r.patientId===p.id).length;
+          return`<tr>
+            <td><b>${p.name}</b></td><td class="num">${cnt}건</td><td>${p.memo||'-'}</td>
+            <td><button class="btn-del pat-del" data-pid="${p.id}">삭제</button></td>
+          </tr>`;
+        }).join('')
+      }</tbody>
+    </table></div>
+  </div>`;
+
+  document.getElementById('pat-add').addEventListener('click',async()=>{
+    const name=document.getElementById('pat-name').value.trim();
+    if(!name){alert('이름을 입력해주세요.');return;}
+    patientsData.push({id:uid(),name,memo:document.getElementById('pat-memo').value.trim()});
+    await save(RX_KEYS.patients,patientsData);
+    renderPatients();
+  });
+  el.querySelectorAll('.pat-del').forEach(b=>b.addEventListener('click',async()=>{
+    const p=patientsData.find(x=>x.id===b.dataset.pid);
+    const cnt=prescriptionsData.filter(r=>r.patientId===b.dataset.pid).length;
+    if(!confirm(`${p?.name||''} 환자를 삭제하시겠습니까?${cnt?` (처방 이력 ${cnt}건)`:''}` ))return;
+    patientsData=patientsData.filter(x=>x.id!==b.dataset.pid);
+    await save(RX_KEYS.patients,patientsData);
+    renderPatients();
+  }));
+}
+
+/* ── 탭 전환 ── */
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${tab}`));
+  if(tab==='register'){rxHerbs=[];renderRegister();}
+  if(tab==='history')renderHistory();
+  if(tab==='patients')renderPatients();
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  if(t.dataset.tab==='register'&&!editingRxId)rxHerbs=[];
+  switchTab(t.dataset.tab);
+}));
+
+/* ── 모달 이벤트 ── */
+document.getElementById('detail-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
+document.getElementById('change-sync-btn').addEventListener('click',()=>{
+  document.getElementById('sync-code-input').value=getSyncCode();
+  document.getElementById('sync-modal-overlay').classList.add('open');
+  document.getElementById('sync-code-input').select();
+});
+document.getElementById('sync-cancel-btn').addEventListener('click',()=>document.getElementById('sync-modal-overlay').classList.remove('open'));
+document.getElementById('sync-apply-btn').addEventListener('click',()=>{
+  const code=document.getElementById('sync-code-input').value.trim().toUpperCase();
+  if(!code)return;
+  localStorage.setItem('b6ix_sync',code);
+  location.reload();
+});
+document.getElementById('sync-code-input').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase();});
+document.getElementById('sync-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
+
+/* ── 초기화 ── */
+(async()=>{
+  const[pat,rx,hb,st]=await Promise.all([
+    load(RX_KEYS.patients),load(RX_KEYS.prescriptions),
+    load(HERB_KEYS.herbs),load(HERB_KEYS.settings),
+  ]);
+  if(pat&&Array.isArray(pat))patientsData=pat;
+  if(rx&&Array.isArray(rx))prescriptionsData=rx;
+  if(hb&&Array.isArray(hb)&&hb.length>0)herbsData=hb;
+  if(st?.prices)settingsData.prices=st.prices;
+  document.getElementById('sync-code-display').textContent=getSyncCode();
+  setSyncStatus('☁ 동기화됨');
+  setStatus(herbsData.length?'불러옴 ✓':'⚠ 약재 목록 없음 — 약재관리 페이지를 먼저 열어주세요');
+  renderRegister();
+})();
+</script>
+</body>
+</html>

@@ -29,11 +29,11 @@ python -m http.server 8080
 
 ## Git & GitHub
 
-`일정관리/주간관리플래너.html`, `약재재고/약재관리.html`, 또는 `CLAUDE.md` 파일을 수정할 때는 반드시 수정 완료 후 GitHub에 push한다:
+`일정관리/주간관리플래너.html`, `약재재고/약재관리.html`, `처방전/처방관리.html`, 또는 `CLAUDE.md` 파일을 수정할 때는 반드시 수정 완료 후 GitHub에 push한다:
 
 ```powershell
 cd "C:\Users\feelw\OneDrive\문서\★HOME PC★\claude-practice"
-git add 일정관리/주간관리플래너.html 약재재고/약재관리.html CLAUDE.md
+git add 일정관리/주간관리플래너.html 약재재고/약재관리.html 처방전/처방관리.html CLAUDE.md
 git commit -m "커밋 메시지"
 git push origin master
 ```
