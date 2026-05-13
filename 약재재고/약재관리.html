@@ -95,6 +95,7 @@ input[type=number]{-moz-appearance:textfield;}
       <span>동기화 코드</span>
       <span class="sync-code-box" id="sync-code-display">-</span>
       <span id="sync-status"></span>
+      <button class="btn btn-primary btn-sm" id="save-all-btn">전체 저장</button>
       <span id="status-bar">불러오는 중...</span>
     </div>
   </div>
@@ -1094,6 +1095,19 @@ function renderTab(tab){
   setSyncStatus('☁ 동기화됨');
   setStatus('불러옴 ✓');
   renderStock();
+  document.getElementById('save-all-btn').addEventListener('click',async()=>{
+    setStatus('저장 중...');
+    await Promise.all([
+      save(KEYS.inbound,inboundData),
+      save(KEYS.outbound,outboundData),
+      save(KEYS.settings,settingsData),
+      save(KEYS.suppliers,suppliersData),
+      save(KEYS.pricelist,pricelistData),
+      save(KEYS.herbs,herbsData),
+      save(KEYS.adjust,adjustData),
+    ]);
+    setStatus('전체 저장 완료 ✓');
+  });
 })();
 </script>
 </body>
