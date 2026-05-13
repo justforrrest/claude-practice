@@ -1205,7 +1205,7 @@ function renderPricelist(){
         editingSupplierName===s
           ?`<input class="pl-sup-rename-inp" data-old="${s}" type="text" value="${s}" style="border:1px solid var(--violet);border-radius:4px;padding:1px 4px;font-size:12px;font-family:var(--font-sans);width:${Math.max(s.length*8+16,48)}px;color:var(--violet-d);background:white;outline:none;">`
           :`<span class="pl-sup-name" data-sup="${s}" style="cursor:pointer" title="클릭하여 수정">${s}</span>`
-      }<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--violet-d);opacity:.6;padding:0 0 0 2px;line-height:1;" title="${DEFAULT_SUPPLIERS.includes(s)?'기본 도매처는 삭제 불가':'삭제'}">${DEFAULT_SUPPLIERS.includes(s)?'':'×'}</button></span>`).join('')}
+      }<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--violet-d);opacity:.6;padding:0 0 0 2px;line-height:1;" title="삭제">×</button></span>`).join('')}
       <div style="flex:1;"></div>
       <input type="text" id="pl-new-sup" placeholder="새 도매처명" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;width:120px;">
       <button class="btn btn-secondary btn-sm" id="pl-add-sup">추가</button>
@@ -1268,10 +1268,10 @@ function renderPricelist(){
 
   el.querySelectorAll('.pl-del-sup').forEach(btn=>{
     if(!btn.dataset.sup)return;
-    btn.addEventListener('click',async()=>{
+    btn.addEventListener('click',async e=>{
+      e.stopPropagation();
       const name=btn.dataset.sup;
-      if(DEFAULT_SUPPLIERS.includes(name))return;
-      if(!confirm(`'${name}' 도매처를 삭제하시겠습니까?`))return;
+      if(!confirm(`'${name}' 도매처를 삭제하시겠습니까?\n\n해당 도매처의 단가표 데이터가 함께 삭제됩니다.`))return;
       suppliersData=suppliersData.filter(s=>s!==name);
       await save(KEYS.suppliers,suppliersData);
       renderPricelist();
