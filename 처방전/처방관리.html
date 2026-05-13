@@ -896,7 +896,7 @@ function renderPatients(){
           const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
           return`<tr>
             <td><b>${p.name}</b></td><td class="num">${cnt}건</td><td>${p.memo||'-'}</td>
-            <td><button class="btn-del pat-del" data-pid="${p.id}">삭제</button></td>
+            <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
           </tr>`;
         }).join('')
       }</tbody>
