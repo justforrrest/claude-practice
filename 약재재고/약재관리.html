@@ -703,7 +703,10 @@ function renderAdjust(){
       <div class="section-title" style="margin:0">재고 조정</div>
     </div>
     <div class="form-row" style="flex-wrap:wrap;gap:7px;">
-      <div class="form-group" style="flex:0 0 120px;min-width:0"><label>약재</label><select id="adj-herb" style="width:100%">${herbsData.map(h=>`<option>${h}</option>`).join('')}</select></div>
+      <div class="form-group" style="flex:0 0 140px;min-width:0"><label>약재</label>
+        <input type="text" id="adj-herb" list="adj-herb-list" placeholder="약재 선택 또는 입력" style="width:100%" autocomplete="off">
+        <datalist id="adj-herb-list">${herbsData.map(h=>`<option value="${h}">`).join('')}</datalist>
+      </div>
       <div class="form-group" style="min-width:0"><label>조정량 (g)</label><input type="number" id="adj-qty" style="width:90px" placeholder="+100 / -50"></div>
       <div class="form-group" style="min-width:0"><label>날짜</label><input type="date" id="adj-date" value="${todayStr()}" style="width:128px"></div>
       <div class="form-group" style="flex:1;min-width:0"><label>메모</label><input type="text" id="adj-note" style="width:100%"></div>
@@ -726,13 +729,15 @@ function renderAdjust(){
   </div>`;
 
   document.getElementById('adj-submit').addEventListener('click',async()=>{
-    const herb=document.getElementById('adj-herb').value;
+    const herb=document.getElementById('adj-herb').value.trim();
     const qty=parseFloat(document.getElementById('adj-qty').value);
     const date=document.getElementById('adj-date').value;
     const note=document.getElementById('adj-note').value.trim();
     if(!herb||isNaN(qty)||qty===0){alert('약재와 조정량을 입력해주세요.');return;}
+    if(!herbsData.includes(herb)){alert('목록에 없는 약재명입니다.');return;}
     adjustData.push({id:uid(),herb,qty,date,note});
     await save(KEYS.adjust,adjustData);
+    document.getElementById('adj-herb').value='';
     document.getElementById('adj-qty').value='';
     document.getElementById('adj-note').value='';
     renderAdjust();renderStock();
