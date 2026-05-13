@@ -30,6 +30,8 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .tab{background:none;border:none;padding:8px 16px;font-size:13px;font-family:var(--font-sans);color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;border-radius:6px 6px 0 0;transition:color .15s,background .15s;}
 .tab.active{color:var(--violet-d);border-bottom-color:var(--violet-d);font-weight:600;}
 .tab:not(.active):hover{color:var(--text-1);background:var(--violet-light);}
+.tab.dragging{opacity:0.35;}
+.tab.drag-over{background:var(--violet-light);color:var(--violet-d);}
 .view{display:none;}.view.active{display:block;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.75rem;margin-bottom:1rem;}
@@ -98,12 +100,12 @@ input[type=number]{-moz-appearance:textfield;}
   </div>
 
   <div class="tabs">
-    <button class="tab active" data-tab="stock">재고현황</button>
-    <button class="tab" data-tab="inbound">입고</button>
-    <button class="tab" data-tab="outbound">출고</button>
-    <button class="tab" data-tab="adjust">재고조정</button>
-    <button class="tab" data-tab="pricelist">단가표</button>
-    <button class="tab" data-tab="settings">설정</button>
+    <button class="tab active" data-tab="stock" draggable="true">재고현황</button>
+    <button class="tab" data-tab="inbound" draggable="true">입고</button>
+    <button class="tab" data-tab="outbound" draggable="true">출고</button>
+    <button class="tab" data-tab="adjust" draggable="true">재고조정</button>
+    <button class="tab" data-tab="pricelist" draggable="true">단가표</button>
+    <button class="tab" data-tab="settings" draggable="true">설정</button>
   </div>
 
   <div class="view active" id="view-stock"></div>
@@ -1034,6 +1036,40 @@ document.querySelectorAll('.tab').forEach(t=>{
     document.getElementById('view-'+t.dataset.tab).classList.add('active');
     renderTab(t.dataset.tab);
   });
+});
+
+/* ── 탭 드래그 앤 드롭 ── */
+let dragSrcTab=null;
+document.querySelector('.tabs').addEventListener('dragstart',e=>{
+  const t=e.target.closest('.tab');if(!t)return;
+  dragSrcTab=t;e.dataTransfer.effectAllowed='move';
+  setTimeout(()=>t.classList.add('dragging'),0);
+});
+document.querySelector('.tabs').addEventListener('dragend',e=>{
+  const t=e.target.closest('.tab');if(t)t.classList.remove('dragging');
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('drag-over'));
+  dragSrcTab=null;
+});
+document.querySelector('.tabs').addEventListener('dragover',e=>{
+  e.preventDefault();
+  const t=e.target.closest('.tab');
+  if(t&&t!==dragSrcTab){
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('drag-over'));
+    t.classList.add('drag-over');
+  }
+});
+document.querySelector('.tabs').addEventListener('dragleave',e=>{
+  const t=e.target.closest('.tab');if(t)t.classList.remove('drag-over');
+});
+document.querySelector('.tabs').addEventListener('drop',e=>{
+  e.preventDefault();
+  const t=e.target.closest('.tab');
+  if(!t||!dragSrcTab||t===dragSrcTab)return;
+  const tabs=document.querySelector('.tabs');
+  const all=[...tabs.querySelectorAll('.tab')];
+  const si=all.indexOf(dragSrcTab),ti=all.indexOf(t);
+  tabs.insertBefore(dragSrcTab,si<ti?t.nextSibling:t);
+  t.classList.remove('drag-over');
 });
 function renderTab(tab){
   if(tab==='stock')renderStock();
