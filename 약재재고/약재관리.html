@@ -74,7 +74,7 @@ input:focus,select:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(-
 .settings-inp{border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;width:76px;font-family:var(--font-sans);text-align:right;background:var(--surface);}
 .pl-inp{border:none;background:transparent;text-align:right;width:100%;font-family:var(--font-sans);font-size:13px;outline:none;padding:0;color:inherit;-webkit-appearance:none;appearance:none;cursor:text;}
 .pl-inp:focus{background:transparent;outline:none;}
-.pl-cho-btn{padding:2px 5px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font-sans);background:var(--surface-2);color:var(--text-2);cursor:pointer;transition:background .15s,color .15s;}
+.pl-cho-btn{padding:3px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font-sans);background:var(--surface-2);color:var(--text-2);cursor:pointer;transition:background .15s,color .15s;}
 .pl-cho-btn.active{background:var(--violet-d);color:#fff;border-color:var(--violet-d);}
 .settings-inp:focus{border-color:var(--violet-d);outline:none;box-shadow:0 0 0 2px var(--violet-light);}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
@@ -100,6 +100,7 @@ input[type=number]{-moz-appearance:textfield;}
     <button class="tab active" data-tab="stock">재고현황</button>
     <button class="tab" data-tab="inbound">입고</button>
     <button class="tab" data-tab="outbound">출고</button>
+    <button class="tab" data-tab="adjust">재고조정</button>
     <button class="tab" data-tab="pricelist">단가표</button>
     <button class="tab" data-tab="settings">설정</button>
   </div>
@@ -107,6 +108,7 @@ input[type=number]{-moz-appearance:textfield;}
   <div class="view active" id="view-stock"></div>
   <div class="view" id="view-inbound"></div>
   <div class="view" id="view-outbound"></div>
+  <div class="view" id="view-adjust"></div>
   <div class="view" id="view-pricelist"></div>
   <div class="view" id="view-settings"></div>
 
@@ -677,13 +679,9 @@ function renderOutbound(){
 }
 
 /* ── 설정 ── */
-let settingsSearch='';
-let settingsConsonant='';
-function renderSettings(){
-  const el=document.getElementById('view-settings');
-  let herbs=herbsData;
-  if(settingsConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===settingsConsonant);
-  if(settingsSearch)herbs=herbs.filter(h=>h.includes(settingsSearch));
+/* ── 재고 조정 ── */
+function renderAdjust(){
+  const el=document.getElementById('view-adjust');
   el.innerHTML=`
   <div class="card">
     <div style="display:flex;align-items:center;margin-bottom:1rem;">
@@ -710,7 +708,39 @@ function renderSettings(){
         </tr>`;
       }).join('')}</tbody>
     </table></div>
-  </div>
+  </div>`;
+
+  document.getElementById('adj-submit').addEventListener('click',async()=>{
+    const herb=document.getElementById('adj-herb').value;
+    const qty=parseFloat(document.getElementById('adj-qty').value);
+    const date=document.getElementById('adj-date').value;
+    const note=document.getElementById('adj-note').value.trim();
+    if(!herb||isNaN(qty)||qty===0){alert('약재와 조정량을 입력해주세요.');return;}
+    adjustData.push({id:uid(),herb,qty,date,note});
+    await save(KEYS.adjust,adjustData);
+    document.getElementById('adj-qty').value='';
+    document.getElementById('adj-note').value='';
+    renderAdjust();renderStock();
+  });
+
+  el.querySelectorAll('.btn-del[data-type="adj"]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      if(!confirm('삭제하시겠습니까?'))return;
+      adjustData=adjustData.filter(r=>r.id!==btn.dataset.id);
+      await save(KEYS.adjust,adjustData);
+      renderAdjust();renderStock();
+    });
+  });
+}
+
+let settingsSearch='';
+let settingsConsonant='';
+function renderSettings(){
+  const el=document.getElementById('view-settings');
+  let herbs=herbsData;
+  if(settingsConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===settingsConsonant);
+  if(settingsSearch)herbs=herbs.filter(h=>h.includes(settingsSearch));
+  el.innerHTML=`
   <div class="card mt">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
       <div class="section-title" style="margin:0">약재 설정</div>
@@ -728,7 +758,7 @@ function renderSettings(){
         <button class="pl-cho-btn${!settingsConsonant?' active':''}" data-st-cho="">전체</button>
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${settingsConsonant===c?' active':''}" data-st-cho="${c}">${c}</button>`).join('')}
       </div>
-      <input class="search-input" id="settings-search" placeholder="검색..." value="${settingsSearch}" style="width:80px;flex-shrink:0;">
+      <input class="search-input" id="settings-search" placeholder="검색..." value="${settingsSearch}" style="width:60px;flex-shrink:0;">
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>약재명</th><th class="num">단가 (원/g)</th><th class="num">최소재고 (g)</th></tr></thead>
@@ -844,29 +874,6 @@ function renderSettings(){
     });
   });
 
-  // 재고 조정 등록
-  document.getElementById('adj-submit').addEventListener('click',async()=>{
-    const herb=document.getElementById('adj-herb').value;
-    const qty=parseFloat(document.getElementById('adj-qty').value);
-    const date=document.getElementById('adj-date').value;
-    const note=document.getElementById('adj-note').value.trim();
-    if(!herb||isNaN(qty)||qty===0){alert('약재와 조정량을 입력해주세요.');return;}
-    adjustData.push({id:uid(),herb,qty,date,note});
-    await save(KEYS.adjust,adjustData);
-    document.getElementById('adj-qty').value='';
-    document.getElementById('adj-note').value='';
-    renderSettings();renderStock();
-  });
-
-  // 재고 조정 삭제
-  el.querySelectorAll('.btn-del[data-type="adj"]').forEach(btn=>{
-    btn.addEventListener('click',async()=>{
-      if(!confirm('삭제하시겠습니까?'))return;
-      adjustData=adjustData.filter(r=>r.id!==btn.dataset.id);
-      await save(KEYS.adjust,adjustData);
-      renderSettings();renderStock();
-    });
-  });
 }
 
 /* ── 약재명 변경 (카스케이드) ── */
@@ -936,7 +943,7 @@ function renderPricelist(){
         <button class="pl-cho-btn${!pricelistConsonant?' active':''}" data-cho="">전체</button>
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${pricelistConsonant===c?' active':''}" data-cho="${c}">${c}</button>`).join('')}
       </div>
-      <input class="search-input" id="pl-search" placeholder="검색..." value="${pricelistSearch}" style="width:80px;flex-shrink:0;">
+      <input class="search-input" id="pl-search" placeholder="검색..." value="${pricelistSearch}" style="width:60px;flex-shrink:0;">
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.875rem;">
       ${suppliersData.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--text-2);">${s}<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:0 0 0 2px;line-height:1;" title="${DEFAULT_SUPPLIERS.includes(s)?'기본 도매처는 삭제 불가':'삭제'}">${DEFAULT_SUPPLIERS.includes(s)?'':'×'}</button></span>`).join('')}
@@ -1016,6 +1023,7 @@ function renderTab(tab){
   if(tab==='stock')renderStock();
   else if(tab==='inbound')renderInbound();
   else if(tab==='outbound')renderOutbound();
+  else if(tab==='adjust')renderAdjust();
   else if(tab==='pricelist')renderPricelist();
   else if(tab==='settings')renderSettings();
 }
