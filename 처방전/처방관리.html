@@ -167,6 +167,9 @@ function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMo
 function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
 function fmtW(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:0});}
 function parseNum(v){return Number(String(v||'').replace(/,/g,''))||0;}
+const _CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const _NORM={ㄲ:'ㄱ',ㄸ:'ㄷ',ㅃ:'ㅂ',ㅆ:'ㅅ',ㅉ:'ㅈ'};
+function getInitCho(s){const c=(s||'').charCodeAt(0);if(c>=0xAC00&&c<=0xD7A3){const ch=_CHO[Math.floor((c-0xAC00)/(21*28))];return _NORM[ch]||ch;}return (s||'')[0]?.toUpperCase()||'';}
 
 /* ── 약재 기본 단가 (약재관리와 동일) ── */
 const DEFAULT_PRICES={
@@ -654,19 +657,15 @@ function renderRegister(){
   autoResize();
 
   // 등록 폼 Enter 키 이동
-  const formNav=['rx-patient','rx-date','rx-diagnosis','rx-packs','rx-total-packs','rx-freq','rx-days-display','rx-timing'];
+  const formNav=['rx-patient','rx-date','rx-diagnosis','rx-packs','rx-total-packs','rx-freq','rx-days-display','rx-timing','rx-note'];
   formNav.forEach((id,i)=>{
+    if(i===formNav.length-1)return; // 마지막(메모)은 Enter=줄바꿈 유지
     const el=document.getElementById(id);
     if(!el)return;
     el.addEventListener('keydown',e=>{
       if(e.key!=='Enter')return;
       e.preventDefault();
-      if(i<formNav.length-1){
-        document.getElementById(formNav[i+1])?.focus();
-      } else {
-        const firstHerb=document.querySelector('#rx-herb-tbody tr[data-rid] .rx-name');
-        firstHerb?.focus();
-      }
+      document.getElementById(formNav[i+1])?.focus();
     });
   });
 
@@ -870,23 +869,31 @@ async function deleteRx(id){
 }
 
 /* ── 환자 관리 탭 ── */
+let patSearch='',patIndex='';
+const PAT_CHO=['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+
 function renderPatients(){
   const el=document.getElementById('view-patients');
+  const list=[...patientsData].filter(p=>{
+    if(patSearch&&!p.name.includes(patSearch))return false;
+    if(patIndex&&getInitCho(p.name)!==patIndex)return false;
+    return true;
+  }).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+
   el.innerHTML=`
-  <div class="card">
-    <div class="section-title">환자 추가</div>
-    <div class="form-row">
-      <div class="form-group grow"><label>이름</label><input type="text" id="pat-name" placeholder="환자 이름"></div>
-      <div class="form-group grow"><label>메모</label><input type="text" id="pat-memo" placeholder="메모 (선택)"></div>
-      <div class="form-group" style="justify-content:flex-end"><button class="btn btn-primary" id="pat-add" style="margin-top:auto">추가</button></div>
-    </div>
+  <div class="toolbar" style="flex-wrap:wrap;gap:6px">
+    <input type="text" id="pat-search" value="${patSearch}" placeholder="환자명 검색" style="flex:1;min-width:140px">
+  </div>
+  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.875rem">
+    <button class="btn btn-sm ${!patIndex?'btn-primary':'btn-secondary'}" data-cho="">전체</button>
+    ${PAT_CHO.map(c=>`<button class="btn btn-sm ${patIndex===c?'btn-primary':'btn-secondary'}" data-cho="${c}">${c}</button>`).join('')}
   </div>
   <div class="card" style="padding:0">
     <div class="tbl-wrap"><table>
       <thead><tr><th>환자명</th><th class="num">처방 건수</th><th>메모</th><th></th></tr></thead>
-      <tbody>${!patientsData.length?`<tr><td colspan="4" class="empty">등록된 환자가 없습니다</td></tr>`:
-        patientsData.map(p=>{
-          const cnt=prescriptionsData.filter(r=>r.patientId===p.id).length;
+      <tbody>${!list.length?`<tr><td colspan="4" class="empty">환자가 없습니다</td></tr>`:
+        list.map(p=>{
+          const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
           return`<tr>
             <td><b>${p.name}</b></td><td class="num">${cnt}건</td><td>${p.memo||'-'}</td>
             <td><button class="btn-del pat-del" data-pid="${p.id}">삭제</button></td>
@@ -896,16 +903,11 @@ function renderPatients(){
     </table></div>
   </div>`;
 
-  document.getElementById('pat-add').addEventListener('click',async()=>{
-    const name=document.getElementById('pat-name').value.trim();
-    if(!name){alert('이름을 입력해주세요.');return;}
-    patientsData.push({id:uid(),name,memo:document.getElementById('pat-memo').value.trim()});
-    await save(RX_KEYS.patients,patientsData);
-    renderPatients();
-  });
+  document.getElementById('pat-search').addEventListener('input',e=>{patSearch=e.target.value;renderPatients();});
+  el.querySelectorAll('[data-cho]').forEach(b=>b.addEventListener('click',()=>{patIndex=b.dataset.cho;renderPatients();}));
   el.querySelectorAll('.pat-del').forEach(b=>b.addEventListener('click',async()=>{
     const p=patientsData.find(x=>x.id===b.dataset.pid);
-    const cnt=prescriptionsData.filter(r=>r.patientId===b.dataset.pid).length;
+    const cnt=prescriptionsData.filter(r=>r.patientId===b.dataset.pid||r.patientName===p?.name).length;
     if(!confirm(`${p?.name||''} 환자를 삭제하시겠습니까?${cnt?` (처방 이력 ${cnt}건)`:''}` ))return;
     patientsData=patientsData.filter(x=>x.id!==b.dataset.pid);
     await save(RX_KEYS.patients,patientsData);
