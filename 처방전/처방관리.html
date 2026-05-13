@@ -502,7 +502,7 @@ function renderRegister(){
         </div>
         <div style="height:1px;background:var(--border);margin-bottom:.75rem"></div>
         <div class="form-row" style="margin-bottom:.75rem;flex-wrap:nowrap;align-items:flex-end">
-          <div class="form-group" style="flex:1;min-width:0"><label>처방일</label><input type="date" id="rx-date" value="${rx?.date||todayStr()}"></div>
+          <div class="form-group" style="flex:1;min-width:0"><label>처방일</label><input type="text" id="rx-date" value="${rx?.date||todayStr()}" placeholder="yyyy-mm-dd" maxlength="10"></div>
           <div class="form-group" style="flex:0 0 auto"><label>구분</label><select id="rx-category" style="width:62px;padding-right:4px;-webkit-appearance:none;-moz-appearance:none;appearance:none;text-align:center"><option value="">-</option><option value="치료"${(rx?.category||'')==='치료'?' selected':''}>치료</option><option value="녹용"${(rx?.category||'')==='녹용'?' selected':''}>녹용</option><option value="건보"${(rx?.category||'')==='건보'?' selected':''}>건보</option></select></div>
           <div class="form-group" style="flex:0 0 auto"><label>회차</label><div style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="text" inputmode="numeric" id="rx-session-cur" value="${rx?.sessionCur||''}" placeholder="-" maxlength="1" style="width:28px;text-align:center"><span style="font-size:13px;color:var(--text-3)">/</span><input type="text" inputmode="numeric" id="rx-session-total" value="${rx?.sessionTotal||''}" placeholder="-" maxlength="1" style="width:28px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차</span></div></div>
         </div>
@@ -685,6 +685,11 @@ function renderRegister(){
     if(!birthInp.value.trim())return;
     birthInp.value=normBirth(birthInp.value);
     updateAge();
+  });
+  const dateInp=document.getElementById('rx-date');
+  dateInp?.addEventListener('blur',()=>{
+    if(!dateInp.value.trim())return;
+    dateInp.value=normBirth(dateInp.value);
   });
   updateAge();
 
