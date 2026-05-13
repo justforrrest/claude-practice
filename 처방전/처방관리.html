@@ -881,10 +881,8 @@ function renderPatients(){
   }).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
 
   el.innerHTML=`
-  <div class="toolbar" style="flex-wrap:wrap;gap:6px">
-    <input type="text" id="pat-search" value="${patSearch}" placeholder="환자명 검색" style="flex:1;min-width:140px">
-  </div>
-  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.875rem">
+  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:.875rem">
+    <input type="text" id="pat-search" value="${patSearch}" placeholder="환자명 검색" style="width:140px;flex-shrink:0">
     <button class="btn btn-sm ${!patIndex?'btn-primary':'btn-secondary'}" data-cho="">전체</button>
     ${PAT_CHO.map(c=>`<button class="btn btn-sm ${patIndex===c?'btn-primary':'btn-secondary'}" data-cho="${c}">${c}</button>`).join('')}
   </div>
