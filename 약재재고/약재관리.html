@@ -959,14 +959,15 @@ function renderPricelist(){
   el.innerHTML=`
   <div class="card">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.875rem;">
-      <input class="search-input" id="pl-search" placeholder="약재명 검색" value="${pricelistSearch}" style="width:150px;min-width:0;flex:none;">
       <div style="display:flex;gap:3px;flex-wrap:nowrap;flex:1;overflow-x:auto;">
         <button class="pl-cho-btn${!pricelistConsonant?' active':''}" data-cho="">전체</button>
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${pricelistConsonant===c?' active':''}" data-cho="${c}">${c}</button>`).join('')}
       </div>
+      <input class="search-input" id="pl-search" placeholder="약재명 검색" value="${pricelistSearch}" style="width:150px;min-width:0;flex:none;">
     </div>
-    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;margin-bottom:.875rem;">
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:.875rem;">
       ${suppliersData.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--violet-light);border:1px solid rgba(124,58,237,0.25);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--violet-d);font-weight:500;">${s}<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--violet-d);opacity:.6;padding:0 0 0 2px;line-height:1;" title="${DEFAULT_SUPPLIERS.includes(s)?'기본 도매처는 삭제 불가':'삭제'}">${DEFAULT_SUPPLIERS.includes(s)?'':'×'}</button></span>`).join('')}
+      <div style="flex:1;"></div>
       <input type="text" id="pl-new-sup" placeholder="새 도매처명" style="border:1px solid var(--border-2);border-radius:8px;padding:3px 10px;font-size:13px;font-family:var(--font-sans);outline:none;width:120px;">
       <button class="btn btn-secondary btn-sm" id="pl-add-sup">+ 추가</button>
       <button class="btn btn-primary btn-sm" id="pl-save">저장</button>
