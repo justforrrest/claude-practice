@@ -282,7 +282,7 @@ function calcSummary(){
   const upd=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   upd('rx-cost-herb-desc',packs+'첩');
   upd('rx-cost-herb-amount',fmtW(herbPrice)+'원');
-  upd('rx-cost-disp-desc',`${fmtW(dPrice)}원 × ${totalPacks}팩`);
+  upd('rx-cost-disp-desc',`${dPrice||''}원 × ${totalPacks}팩`);
   upd('rx-cost-disp-amount',dPrice>0?fmtW(dTotal)+'원':'-');
   upd('rx-cost-deco-amount',tPrice>0?fmtW(tPrice)+'원':'-');
   upd('rx-cost-pack-amount',pPrice>0?fmtW(pPrice)+'원':'-');
