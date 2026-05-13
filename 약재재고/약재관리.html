@@ -72,6 +72,10 @@ input[type=text],input[type=number],input[type=date],select{border:1px solid var
 input:focus,select:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
 .section-title{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.75rem;}
 .settings-inp{border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;width:76px;font-family:var(--font-sans);text-align:right;background:var(--surface);}
+.pl-inp{border:none;background:transparent;text-align:right;width:100%;font-family:var(--font-sans);font-size:13px;outline:none;padding:2px 0;color:inherit;}
+.pl-inp:focus{outline:1px solid var(--violet-d);border-radius:3px;background:var(--violet-light);}
+.pl-cho-btn{padding:3px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font-sans);background:var(--surface-2);color:var(--text-2);cursor:pointer;transition:background .15s,color .15s;}
+.pl-cho-btn.active{background:var(--violet-d);color:#fff;border-color:var(--violet-d);}
 .settings-inp:focus{border-color:var(--violet-d);outline:none;box-shadow:0 0 0 2px var(--violet-light);}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 input[type=number]{-moz-appearance:textfield;}
@@ -680,6 +684,32 @@ function renderSettings(){
   if(settingsSearch)herbs=herbs.filter(h=>h.includes(settingsSearch));
   el.innerHTML=`
   <div class="card">
+    <div style="display:flex;align-items:center;margin-bottom:1rem;">
+      <div class="section-title" style="margin:0">재고 조정</div>
+    </div>
+    <div class="form-row" style="flex-wrap:wrap;gap:7px;">
+      <div class="form-group" style="flex:0 0 120px;min-width:0"><label>약재</label><select id="adj-herb" style="width:100%">${herbsData.map(h=>`<option>${h}</option>`).join('')}</select></div>
+      <div class="form-group" style="min-width:0"><label>조정량 (g)</label><input type="number" id="adj-qty" style="width:90px" placeholder="+100 / -50"></div>
+      <div class="form-group" style="min-width:0"><label>날짜</label><input type="date" id="adj-date" value="${todayStr()}" style="width:128px"></div>
+      <div class="form-group" style="flex:1;min-width:0"><label>메모</label><input type="text" id="adj-note" style="width:100%"></div>
+      <div class="form-group" style="align-self:flex-end"><button class="btn btn-primary" id="adj-submit" style="white-space:nowrap;margin-top:auto">등록</button></div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin:.25rem 0 .75rem">양수(+) 입력 시 재고 증가, 음수(-) 입력 시 재고 감소</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>날짜</th><th>약재명</th><th class="num">조정량</th><th>메모</th><th></th></tr></thead>
+      <tbody>${[...adjustData].reverse().slice(0,50).map(r=>{
+        const sign=Number(r.qty)>=0;
+        const display=(sign?'+':'')+Number(r.qty)+'g';
+        return`<tr>
+          <td>${r.date}</td><td>${r.herb}</td>
+          <td class="num" style="color:${sign?'var(--green)':'var(--coral)'};font-weight:600">${display}</td>
+          <td>${r.note||''}</td>
+          <td><button class="btn-del" data-type="adj" data-id="${r.id}">×</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>
+  <div class="card mt">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
       <div class="section-title" style="margin:0">약재 설정</div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
@@ -711,32 +741,6 @@ function renderSettings(){
           </td>
           <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
           <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table></div>
-  </div>
-  <div class="card mt">
-    <div style="display:flex;align-items:center;margin-bottom:1rem;">
-      <div class="section-title" style="margin:0">재고 조정</div>
-    </div>
-    <div class="form-row" style="flex-wrap:wrap;gap:7px;">
-      <div class="form-group" style="flex:0 0 120px;min-width:0"><label>약재</label><select id="adj-herb" style="width:100%">${herbsData.map(h=>`<option>${h}</option>`).join('')}</select></div>
-      <div class="form-group" style="min-width:0"><label>조정량 (g)</label><input type="number" id="adj-qty" style="width:90px" placeholder="+100 / -50"></div>
-      <div class="form-group" style="min-width:0"><label>날짜</label><input type="date" id="adj-date" value="${todayStr()}" style="width:128px"></div>
-      <div class="form-group" style="flex:1;min-width:0"><label>메모</label><input type="text" id="adj-note" style="width:100%"></div>
-      <div class="form-group" style="align-self:flex-end"><button class="btn btn-primary" id="adj-submit" style="white-space:nowrap;margin-top:auto">등록</button></div>
-    </div>
-    <p style="font-size:12px;color:var(--muted);margin:.25rem 0 .75rem">양수(+) 입력 시 재고 증가, 음수(-) 입력 시 재고 감소</p>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>날짜</th><th>약재명</th><th class="num">조정량</th><th>메모</th><th></th></tr></thead>
-      <tbody>${[...adjustData].reverse().slice(0,50).map(r=>{
-        const sign=Number(r.qty)>=0;
-        const display=(sign?'+':'')+Number(r.qty)+'g';
-        return`<tr>
-          <td>${r.date}</td><td>${r.herb}</td>
-          <td class="num" style="color:${sign?'var(--green)':'var(--coral)'};font-weight:600">${display}</td>
-          <td>${r.note||''}</td>
-          <td><button class="btn-del" data-type="adj" data-id="${r.id}">×</button></td>
         </tr>`;
       }).join('')}</tbody>
     </table></div>
@@ -872,6 +876,13 @@ async function renameHerb(oldName,newName){
 
 /* ── 단가표 ── */
 let pricelistSearch='';
+let pricelistConsonant='';
+function getChoseong(ch){
+  const c=ch.charCodeAt(0)-0xAC00;
+  if(c<0||c>11171)return ch;
+  const map=['ㄱ','ㄱ','ㄴ','ㄷ','ㄷ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅇ','ㅈ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+  return map[Math.floor(c/588)]||ch;
+}
 function calcPriceList(){
   const result={};
   herbsData.forEach(h=>{result[h]={};suppliersData.forEach(s=>result[h][s]=null);});
@@ -886,6 +897,7 @@ function renderPricelist(){
   const el=document.getElementById('view-pricelist');
   const derived=calcPriceList();
   let herbs=herbsData;
+  if(pricelistConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===pricelistConsonant);
   if(pricelistSearch)herbs=herbs.filter(h=>h.includes(pricelistSearch));
 
   // effectivePrice: 직접입력 > 입고이력자동 > ''
@@ -907,6 +919,10 @@ function renderPricelist(){
         <button class="btn btn-primary btn-sm" id="pl-save">저장</button>
       </div>
     </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.625rem;">
+      <button class="pl-cho-btn${!pricelistConsonant?' active':''}" data-cho="">전체</button>
+      ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${pricelistConsonant===c?' active':''}" data-cho="${c}">${c}</button>`).join('')}
+    </div>
     <div class="toolbar" style="margin-bottom:.75rem;">
       <input class="search-input" id="pl-search" placeholder="약재명 검색..." value="${pricelistSearch}">
     </div>
@@ -914,7 +930,7 @@ function renderPricelist(){
       ${suppliersData.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--text-2);">${s}<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:0 0 0 2px;line-height:1;" title="${DEFAULT_SUPPLIERS.includes(s)?'기본 도매처는 삭제 불가':'삭제'}">${DEFAULT_SUPPLIERS.includes(s)?'':'×'}</button></span>`).join('')}
     </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>약재명</th>${suppliersData.map(s=>`<th class="num">${s}</th>`).join('')}</tr></thead>
+      <thead><tr><th>약재명</th>${suppliersData.map(s=>`<th class="num" style="width:62px">${s}</th>`).join('')}</tr></thead>
       <tbody>${herbs.map(h=>{
         const entries=suppliersData.map(s=>ep(h,s));
         const nums=entries.map(e=>e.val).filter(v=>v!=='');
@@ -923,14 +939,19 @@ function renderPricelist(){
           const e=entries[i];
           const isMin=minVal!==null&&e.val!==''&&e.val===minVal;
           const tdStyle=isMin?'background:var(--green-light)':'';
-          const inpStyle=`width:72px;text-align:right;${e.manual?'color:var(--text-1);':'color:var(--text-3);'}${isMin?'font-weight:600;':''}`;
+          const color=e.manual?'var(--text-1)':'var(--text-3)';
+          const fw=isMin?'font-weight:600;':'';
           const title=!e.manual&&e.date?`title="입고이력: ${e.date}"`:'';
-          return`<td class="num" style="${tdStyle}"><input class="settings-inp pl-inp" data-herb="${h}" data-sup="${s}" type="number" min="0" step="0.1" value="${e.val}" placeholder="-" style="${inpStyle}" ${title}></td>`;
+          return`<td class="num" style="${tdStyle}"><input class="pl-inp" data-herb="${h}" data-sup="${s}" type="number" min="0" step="0.1" value="${e.val}" placeholder="—" style="color:${color};${fw}" ${title}></td>`;
         }).join('')}</tr>`;
       }).join('')}</tbody>
     </table></div>
     <p style="margin-top:.75rem;font-size:11px;color:var(--text-3)">※ 진한 숫자 = 직접 입력값, 연한 숫자 = 입고 이력 자동값. 저장 후 직접 입력값이 우선 적용됩니다. 초록 = 최저가</p>
   </div>`;
+
+  el.querySelectorAll('.pl-cho-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{pricelistConsonant=btn.dataset.cho;renderPricelist();});
+  });
 
   document.getElementById('pl-search').addEventListener('input',e=>{pricelistSearch=e.target.value;renderPricelist();});
 
