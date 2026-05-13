@@ -435,7 +435,7 @@ function renderRegister(){
         <div class="section-title" style="margin-bottom:.875rem">${isEdit?'처방 수정':'새 처방 등록'}</div>
         <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group grow">
-            <label>환자명</label>
+            <label>이름</label>
             <div class="herb-ac-wrap">
               <input type="text" id="rx-patient" placeholder="환자명" autocomplete="off" value="${rx?.patientName||''}">
               <ul class="herb-dropdown" id="rx-patient-dropdown"></ul>
@@ -445,7 +445,7 @@ function renderRegister(){
         <div class="form-row" style="margin-bottom:.75rem;align-items:flex-end;flex-wrap:nowrap;gap:8px">
           <div class="form-group" style="flex:1;min-width:0">
             <label>생년월일</label>
-            <input type="date" id="rx-patient-birth" value="${rxPatBirth}" style="width:100%">
+            <input type="text" id="rx-patient-birth" value="${rxPatBirth}" placeholder="19901231" maxlength="10" style="width:100%">
           </div>
           <div style="display:flex;align-items:center;gap:4px;padding-bottom:7px;white-space:nowrap;flex-shrink:0">
             <span style="font-size:13px;color:var(--text-3)">만</span>
@@ -620,15 +620,18 @@ function renderRegister(){
   patInput.addEventListener('focus',filterPat);
   patInput.addEventListener('blur',()=>setTimeout(()=>patDrop.classList.remove('open'),160));
   const updateAge=()=>{
-    const birthVal=document.getElementById('rx-patient-birth')?.value;
+    const birthVal=(document.getElementById('rx-patient-birth')?.value||'').trim();
     const ageEl=document.getElementById('rx-patient-age');
     if(!ageEl)return;
     if(!birthVal){ageEl.textContent='-';return;}
-    const birth=new Date(birthVal);const today=new Date();
+    const clean=birthVal.replace(/[.\-\/\s]/g,'');
+    if(clean.length!==8||!/^\d{8}$/.test(clean)){ageEl.textContent='-';return;}
+    const y=parseInt(clean.slice(0,4)),m=parseInt(clean.slice(4,6))-1,d=parseInt(clean.slice(6,8));
+    const birth=new Date(y,m,d);const today=new Date();
     let age=today.getFullYear()-birth.getFullYear();
-    const m=today.getMonth()-birth.getMonth();
-    if(m<0||(m===0&&today.getDate()<birth.getDate()))age--;
-    ageEl.textContent=age>=0?String(age):'-';
+    const mo=today.getMonth()-birth.getMonth();
+    if(mo<0||(mo===0&&today.getDate()<birth.getDate()))age--;
+    ageEl.textContent=(age>=0&&age<150)?String(age):'-';
   };
   document.getElementById('rx-patient-birth')?.addEventListener('input',updateAge);
   updateAge();
