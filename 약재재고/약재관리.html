@@ -944,36 +944,37 @@ function renderSettings(){
     </div>
   ${(()=>{
     const ibCount=h=>inboundData.filter(r=>r.herb===h).length;
-    const stHead=`<thead><tr><th style="text-align:center;border-right:2px solid var(--border);width:85px">약재명</th><th style="text-align:center;border-right:2px solid var(--border)">메모</th><th class="num" style="border-right:2px solid var(--border)">입고 횟수</th><th class="num" style="width:80px;border-right:2px solid var(--border)">단가 (원/g)</th><th class="num" style="width:80px">최소재고 (g)</th></tr></thead>`;
+    const SEP='border-right:1px solid rgba(0,0,0,0.10)';
+    const stHead=`<thead><tr><th style="text-align:center;${SEP};width:85px">약재명</th><th style="text-align:center;${SEP}">메모</th><th class="num" style="${SEP}">입고 횟수</th><th class="num" style="width:80px;${SEP}">단가 (원/g)</th><th class="num" style="width:80px">최소재고 (g)</th></tr></thead>`;
     const stRows=list=>list.map(h=>{
       if(editingHerbName===h)return`<tr style="background:var(--violet-light)">
-        <td style="text-align:center;border-right:2px solid var(--border);white-space:nowrap">
+        <td style="text-align:center;border-right:1px solid rgba(0,0,0,0.10);white-space:nowrap">
           <input class="herb-rename-inp" type="text" value="${h}" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;font-family:var(--font-sans);background:var(--surface);width:90px;">
           <button class="btn btn-primary btn-sm herb-rename-save" data-old="${h}" style="margin-left:2px">✓</button>
           <button class="btn btn-secondary btn-sm herb-rename-cancel" style="margin-left:2px">✕</button>
         </td>
-        <td style="border-right:2px solid var(--border)"><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;text-align:left;"></td>
-        <td class="num" style="color:var(--text-3);border-right:2px solid var(--border)">${ibCount(h)}</td>
-        <td class="num" style="border-right:2px solid var(--border)"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}" style="width:64px"></td>
+        <td style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;text-align:left;"></td>
+        <td class="num" style="color:var(--text-3);border-right:1px solid rgba(0,0,0,0.10)">${ibCount(h)}</td>
+        <td class="num" style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}" style="width:64px"></td>
         <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}" style="width:64px"></td>
       </tr>`;
       return`<tr>
-        <td style="border-right:2px solid var(--border);white-space:nowrap">
+        <td style="border-right:1px solid rgba(0,0,0,0.10);white-space:nowrap">
           <div style="display:flex;align-items:center">
             <button class="btn-del herb-del" data-herb="${h}" style="opacity:.45;font-size:13px;flex-shrink:0">×</button>
             <span class="herb-name-click" data-herb="${h}" style="cursor:pointer;flex:1;text-align:left;font-weight:600;color:var(--text-1)">${h}</span>
           </div>
         </td>
-        <td style="border-right:2px solid var(--border)"><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;text-align:left;"></td>
-        <td class="num" style="color:var(--text-3);border-right:2px solid var(--border)">${ibCount(h)}</td>
-        <td class="num" style="border-right:2px solid var(--border)"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}" style="width:64px"></td>
+        <td style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;text-align:left;"></td>
+        <td class="num" style="color:var(--text-3);border-right:1px solid rgba(0,0,0,0.10)">${ibCount(h)}</td>
+        <td class="num" style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}" style="width:64px"></td>
         <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}" style="width:64px"></td>
       </tr>`;
     }).join('');
     const half=Math.ceil(herbs.length/2);
     return`<div style="display:flex;gap:2.5rem;align-items:flex-start;">
-      <div class="tbl-wrap" style="flex:1;min-width:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table>${stHead}<tbody>${stRows(herbs.slice(0,half))}</tbody></table></div>
-      <div class="tbl-wrap" style="flex:1;min-width:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table>${stHead}<tbody>${stRows(herbs.slice(half))}</tbody></table></div>
+      <div class="tbl-wrap" style="flex:1;min-width:0;border:1px solid rgba(0,0,0,0.22);border-radius:8px;overflow:hidden;"><table>${stHead}<tbody>${stRows(herbs.slice(0,half))}</tbody></table></div>
+      <div class="tbl-wrap" style="flex:1;min-width:0;border:1px solid rgba(0,0,0,0.22);border-radius:8px;overflow:hidden;"><table>${stHead}<tbody>${stRows(herbs.slice(half))}</tbody></table></div>
     </div>`;
   })()}
   </div>`;
