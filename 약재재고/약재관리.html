@@ -72,8 +72,8 @@ input[type=text],input[type=number],input[type=date],select{border:1px solid var
 input:focus,select:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
 .section-title{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.75rem;}
 .settings-inp{border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;width:76px;font-family:var(--font-sans);text-align:right;background:var(--surface);}
-.pl-inp{border:none;background:transparent;text-align:right;width:100%;font-family:var(--font-sans);font-size:13px;outline:none;padding:2px 0;color:inherit;}
-.pl-inp:focus{outline:1px solid var(--violet-d);border-radius:3px;background:var(--violet-light);}
+.pl-inp{border:none;background:transparent;text-align:right;width:100%;font-family:var(--font-sans);font-size:13px;outline:none;padding:0;color:inherit;-webkit-appearance:none;appearance:none;cursor:text;}
+.pl-inp:focus{background:transparent;outline:none;}
 .pl-cho-btn{padding:3px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font-sans);background:var(--surface-2);color:var(--text-2);cursor:pointer;transition:background .15s,color .15s;}
 .pl-cho-btn.active{background:var(--violet-d);color:#fff;border-color:var(--violet-d);}
 .settings-inp:focus{border-color:var(--violet-d);outline:none;box-shadow:0 0 0 2px var(--violet-light);}
@@ -919,18 +919,18 @@ function renderPricelist(){
         <button class="btn btn-primary btn-sm" id="pl-save">저장</button>
       </div>
     </div>
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.625rem;">
-      <button class="pl-cho-btn${!pricelistConsonant?' active':''}" data-cho="">전체</button>
-      ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${pricelistConsonant===c?' active':''}" data-cho="${c}">${c}</button>`).join('')}
-    </div>
-    <div class="toolbar" style="margin-bottom:.75rem;">
-      <input class="search-input" id="pl-search" placeholder="약재명 검색..." value="${pricelistSearch}">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.875rem;">
+      <div style="display:flex;gap:4px;flex-wrap:wrap;flex:1;">
+        <button class="pl-cho-btn${!pricelistConsonant?' active':''}" data-cho="">전체</button>
+        ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${pricelistConsonant===c?' active':''}" data-cho="${c}">${c}</button>`).join('')}
+      </div>
+      <input class="search-input" id="pl-search" placeholder="약재명 검색..." value="${pricelistSearch}" style="width:150px;flex-shrink:0;">
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.875rem;">
       ${suppliersData.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--text-2);">${s}<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:0 0 0 2px;line-height:1;" title="${DEFAULT_SUPPLIERS.includes(s)?'기본 도매처는 삭제 불가':'삭제'}">${DEFAULT_SUPPLIERS.includes(s)?'':'×'}</button></span>`).join('')}
     </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>약재명</th>${suppliersData.map(s=>`<th class="num" style="width:62px">${s}</th>`).join('')}</tr></thead>
+      <thead><tr><th>약재명</th>${suppliersData.map(s=>`<th class="num" style="width:85px">${s}</th>`).join('')}</tr></thead>
       <tbody>${herbs.map(h=>{
         const entries=suppliersData.map(s=>ep(h,s));
         const nums=entries.map(e=>e.val).filter(v=>v!=='');
