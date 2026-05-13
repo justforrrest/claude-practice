@@ -626,9 +626,9 @@ function renderRegister(){
     patDrop.innerHTML=matches.map(p=>`<li data-name="${p.name}">${p.name}</li>`).join('');
     patDrop.classList.toggle('open',matches.length>0&&document.activeElement===patInput);
   };
-  patInput.addEventListener('input',filterPat);
+  patInput.addEventListener('input',()=>{filterPat();});
   patInput.addEventListener('focus',filterPat);
-  patInput.addEventListener('blur',()=>setTimeout(()=>patDrop.classList.remove('open'),160));
+  patInput.addEventListener('blur',()=>{setTimeout(()=>patDrop.classList.remove('open'),160);});
   const updateAge=()=>{
     const birthVal=(document.getElementById('rx-patient-birth')?.value||'').trim();
     const ageEl=document.getElementById('rx-patient-age');
@@ -654,6 +654,16 @@ function renderRegister(){
   };
   document.getElementById('rx-gender-m')?.addEventListener('click',()=>{rxGender=rxGender==='남'?'':'남';setGenderBtns();});
   document.getElementById('rx-gender-f')?.addEventListener('click',()=>{rxGender=rxGender==='여'?'':'여';setGenderBtns();});
+
+  const fillPatientInfo=(name)=>{
+    const pat=patientsData.find(p=>p.name===name);
+    if(!pat)return;
+    const birthEl=document.getElementById('rx-patient-birth');
+    if(birthEl&&pat.birth){birthEl.value=pat.birth;updateAge();}
+    if(pat.gender){rxGender=pat.gender;setGenderBtns();}
+  };
+  patInput.addEventListener('input',()=>{filterPat();fillPatientInfo(patInput.value.trim());});
+  patInput.addEventListener('blur',()=>fillPatientInfo(patInput.value.trim()),true);
 
   patDrop.addEventListener('mousedown',e=>{
     const li=e.target.closest('li');
@@ -806,18 +816,16 @@ async function batchAddFees(){
   alert(`${toUpdate.length}건 처방에 비용을 적용했습니다.`);
 }
 
-let histPatient='',histSearch='';
+let histSearch='';
 
 function renderHistory(){
   const el=document.getElementById('view-history');
-  const patOpts=`<option value="">전체 환자</option>`+patientsData.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   const list=[...prescriptionsData]
-    .filter(r=>(!histPatient||r.patientId===histPatient)&&(!histSearch||(r.patientName+r.diagnosis).includes(histSearch)))
+    .filter(r=>(!histSearch||(r.patientName+r.diagnosis).includes(histSearch)))
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
 
   el.innerHTML=`
   <div class="toolbar">
-    <select id="hist-pat" style="min-width:120px">${patOpts}</select>
     <input type="text" id="hist-q" value="${histSearch}" placeholder="환자명·처방명 검색" style="flex:1;min-width:140px">
     ${prescriptionsData.some(r=>!r.fees)?`<button class="btn btn-secondary btn-sm" id="batch-fees-btn">비용 일괄 적용</button>`:''}
   </div>
@@ -840,8 +848,6 @@ function renderHistory(){
     </table></div>
   </div>`;
 
-  document.getElementById('hist-pat').value=histPatient;
-  document.getElementById('hist-pat').addEventListener('change',e=>{histPatient=e.target.value;renderHistory();});
   document.getElementById('hist-q').addEventListener('input',e=>{histSearch=e.target.value;renderHistory();});
   document.getElementById('batch-fees-btn')?.addEventListener('click',batchAddFees);
 
