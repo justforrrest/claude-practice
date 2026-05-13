@@ -1030,22 +1030,9 @@ function renderSettings(){
     });
   });
 
-  document.getElementById('export-btn').addEventListener('click',async()=>{
+  document.getElementById('export-btn').addEventListener('click',async function(e){
     const data={inbound:inboundData,outbound:outboundData,settings:settingsData};
-    const json=JSON.stringify(data,null,2);
-    const fileName='herb_data_'+todayStr()+'.json';
-    if(window.showSaveFilePicker){
-      try{
-        const fh=await window.showSaveFilePicker({suggestedName:fileName,types:[{description:'JSON 파일',accept:{'application/json':['.json']}}]});
-        const ws=await fh.createWritable();
-        await ws.write(json);
-        await ws.close();
-        return;
-      }catch(e){if(e.name==='AbortError')return;}
-    }
-    const blob=new Blob([json],{type:'application/json'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-    a.download=fileName;a.click();
+    await window._exportToFolder(JSON.stringify(data,null,2),'herb_data_'+todayStr()+'.json',this,e.shiftKey);
   });
 
   document.getElementById('import-input').addEventListener('change',async e=>{
@@ -1346,6 +1333,48 @@ function renderPricelist(){
   amtEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apply();}if(e.key==='Escape')hide();});
   document.addEventListener('click',e=>{if(pop.style.display!=='none'&&!pop.contains(e.target)&&e.target!==_inp)hide();});
   window._plCalcPop={show};
+})();
+
+/* ── 내보내기 폴더 기억 ── */
+(function(){
+  const DB='herb_export_db',STORE='config',KEY='exportDir';
+  function openDb(){return new Promise(res=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=e=>e.target.result.createObjectStore(STORE);r.onsuccess=e=>res(e.target.result);r.onerror=()=>res(null);});}
+  async function getHandle(){const db=await openDb();if(!db)return null;return new Promise(res=>{const r=db.transaction(STORE).objectStore(STORE).get(KEY);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);});}
+  async function setHandle(h){const db=await openDb();if(!db)return;return new Promise(res=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(h,KEY);tx.oncomplete=res;tx.onerror=res;});}
+
+  window._exportToFolder=async function(json,fileName,btnEl,forcePickDir){
+    if(!window.showDirectoryPicker){
+      const blob=new Blob([json],{type:'application/json'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileName;a.click();
+      return;
+    }
+    try{
+      let dir=forcePickDir?null:await getHandle();
+      if(dir){
+        const perm=await dir.queryPermission({mode:'readwrite'});
+        if(perm!=='granted'){const r=await dir.requestPermission({mode:'readwrite'});if(r!=='granted')dir=null;}
+      }
+      if(!dir){
+        dir=await window.showDirectoryPicker({mode:'readwrite',startIn:'documents'});
+        await setHandle(dir);
+      }
+      const fh=await dir.getFileHandle(fileName,{create:true});
+      const ws=await fh.createWritable();
+      await ws.write(json);await ws.close();
+      const orig=btnEl.textContent;
+      btnEl.textContent='저장 완료 ✓';btnEl.disabled=true;
+      setTimeout(()=>{btnEl.textContent=orig;btnEl.disabled=false;},1500);
+    }catch(e){
+      if(e.name==='AbortError')return;
+      // 폴더 접근 실패 시 폴더 다시 선택
+      try{
+        const dir2=await window.showDirectoryPicker({mode:'readwrite',startIn:'documents'});
+        await setHandle(dir2);
+        const fh=await dir2.getFileHandle(fileName,{create:true});
+        const ws=await fh.createWritable();await ws.write(json);await ws.close();
+      }catch(e2){if(e2.name!=='AbortError'){const blob=new Blob([json],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileName;a.click();}}
+    }
+  };
 })();
 
 /* ── 탭 ── */
