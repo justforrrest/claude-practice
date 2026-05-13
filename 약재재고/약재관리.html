@@ -465,7 +465,9 @@ function renderStock(){
       </table>
     </div>
   </div>`;
-  document.getElementById('stock-search').addEventListener('input',e=>{stockSearch=e.target.value;renderStock();});
+  const ssEl=document.getElementById('stock-search');
+  ssEl.addEventListener('input',e=>{if(e.isComposing)return;stockSearch=e.target.value;renderStock();});
+  ssEl.addEventListener('compositionend',e=>{stockSearch=e.target.value;renderStock();});
   document.getElementById('low-only-btn').addEventListener('click',()=>{showLowOnly=!showLowOnly;renderStock();});
   el.querySelectorAll('[data-st-cho]').forEach(btn=>{
     btn.addEventListener('click',()=>{stockConsonant=btn.dataset.stCho;renderStock();});
@@ -805,7 +807,9 @@ function renderSettings(){
     btn.addEventListener('click',()=>{settingsConsonant=btn.dataset.stCho;renderSettings();});
   });
 
-  document.getElementById('settings-search').addEventListener('input',e=>{settingsSearch=e.target.value;renderSettings();});
+  const stSrEl=document.getElementById('settings-search');
+  stSrEl.addEventListener('input',e=>{if(e.isComposing)return;settingsSearch=e.target.value;renderSettings();});
+  stSrEl.addEventListener('compositionend',e=>{settingsSearch=e.target.value;renderSettings();});
 
   document.getElementById('settings-save').addEventListener('click',async()=>{
     el.querySelectorAll('.settings-inp[data-field]').forEach(inp=>{
@@ -991,7 +995,9 @@ function renderPricelist(){
     btn.addEventListener('click',()=>{pricelistConsonant=btn.dataset.cho;renderPricelist();});
   });
 
-  document.getElementById('pl-search').addEventListener('input',e=>{pricelistSearch=e.target.value;renderPricelist();});
+  const plSrEl=document.getElementById('pl-search');
+  plSrEl.addEventListener('input',e=>{if(e.isComposing)return;pricelistSearch=e.target.value;renderPricelist();});
+  plSrEl.addEventListener('compositionend',e=>{pricelistSearch=e.target.value;renderPricelist();});
 
   document.getElementById('pl-save').addEventListener('click',async()=>{
     el.querySelectorAll('.pl-inp').forEach(inp=>{
