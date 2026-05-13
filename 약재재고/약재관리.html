@@ -999,20 +999,34 @@ function renderSettings(){
     renderStock();
   });
 
+  const stSaveAll=async()=>{
+    el.querySelectorAll('.settings-inp[data-field]').forEach(i=>{
+      const h=i.dataset.herb,v=parseFloat(i.value)||0;
+      if(i.dataset.field==='price')settingsData.prices[h]=v;
+      else if(i.dataset.field==='min')settingsData.minStock[h]=v;
+      else if(i.dataset.field==='memo')settingsData.memos[h]=i.value.trim();
+    });
+    await save(KEYS.settings,settingsData);
+    renderStock();
+  };
+
   let stAutoTimer=null;
   el.querySelectorAll('.settings-inp').forEach(inp=>{
     inp.addEventListener('input',()=>{
       clearTimeout(stAutoTimer);
-      stAutoTimer=setTimeout(async()=>{
-        el.querySelectorAll('.settings-inp[data-field]').forEach(i=>{
-          const h=i.dataset.herb,v=parseFloat(i.value)||0;
-          if(i.dataset.field==='price')settingsData.prices[h]=v;
-          else if(i.dataset.field==='min')settingsData.minStock[h]=v;
-          else if(i.dataset.field==='memo')settingsData.memos[h]=i.value.trim();
-        });
-        await save(KEYS.settings,settingsData);
-        renderStock();
-      },1000);
+      stAutoTimer=setTimeout(stSaveAll,1000);
+    });
+  });
+
+  el.querySelectorAll('.settings-inp[data-field="price"],.settings-inp[data-field="min"]').forEach(inp=>{
+    inp.addEventListener('focus',()=>inp.select());
+    inp.addEventListener('keydown',async e=>{
+      if(e.key==='Enter'&&!e.isComposing){
+        e.preventDefault();
+        clearTimeout(stAutoTimer);
+        await stSaveAll();
+        inp.blur();
+      }
     });
   });
 
