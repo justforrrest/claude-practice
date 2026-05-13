@@ -413,8 +413,10 @@ function renderRegister(){
         <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group" style="min-width:0;flex:1">
             <label>환자</label>
-            <input type="text" id="rx-patient" list="rx-patient-list" placeholder="환자명 입력" autocomplete="off" value="${rx?.patientName||''}">
-            <datalist id="rx-patient-list">${patientsData.map(p=>`<option value="${p.name}">`).join('')}</datalist>
+            <div class="herb-ac-wrap">
+              <input type="text" id="rx-patient" placeholder="환자명 입력" autocomplete="off" value="${rx?.patientName||''}">
+              <ul class="herb-dropdown" id="rx-patient-dropdown"></ul>
+            </div>
           </div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
@@ -566,7 +568,22 @@ function renderRegister(){
     </div><!-- /우측 -->
   </div><!-- /2컬럼 -->`;
 
-  // 환자명 초기값은 template에서 설정됨
+  // 환자 자동완성
+  const patInput=document.getElementById('rx-patient');
+  const patDrop=document.getElementById('rx-patient-dropdown');
+  const filterPat=()=>{
+    const q=patInput.value.trim();
+    const matches=q?patientsData.filter(p=>p.name.includes(q)):patientsData.slice(0,20);
+    patDrop.innerHTML=matches.map(p=>`<li data-name="${p.name}">${p.name}</li>`).join('');
+    patDrop.classList.toggle('open',matches.length>0&&document.activeElement===patInput);
+  };
+  patInput.addEventListener('input',filterPat);
+  patInput.addEventListener('focus',filterPat);
+  patInput.addEventListener('blur',()=>setTimeout(()=>patDrop.classList.remove('open'),160));
+  patDrop.addEventListener('mousedown',e=>{
+    const li=e.target.closest('li');
+    if(li){patInput.value=li.dataset.name;patDrop.classList.remove('open');}
+  });
 
   // 약재 행 초기화 — addHerbRow가 rxHerbs에 push하므로, 먼저 기존 목록 저장 후 clear
   if(rx && rxHerbs.length===0) rxHerbs=rx.herbs.map(h=>({id:uid(),herb:h.herb,qty:h.qtyPerPack}));
