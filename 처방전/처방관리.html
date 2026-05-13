@@ -110,13 +110,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
     <button class="tab active" data-tab="register">처방 등록</button>
     <button class="tab" data-tab="history">처방 이력</button>
     <button class="tab" data-tab="patients">환자 관리</button>
-    <button class="tab" data-tab="config">설정</button>
   </div>
 
   <div class="view active" id="view-register"></div>
   <div class="view" id="view-history"></div>
   <div class="view" id="view-patients"></div>
-  <div class="view" id="view-config"></div>
 
 </div>
 
@@ -729,82 +727,6 @@ function renderPatients(){
   }));
 }
 
-/* ── 설정 탭 ── */
-function cfgInp(id,val,w='120px',type='number'){
-  return `<input id="${id}" type="${type}" value="${val??''}"
-    style="width:${w};text-align:right;border:1px solid var(--border-2);border-radius:8px;
-           padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;
-           background:var(--surface);color:var(--text-1);" ${type==='number'?'min="0"':''}>`;
-}
-function renderConfig(){
-  const el=document.getElementById('view-config');
-  const c=rxConfig;
-  el.innerHTML=`
-  <div class="card" style="max-width:520px">
-    <div class="section-title">비용 설정</div>
-    <table style="width:100%;border-collapse:collapse;font-size:13px">
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:12px 0;font-weight:600;color:var(--text-2);width:80px">조제비</td>
-        <td style="padding:12px 8px">
-          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
-            ${cfgInp('cfg-dispensing-price',c.dispensing_price)}
-            <span style="color:var(--text-3)">원 / 팩</span>
-          </div>
-        </td>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:12px 0;font-weight:600;color:var(--text-2)">탕전비</td>
-        <td style="padding:12px 8px">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-            ${cfgInp('cfg-decoction-ml',c.decoction_ml,'80px')}
-            <span style="color:var(--text-3)">ml / 팩</span>
-            <span style="color:var(--border-2);margin:0 4px">·</span>
-            ${cfgInp('cfg-decoction-price',c.decoction_price)}
-            <span style="color:var(--text-3)">원</span>
-          </div>
-        </td>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:12px 0;font-weight:600;color:var(--text-2)">포장비</td>
-        <td style="padding:12px 8px">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-            ${cfgInp('cfg-packaging-desc',c.packaging_desc,'180px','text')}
-            ${cfgInp('cfg-packaging-price',c.packaging_price)}
-            <span style="color:var(--text-3)">원</span>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:12px 0;font-weight:600;color:var(--text-2)">배송비</td>
-        <td style="padding:12px 8px">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-            ${cfgInp('cfg-delivery-desc',c.delivery_desc,'180px','text')}
-            ${cfgInp('cfg-delivery-price',c.delivery_price)}
-            <span style="color:var(--text-3)">원</span>
-          </div>
-        </td>
-      </tr>
-    </table>
-    <div style="margin-top:1rem;display:flex;justify-content:flex-end">
-      <button class="btn btn-primary" id="cfg-save">저장</button>
-    </div>
-  </div>`;
-
-  ['cfg-dispensing-price','cfg-decoction-ml','cfg-decoction-price','cfg-packaging-price','cfg-delivery-price']
-    .forEach(id=>document.getElementById(id)?.addEventListener('focus',e=>e.target.select()));
-
-  document.getElementById('cfg-save').addEventListener('click',async()=>{
-    rxConfig.dispensing_price =Number(document.getElementById('cfg-dispensing-price').value)||0;
-    rxConfig.decoction_ml     =Number(document.getElementById('cfg-decoction-ml').value)||0;
-    rxConfig.decoction_price  =Number(document.getElementById('cfg-decoction-price').value)||0;
-    rxConfig.packaging_desc   =document.getElementById('cfg-packaging-desc').value.trim();
-    rxConfig.packaging_price  =Number(document.getElementById('cfg-packaging-price').value)||0;
-    rxConfig.delivery_desc    =document.getElementById('cfg-delivery-desc').value.trim();
-    rxConfig.delivery_price   =Number(document.getElementById('cfg-delivery-price').value)||0;
-    await save(RX_KEYS.config,rxConfig);
-    setStatus('설정 저장됨 ✓');
-  });
-}
 
 /* ── 탭 전환 ── */
 function switchTab(tab){
@@ -813,7 +735,6 @@ function switchTab(tab){
   if(tab==='register'){rxHerbs=[];renderRegister();}
   if(tab==='history')renderHistory();
   if(tab==='patients')renderPatients();
-  if(tab==='config')renderConfig();
 }
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   if(t.dataset.tab==='register'&&!editingRxId)rxHerbs=[];
