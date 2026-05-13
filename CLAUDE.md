@@ -40,11 +40,12 @@ git push origin master
 
 ## Design System (Linear Style)
 
-프로젝트는 Linear(linear.app) 디자인 언어를 따릅니다:
+프로젝트는 Linear(linear.app) 디자인 언어를 따릅니다 (밝은 테마 기본):
 
-- **배경**: `#0a0a0b` (거의 검정)
-- **카드/컴포넌트**: `#111113`, 테두리 `rgba(255,255,255,0.08)`
-- **강조색**: 퍼플 계열 `#7c3aed` / `#a78bfa`
+- **배경**: `#ffffff` / `#f7f7f8` (흰색/밝은 회색)
+- **카드/컴포넌트**: `#ffffff`, 테두리 `rgba(0,0,0,0.08)`
+- **강조색**: 퍼플 계열 `#5b21b6` / `#7c3aed`
+- **텍스트**: `#0f0f10` (기본), 보조 `#6b7280`
 - **폰트**: Inter (Google Fonts), weight 300–600
 - **그림자**: 다층 box-shadow로 깊이감 표현
-- **인터랙션**: hover는 `opacity: 0.04` white overlay, active는 `scale(0.96)`
+- **인터랙션**: hover는 `opacity: 0.04` dark overlay, active는 `scale(0.96)`
