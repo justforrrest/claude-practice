@@ -420,7 +420,7 @@ function renderRegister(){
           <div class="form-group" style="flex:0 0 auto;min-width:0">
             <label>하루</label>
             <div style="display:flex;align-items:center;gap:3px">
-              <input type="number" id="rx-freq" value="${rx?.dosageFreq||3}" min="1" style="width:40px;text-align:center">
+              <input type="text" inputmode="numeric" id="rx-freq" value="${rx?.dosageFreq||3}" style="width:40px;text-align:center">
               <span style="font-size:13px;color:var(--text-2)">회</span>
             </div>
           </div>
