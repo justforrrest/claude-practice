@@ -457,19 +457,23 @@ function renderStock(){
       <input class="search-input" id="stock-search" placeholder="약재명 검색..." value="${stockSearch}" style="width:150px;min-width:0;flex:none;">
       <button class="toggle-btn${showLowOnly?' on':''}" id="low-only-btn">부족만 보기</button>
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>약재명</th><th class="num">현재고 (g)</th><th class="num">최소재고 (g)</th><th class="num">단가 (원/g)</th><th>상태</th></tr></thead>
-        <tbody>${herbs.length===0?'<tr><td colspan="5" class="empty">검색 결과 없음</td></tr>':herbs.map(h=>{
-          const s=stock[h],m=getMinStock(h),p=getPrice(h);
-          let badge,bs;
-          if(s<=0){badge='없음';bs='badge-zero';}
-          else if(m>0&&s<m){badge='부족';bs='badge-low';}
-          else{badge='정상';bs='badge-ok';}
-          return`<tr><td>${h}</td><td class="num"${s<0?' style="color:var(--coral)"':''}>${fmt(s)}</td><td class="num">${m>0?fmt(m):'-'}</td><td class="num">${p>0?fmt(p):'-'}</td><td><span class="badge ${bs}">${badge}</span></td></tr>`;
-        }).join('')}</tbody>
-      </table>
-    </div>
+  ${(()=>{
+    const stHead=`<thead><tr><th style="border-right:2px solid var(--border)">약재명</th><th class="num">현재고 (g)</th><th class="num">최소재고 (g)</th><th class="num">단가 (원/g)</th><th>상태</th></tr></thead>`;
+    if(herbs.length===0)return`<div class="tbl-wrap" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table>${stHead}<tbody><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-3)">검색 결과 없음</td></tr></tbody></table></div>`;
+    const stRows=list=>list.map(h=>{
+      const s=stock[h],m=getMinStock(h),p=getPrice(h);
+      let badge,bs;
+      if(s<=0){badge='없음';bs='badge-zero';}
+      else if(m>0&&s<m){badge='부족';bs='badge-low';}
+      else{badge='정상';bs='badge-ok';}
+      return`<tr><td style="border-right:2px solid var(--border);font-weight:600;color:var(--text-1);white-space:nowrap">${h}</td><td class="num"${s<0?' style="color:var(--coral)"':''}>${fmt(s)}</td><td class="num">${m>0?fmt(m):'-'}</td><td class="num">${p>0?fmt(p):'-'}</td><td><span class="badge ${bs}">${badge}</span></td></tr>`;
+    }).join('');
+    const half=Math.ceil(herbs.length/2);
+    return`<div style="display:flex;gap:2.5rem;align-items:flex-start;">
+      <div class="tbl-wrap" style="flex:1;min-width:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table>${stHead}<tbody>${stRows(herbs.slice(0,half))}</tbody></table></div>
+      <div class="tbl-wrap" style="flex:1;min-width:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table>${stHead}<tbody>${stRows(herbs.slice(half))}</tbody></table></div>
+    </div>`;
+  })()}
   </div>`;
   const ssEl=document.getElementById('stock-search');
   ssEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){stockSearch=ssEl.value;renderStock();focusEnd('stock-search');}});
