@@ -673,6 +673,24 @@ async function saveRx(){
 }
 
 /* ── 처방 이력 탭 ── */
+async function batchAddFees(){
+  const toUpdate=prescriptionsData.filter(r=>!r.fees);
+  if(!toUpdate.length){alert('모든 처방에 이미 비용이 적용되어 있습니다.');return;}
+  const dp=rxConfig.dispensing_price,tc=rxConfig.decoction_price,pc=rxConfig.packaging_price,dc=rxConfig.delivery_price;
+  if(!confirm(`비용 미등록 처방 ${toUpdate.length}건에 기본 비용을 적용하시겠습니까?\n\n조제비: ${fmtW(dp)}원/팩\n탕전비: ${fmtW(tc)}원\n포장비: ${fmtW(pc)}원\n배송비: ${fmtW(dc)}원`))return;
+  prescriptionsData=prescriptionsData.map(r=>{
+    if(r.fees)return r;
+    const packs=r.packs||20,totalPacks=r.totalPacks||45;
+    const fees={dispensing:dp,decoction:tc,packaging:pc,delivery:dc};
+    const herbCost=r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*packs:0;
+    const totalPrice=herbCost+dp*totalPacks+tc+pc+dc;
+    return{...r,fees,totalPrice};
+  });
+  await save(RX_KEYS.prescriptions,prescriptionsData);
+  renderHistory();
+  alert(`${toUpdate.length}건 처방에 비용을 적용했습니다.`);
+}
+
 let histPatient='',histSearch='';
 
 function renderHistory(){
@@ -686,6 +704,7 @@ function renderHistory(){
   <div class="toolbar">
     <select id="hist-pat" style="min-width:120px">${patOpts}</select>
     <input type="text" id="hist-q" value="${histSearch}" placeholder="환자명·처방명 검색" style="flex:1;min-width:140px">
+    ${prescriptionsData.some(r=>!r.fees)?`<button class="btn btn-secondary btn-sm" id="batch-fees-btn">비용 일괄 적용</button>`:''}
   </div>
   <div class="card" style="padding:0">
     <div class="tbl-wrap"><table>
@@ -709,6 +728,7 @@ function renderHistory(){
   document.getElementById('hist-pat').value=histPatient;
   document.getElementById('hist-pat').addEventListener('change',e=>{histPatient=e.target.value;renderHistory();});
   document.getElementById('hist-q').addEventListener('input',e=>{histSearch=e.target.value;renderHistory();});
+  document.getElementById('batch-fees-btn')?.addEventListener('click',batchAddFees);
 
   el.querySelectorAll('.hist-row').forEach(tr=>{
     tr.addEventListener('click',e=>{if(!e.target.closest('button'))showDetail(tr.dataset.rxid);});
