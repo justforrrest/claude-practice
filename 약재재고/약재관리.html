@@ -1295,7 +1295,11 @@ function renderPricelist(){
     pop.style.top=(r.bottom+4)+'px';
     pop.style.display='block';
     _inp=inp;qtyEl.value='';amtEl.value='';resEl.textContent='';
-    setTimeout(()=>qtyEl.focus(),0);
+    const herb=inp.dataset.herb,sup=inp.dataset.sup;
+    const last=[...inboundData].filter(r=>r.herb===herb&&r.supplier===sup&&r.qty>0&&r.amount>0)
+      .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id))[0];
+    if(last){qtyEl.value=last.qty;amtEl.value=last.amount;calc();}
+    setTimeout(()=>qtyEl.select(),0);
   }
   function hide(){pop.style.display='none';_inp=null;}
   function calc(){
