@@ -343,6 +343,14 @@ function attachRowListeners(tr){
     if(row)row.qty=qtyInput.value;
     updateCells();
   });
+  nameInput.addEventListener('keydown',e=>{
+    if(e.key==='Backspace'&&!nameInput.value){
+      e.preventDefault();
+      rxHerbs=rxHerbs.filter(r=>r.id!==rid);
+      tr.remove();
+      calcSummary();
+    }
+  });
   qtyInput.addEventListener('keydown',e=>{
     if(e.key!=='Enter')return;
     e.preventDefault();
