@@ -857,14 +857,16 @@ async function batchAddFees(){
 
 let histPatSearch='';
 let histDxSearch='';
+let histMonth='';
 
 function renderHistory(){
   const el=document.getElementById('view-history');
   if(!document.getElementById('hist-q-pat')){
     el.innerHTML=`
     <div class="toolbar">
-      <input type="text" id="hist-q-pat" placeholder="환자명 검색" style="flex:1;min-width:100px">
-      <input type="text" id="hist-q-dx" placeholder="처방명 검색" style="flex:1;min-width:100px">
+      <input type="text" id="hist-q-pat" placeholder="환자명" style="width:100px;flex-shrink:0">
+      <input type="text" id="hist-q-dx" placeholder="처방명" style="width:100px;flex-shrink:0">
+      <span id="hist-month-wrap"></span>
       <span id="hist-batch-wrap"></span>
     </div>
     <div class="card" style="padding:0">
@@ -878,6 +880,12 @@ function renderHistory(){
     patEl.addEventListener('input',()=>{histPatSearch=patEl.value;updateHistList();});
     dxEl.addEventListener('input',()=>{histDxSearch=dxEl.value;updateHistList();});
   }
+  const mw=document.getElementById('hist-month-wrap');
+  if(mw){
+    const months=[...new Set(prescriptionsData.map(r=>r.date?.slice(0,7)).filter(Boolean))].sort().reverse();
+    mw.innerHTML=`<select id="hist-month" style="width:auto;flex-shrink:0"><option value="">전체 기간</option>${months.map(m=>`<option value="${m}"${histMonth===m?' selected':''}>${m}</option>`).join('')}</select>`;
+    document.getElementById('hist-month')?.addEventListener('change',e=>{histMonth=e.target.value;updateHistList();});
+  }
   const bw=document.getElementById('hist-batch-wrap');
   if(bw){
     bw.innerHTML=prescriptionsData.some(r=>!r.fees)?`<button class="btn btn-secondary btn-sm" id="batch-fees-btn">비용 일괄 적용</button>`:'';
@@ -890,7 +898,7 @@ function updateHistList(){
   const tbody=document.getElementById('hist-tbody');
   if(!tbody)return;
   const list=[...prescriptionsData]
-    .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch)))
+    .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch))&&(!histMonth||r.date?.startsWith(histMonth)))
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
   tbody.innerHTML=!list.length?`<tr><td colspan="9" class="empty">처방 이력이 없습니다</td></tr>`:
     list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
