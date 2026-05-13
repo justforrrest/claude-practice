@@ -72,6 +72,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 /* 처방 약재 테이블 */
 .rx-table td{padding:4px 6px;}
 .rx-table input[type=text],.rx-table input[type=number]{padding:5px 8px;font-size:13px;}
+.rx-table input[type=number]::-webkit-inner-spin-button,.rx-table input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.rx-table input[type=number]{-moz-appearance:textfield;}
 /* 모달 */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;}
 .modal-overlay.open{display:flex;}
