@@ -282,7 +282,7 @@ function calcSummary(){
   const upd=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   upd('rx-cost-herb-desc',packs+'첩');
   upd('rx-cost-herb-amount',fmtW(herbPrice)+'원');
-  upd('rx-cost-disp-desc',`${dPrice||''}원 × ${totalPacks}팩`);
+  upd('rx-cost-disp-desc',`원 × ${totalPacks}팩`);
   upd('rx-cost-disp-amount',dPrice>0?fmtW(dTotal)+'원':'-');
   upd('rx-cost-deco-amount',tPrice>0?fmtW(tPrice)+'원':'-');
   upd('rx-cost-pack-amount',pPrice>0?fmtW(pPrice)+'원':'-');
@@ -425,7 +425,7 @@ function renderRegister(){
           <div style="display:flex;align-items:center;gap:5px">
             <input id="rx-fee-dispensing" type="number" value="${rx?.fees?.dispensing??rxConfig.dispensing_price??300}" min="0"
               style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
-            <span style="font-size:12px;color:var(--text-3)" id="rx-cost-disp-desc">원/팩</span>
+            <span style="font-size:12px;color:var(--text-3)" id="rx-cost-disp-desc">원 × ${rx?.totalPacks||45}팩</span>
           </div>
         </td>
         <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-disp-amount">-</td>
