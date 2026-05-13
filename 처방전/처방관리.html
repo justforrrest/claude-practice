@@ -857,17 +857,24 @@ async function batchAddFees(){
 
 let histPatSearch='';
 let histDxSearch='';
+let histYear='';
 let histMonth='';
 
 function renderHistory(){
   const el=document.getElementById('view-history');
   if(!document.getElementById('hist-q-pat')){
     el.innerHTML=`
-    <div class="toolbar">
-      <input type="text" id="hist-q-pat" placeholder="환자명" style="width:100px;flex-shrink:0">
-      <input type="text" id="hist-q-dx" placeholder="처방명" style="width:100px;flex-shrink:0">
-      <span id="hist-month-wrap"></span>
-      <span id="hist-batch-wrap"></span>
+    <div style="margin-bottom:.875rem">
+      <div class="toolbar" style="margin-bottom:6px">
+        <input type="text" id="hist-q-pat" placeholder="환자명" style="width:100px;flex-shrink:0">
+        <input type="text" id="hist-q-dx" placeholder="처방명" style="width:100px;flex-shrink:0">
+        <span id="hist-batch-wrap" style="margin-left:auto"></span>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+        <span id="hist-year-wrap" style="display:flex;gap:4px;flex-wrap:wrap"></span>
+        <span id="hist-yr-sep" style="display:none;width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center"></span>
+        <span id="hist-month-btns" style="display:flex;gap:4px;flex-wrap:wrap"></span>
+      </div>
     </div>
     <div class="card" style="padding:0">
       <div class="tbl-wrap"><table id="hist-table">
@@ -879,26 +886,43 @@ function renderHistory(){
     const dxEl=document.getElementById('hist-q-dx');
     patEl.addEventListener('input',()=>{histPatSearch=patEl.value;updateHistList();});
     dxEl.addEventListener('input',()=>{histDxSearch=dxEl.value;updateHistList();});
-  }
-  const mw=document.getElementById('hist-month-wrap');
-  if(mw){
-    const months=[...new Set(prescriptionsData.map(r=>r.date?.slice(0,7)).filter(Boolean))].sort().reverse();
-    mw.innerHTML=`<select id="hist-month" style="width:auto;flex-shrink:0"><option value="">전체 기간</option>${months.map(m=>`<option value="${m}"${histMonth===m?' selected':''}>${m}</option>`).join('')}</select>`;
-    document.getElementById('hist-month')?.addEventListener('change',e=>{histMonth=e.target.value;updateHistList();});
+    document.getElementById('hist-year-wrap').addEventListener('click',e=>{
+      const b=e.target.closest('[data-hy]');if(!b)return;
+      histYear=histYear===b.dataset.hy?'':b.dataset.hy;
+      renderHistFilters();updateHistList();
+    });
+    document.getElementById('hist-month-btns').addEventListener('click',e=>{
+      const b=e.target.closest('[data-hm]');if(!b)return;
+      histMonth=histMonth===b.dataset.hm?'':b.dataset.hm;
+      renderHistFilters();updateHistList();
+    });
   }
   const bw=document.getElementById('hist-batch-wrap');
   if(bw){
     bw.innerHTML=prescriptionsData.some(r=>!r.fees)?`<button class="btn btn-secondary btn-sm" id="batch-fees-btn">비용 일괄 적용</button>`:'';
     document.getElementById('batch-fees-btn')?.addEventListener('click',batchAddFees);
   }
+  renderHistFilters();
   updateHistList();
+}
+
+function renderHistFilters(){
+  const yw=document.getElementById('hist-year-wrap');
+  const mw=document.getElementById('hist-month-btns');
+  const sep=document.getElementById('hist-yr-sep');
+  if(!yw||!mw)return;
+  const years=[...new Set(prescriptionsData.map(r=>r.date?.slice(0,4)).filter(Boolean))].sort().reverse();
+  yw.innerHTML=years.map(y=>`<button class="btn btn-sm ${histYear===y?'btn-primary':'btn-secondary'}" data-hy="${y}">${y}</button>`).join('');
+  const MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
+  mw.innerHTML=MONTHS.map(m=>`<button class="btn btn-sm ${histMonth===m?'btn-primary':'btn-secondary'}" data-hm="${m}">${parseInt(m)}월</button>`).join('');
+  if(sep)sep.style.display=years.length?'block':'none';
 }
 
 function updateHistList(){
   const tbody=document.getElementById('hist-tbody');
   if(!tbody)return;
   const list=[...prescriptionsData]
-    .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch))&&(!histMonth||r.date?.startsWith(histMonth)))
+    .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch))&&(!histYear||r.date?.startsWith(histYear))&&(!histMonth||r.date?.slice(5,7)===histMonth))
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
   tbody.innerHTML=!list.length?`<tr><td colspan="9" class="empty">처방 이력이 없습니다</td></tr>`:
     list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
