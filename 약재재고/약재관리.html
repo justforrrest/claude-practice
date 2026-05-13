@@ -49,6 +49,8 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .btn-sm{padding:5px 10px;font-size:12px;}
 .btn-del{background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-3);padding:3px 6px;border-radius:4px;transition:all .15s;}
 .btn-del:hover{background:var(--coral-light);color:var(--coral);}
+.btn-edit{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:3px 5px;border-radius:4px;transition:all .15s;}
+.btn-edit:hover{background:var(--violet-light);color:var(--violet-d);}
 .toggle-btn{background:none;border:1px solid var(--border-2);border-radius:20px;padding:5px 12px;font-size:12px;font-family:var(--font-sans);cursor:pointer;color:var(--text-3);transition:all .15s;}
 .toggle-btn.on{background:var(--coral-light);border-color:var(--coral);color:var(--coral);font-weight:600;}
 .tbl-wrap{overflow-x:auto;}
@@ -71,6 +73,8 @@ input:focus,select:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(-
 .section-title{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.75rem;}
 .settings-inp{border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;width:76px;font-family:var(--font-sans);text-align:right;background:var(--surface);}
 .settings-inp:focus{border-color:var(--violet-d);outline:none;box-shadow:0 0 0 2px var(--violet-light);}
+.pl-inp::-webkit-inner-spin-button,.pl-inp::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.pl-inp{-moz-appearance:textfield;}
 .empty{text-align:center;color:var(--text-3);padding:2.5rem;font-size:13px;}
 .mt{margin-top:.875rem;}
 </style>
@@ -189,6 +193,7 @@ let outboundData=[];
 let settingsData={prices:{},minStock:{}};
 let suppliersData=[...DEFAULT_SUPPLIERS];
 let pricelistData={}; // {herb:{supplier:price}} 직접 입력 단가
+let editingInboundId=null,editingOutboundId=null;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
@@ -246,15 +251,18 @@ function renderStock(){
 function renderInbound(){
   const el=document.getElementById('view-inbound');
   const recent=[...inboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).slice(0,50);
+  const herbOpts=`<option value="">약재 선택</option>${HERBS.map(h=>`<option>${h}</option>`).join('')}`;
+  const supOpts=suppliersData.map(s=>`<option>${s}</option>`).join('');
   el.innerHTML=`
   <div class="card">
     <div class="section-title">입고 등록</div>
     <div class="form-row">
-      <div class="form-group grow"><label>약재</label><select id="in-herb"><option value="">약재 선택</option>${HERBS.map(h=>`<option>${h}</option>`).join('')}</select></div>
-      <div class="form-group"><label>수량 (g)</label><input type="number" id="in-qty" min="0" step="0.1" placeholder="0.0" style="width:90px"></div>
-      <div class="form-group"><label>단가 (원/g)</label><input type="number" id="in-price" min="0" step="0.1" placeholder="0.0" style="width:90px"></div>
+      <div class="form-group grow"><label>약재</label><select id="in-herb">${herbOpts}</select></div>
+      <div class="form-group"><label>수량 (g)</label><input type="number" id="in-qty" min="0" step="0.1" placeholder="0.0" style="width:88px"></div>
+      <div class="form-group"><label>단가 (원/g)</label><input type="number" id="in-price" min="0" step="0.1" placeholder="0.0" style="width:88px"></div>
+      <div class="form-group"><label>금액 (원)</label><input type="number" id="in-amount" min="0" step="1" placeholder="0" style="width:100px"></div>
       <div class="form-group"><label>날짜</label><input type="date" id="in-date" value="${todayStr()}"></div>
-      <div class="form-group"><label>공급업체</label><select id="in-sup">${suppliersData.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="form-group"><label>공급업체</label><select id="in-sup">${supOpts}</select></div>
       <div class="form-group grow"><label>메모</label><input type="text" id="in-note" placeholder="메모 (선택)"></div>
       <div class="form-group" style="justify-content:flex-end"><button class="btn btn-primary" id="in-submit" style="margin-top:auto">등록</button></div>
     </div>
@@ -262,30 +270,97 @@ function renderInbound(){
   <div class="card">
     <div class="section-title">입고 이력 (최근 50건)</div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th class="num">단가 (원/g)</th><th>공급업체</th><th>메모</th><th></th></tr></thead>
-      <tbody>${recent.length===0?'<tr><td colspan="7" class="empty">입고 이력이 없습니다</td></tr>':recent.map(r=>`<tr>
-        <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
-        <td class="num">${r.price>0?fmt(r.price):'-'}</td>
-        <td>${r.supplier||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
-        <td><button class="btn-del" data-id="${r.id}" data-type="ib">×</button></td>
-      </tr>`).join('')}</tbody>
+      <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th class="num">단가 (원/g)</th><th class="num">금액 (원)</th><th>공급업체</th><th>메모</th><th></th></tr></thead>
+      <tbody>${recent.length===0?'<tr><td colspan="8" class="empty">입고 이력이 없습니다</td></tr>':recent.map(r=>{
+        if(editingInboundId===r.id){
+          const hOpts=HERBS.map(h=>`<option${h===r.herb?' selected':''}>${h}</option>`).join('');
+          const sOpts=suppliersData.map(s=>`<option${s===r.supplier?' selected':''}>${s}</option>`).join('');
+          return`<tr style="background:var(--violet-light)">
+            <td><input class="settings-inp ei-date" type="date" value="${r.date}" style="width:116px"></td>
+            <td><select class="settings-inp ei-herb" style="width:88px">${hOpts}</select></td>
+            <td><input class="settings-inp ei-qty" type="number" step="0.1" value="${r.qty}" style="width:70px;text-align:right"></td>
+            <td><input class="settings-inp ei-price" type="number" step="0.1" value="${r.price||''}" placeholder="-" style="width:70px;text-align:right"></td>
+            <td><input class="settings-inp ei-amount" type="number" step="1" value="${r.amount||''}" placeholder="-" style="width:82px;text-align:right"></td>
+            <td><select class="settings-inp ei-sup" style="width:78px">${sOpts}</select></td>
+            <td><input class="settings-inp ei-note" type="text" value="${r.note||''}" style="min-width:80px;width:100%"></td>
+            <td style="white-space:nowrap">
+              <button class="btn btn-primary btn-sm ib-save" data-id="${r.id}">✓</button>
+              <button class="btn btn-secondary btn-sm ib-cancel" style="margin-left:2px">✕</button>
+            </td>
+          </tr>`;
+        }
+        return`<tr>
+          <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
+          <td class="num">${r.price>0?fmt(r.price):'-'}</td>
+          <td class="num">${r.amount>0?fmt(r.amount):'-'}</td>
+          <td>${r.supplier||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
+          <td style="white-space:nowrap">
+            <button class="btn-edit ib-edit" data-id="${r.id}">✎</button>
+            <button class="btn-del" data-id="${r.id}" data-type="ib">×</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
     </table></div>
   </div>`;
+
+  const qtyEl=document.getElementById('in-qty');
+  const priceEl=document.getElementById('in-price');
+  const amountEl=document.getElementById('in-amount');
+  const calcAmt=()=>{const q=parseFloat(qtyEl.value),p=parseFloat(priceEl.value);if(q>0&&p>0)amountEl.value=Math.round(q*p);};
+  const calcPrc=()=>{const q=parseFloat(qtyEl.value),a=parseFloat(amountEl.value);if(q>0&&a>0)priceEl.value=+(a/q).toFixed(2);};
+  priceEl.addEventListener('input',calcAmt);
+  amountEl.addEventListener('input',calcPrc);
+  qtyEl.addEventListener('input',()=>{if(priceEl.value)calcAmt();else if(amountEl.value)calcPrc();});
+
   document.getElementById('in-submit').addEventListener('click',async()=>{
     const herb=document.getElementById('in-herb').value;
-    const qty=parseFloat(document.getElementById('in-qty').value);
-    const price=parseFloat(document.getElementById('in-price').value)||0;
+    const qty=parseFloat(qtyEl.value);
+    const price=parseFloat(priceEl.value)||0;
+    const amount=parseFloat(amountEl.value)||0;
     const date=document.getElementById('in-date').value;
     const supplier=document.getElementById('in-sup').value;
     const note=document.getElementById('in-note').value.trim();
     if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
-    inboundData.push({id:uid(),herb,qty,price,date,supplier,note});
+    inboundData.push({id:uid(),herb,qty,price,amount,date,supplier,note});
     await save(KEYS.inbound,inboundData);
-    document.getElementById('in-qty').value='';
-    document.getElementById('in-price').value='';
+    qtyEl.value='';priceEl.value='';amountEl.value='';
     document.getElementById('in-note').value='';
     renderInbound();
   });
+
+  el.querySelectorAll('.ib-edit').forEach(btn=>{
+    btn.addEventListener('click',()=>{editingInboundId=btn.dataset.id;renderInbound();});
+  });
+  el.querySelectorAll('.ib-cancel').forEach(btn=>{
+    btn.addEventListener('click',()=>{editingInboundId=null;renderInbound();});
+  });
+  el.querySelectorAll('.ib-save').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const tr=btn.closest('tr');
+      const herb=tr.querySelector('.ei-herb').value;
+      const qty=parseFloat(tr.querySelector('.ei-qty').value);
+      const price=parseFloat(tr.querySelector('.ei-price').value)||0;
+      const amount=parseFloat(tr.querySelector('.ei-amount').value)||0;
+      const date=tr.querySelector('.ei-date').value;
+      const supplier=tr.querySelector('.ei-sup').value;
+      const note=tr.querySelector('.ei-note').value.trim();
+      if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
+      inboundData=inboundData.map(r=>r.id===btn.dataset.id?{...r,herb,qty,price,amount,date,supplier,note}:r);
+      await save(KEYS.inbound,inboundData);
+      editingInboundId=null;renderInbound();
+    });
+  });
+
+  // 편집 행 자동계산
+  const eiQty=el.querySelector('.ei-qty'),eiPrice=el.querySelector('.ei-price'),eiAmt=el.querySelector('.ei-amount');
+  if(eiQty&&eiPrice&&eiAmt){
+    const eCalcAmt=()=>{const q=parseFloat(eiQty.value),p=parseFloat(eiPrice.value);if(q>0&&p>0)eiAmt.value=Math.round(q*p);};
+    const eCalcPrc=()=>{const q=parseFloat(eiQty.value),a=parseFloat(eiAmt.value);if(q>0&&a>0)eiPrice.value=+(a/q).toFixed(2);};
+    eiPrice.addEventListener('input',eCalcAmt);
+    eiAmt.addEventListener('input',eCalcPrc);
+    eiQty.addEventListener('input',()=>{if(eiPrice.value)eCalcAmt();else if(eiAmt.value)eCalcPrc();});
+  }
+
   el.querySelectorAll('.btn-del[data-type="ib"]').forEach(btn=>{
     btn.addEventListener('click',async()=>{
       if(!confirm('삭제하시겠습니까?'))return;
@@ -300,11 +375,12 @@ function renderInbound(){
 function renderOutbound(){
   const el=document.getElementById('view-outbound');
   const recent=[...outboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).slice(0,50);
+  const herbOpts=`<option value="">약재 선택</option>${HERBS.map(h=>`<option>${h}</option>`).join('')}`;
   el.innerHTML=`
   <div class="card">
     <div class="section-title">출고 등록</div>
     <div class="form-row">
-      <div class="form-group grow"><label>약재</label><select id="out-herb"><option value="">약재 선택</option>${HERBS.map(h=>`<option>${h}</option>`).join('')}</select></div>
+      <div class="form-group grow"><label>약재</label><select id="out-herb">${herbOpts}</select></div>
       <div class="form-group"><label>수량 (g)</label><input type="number" id="out-qty" min="0" step="0.1" placeholder="0.0" style="width:90px"></div>
       <div class="form-group"><label>날짜</label><input type="date" id="out-date" value="${todayStr()}"></div>
       <div class="form-group"><label>용도</label><input type="text" id="out-purpose" placeholder="처방, 폐기 등"></div>
@@ -316,13 +392,33 @@ function renderOutbound(){
     <div class="section-title">출고 이력 (최근 50건)</div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th>용도</th><th>메모</th><th></th></tr></thead>
-      <tbody>${recent.length===0?'<tr><td colspan="6" class="empty">출고 이력이 없습니다</td></tr>':recent.map(r=>`<tr>
-        <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
-        <td>${r.purpose||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
-        <td><button class="btn-del" data-id="${r.id}" data-type="ob">×</button></td>
-      </tr>`).join('')}</tbody>
+      <tbody>${recent.length===0?'<tr><td colspan="6" class="empty">출고 이력이 없습니다</td></tr>':recent.map(r=>{
+        if(editingOutboundId===r.id){
+          const hOpts=HERBS.map(h=>`<option${h===r.herb?' selected':''}>${h}</option>`).join('');
+          return`<tr style="background:var(--violet-light)">
+            <td><input class="settings-inp eo-date" type="date" value="${r.date}" style="width:116px"></td>
+            <td><select class="settings-inp eo-herb" style="width:88px">${hOpts}</select></td>
+            <td><input class="settings-inp eo-qty" type="number" step="0.1" value="${r.qty}" style="width:70px;text-align:right"></td>
+            <td><input class="settings-inp eo-purpose" type="text" value="${r.purpose||''}" style="width:90px"></td>
+            <td><input class="settings-inp eo-note" type="text" value="${r.note||''}" style="min-width:80px;width:100%"></td>
+            <td style="white-space:nowrap">
+              <button class="btn btn-primary btn-sm ob-save" data-id="${r.id}">✓</button>
+              <button class="btn btn-secondary btn-sm ob-cancel" style="margin-left:2px">✕</button>
+            </td>
+          </tr>`;
+        }
+        return`<tr>
+          <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
+          <td>${r.purpose||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
+          <td style="white-space:nowrap">
+            <button class="btn-edit ob-edit" data-id="${r.id}">✎</button>
+            <button class="btn-del" data-id="${r.id}" data-type="ob">×</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
     </table></div>
   </div>`;
+
   document.getElementById('out-submit').addEventListener('click',async()=>{
     const herb=document.getElementById('out-herb').value;
     const qty=parseFloat(document.getElementById('out-qty').value);
@@ -337,6 +433,28 @@ function renderOutbound(){
     document.getElementById('out-note').value='';
     renderOutbound();
   });
+
+  el.querySelectorAll('.ob-edit').forEach(btn=>{
+    btn.addEventListener('click',()=>{editingOutboundId=btn.dataset.id;renderOutbound();});
+  });
+  el.querySelectorAll('.ob-cancel').forEach(btn=>{
+    btn.addEventListener('click',()=>{editingOutboundId=null;renderOutbound();});
+  });
+  el.querySelectorAll('.ob-save').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const tr=btn.closest('tr');
+      const herb=tr.querySelector('.eo-herb').value;
+      const qty=parseFloat(tr.querySelector('.eo-qty').value);
+      const date=tr.querySelector('.eo-date').value;
+      const purpose=tr.querySelector('.eo-purpose').value.trim();
+      const note=tr.querySelector('.eo-note').value.trim();
+      if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
+      outboundData=outboundData.map(r=>r.id===btn.dataset.id?{...r,herb,qty,date,purpose,note}:r);
+      await save(KEYS.outbound,outboundData);
+      editingOutboundId=null;renderOutbound();
+    });
+  });
+
   el.querySelectorAll('.btn-del[data-type="ob"]').forEach(btn=>{
     btn.addEventListener('click',async()=>{
       if(!confirm('삭제하시겠습니까?'))return;
