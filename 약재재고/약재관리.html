@@ -440,13 +440,13 @@ function renderStock(){
     <div class="stat-card"><div class="stat-num muted">${zeroCount}</div><div class="stat-label">재고 없음</div></div>
   </div>
   <div class="card">
-    <div class="toolbar">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:.875rem;">
+      <div style="display:flex;gap:3px;flex-wrap:nowrap;flex:1;overflow-x:auto;">
+        <button class="pl-cho-btn${!stockConsonant?' active':''}" data-st-cho="">전체</button>
+        ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${stockConsonant===c?' active':''}" data-st-cho="${c}">${c}</button>`).join('')}
+      </div>
       <input class="search-input" id="stock-search" placeholder="약재명 검색..." value="${stockSearch}" style="width:150px;min-width:0;flex:none;">
       <button class="toggle-btn${showLowOnly?' on':''}" id="low-only-btn">부족만 보기</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:3px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:.875rem;">
-      <button class="pl-cho-btn${!stockConsonant?' active':''}" data-st-cho="">전체</button>
-      ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${stockConsonant===c?' active':''}" data-st-cho="${c}">${c}</button>`).join('')}
     </div>
     <div class="tbl-wrap">
       <table>
