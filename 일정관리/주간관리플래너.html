@@ -739,8 +739,10 @@ let dragSrcMainTab=null;
 function initTabDrag(){
   document.querySelectorAll('.tab').forEach(t=>{
     t.draggable=true;
-    t.addEventListener('dragstart',()=>{dragSrcMainTab=t;});
-    t.addEventListener('dragover',e=>{e.preventDefault();if(t!==dragSrcMainTab)t.classList.add('drag-over');});
+    t.addEventListener('dragstart',e=>{dragSrcMainTab=t;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',t.dataset.tab);t.style.opacity='0.5';});
+    t.addEventListener('dragend',()=>{t.style.opacity='';document.querySelectorAll('.tab').forEach(x=>x.classList.remove('drag-over'));});
+    t.addEventListener('dragenter',e=>{e.preventDefault();if(t!==dragSrcMainTab)t.classList.add('drag-over');});
+    t.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';});
     t.addEventListener('dragleave',()=>t.classList.remove('drag-over'));
     t.addEventListener('drop',e=>{
       e.preventDefault();t.classList.remove('drag-over');
