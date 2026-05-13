@@ -226,7 +226,7 @@ let rxHerbs=[]; // [{id,herb,qty}]  qty = 첩당g
 let editingRxId=null;
 
 /* ── 약재 자동완성 ── */
-function setupHerbAC(input,dropdown,onSelect){
+function setupHerbAC(input,dropdown,onSelect,onEnterNav){
   let hlIdx=-1;
   const filter=()=>{
     const q=input.value.trim();
@@ -242,13 +242,28 @@ function setupHerbAC(input,dropdown,onSelect){
     const items=dropdown.querySelectorAll('li');
     if(e.key==='ArrowDown'){hlIdx=Math.min(hlIdx+1,items.length-1);items.forEach((li,i)=>li.classList.toggle('hl',i===hlIdx));e.preventDefault();}
     else if(e.key==='ArrowUp'){hlIdx=Math.max(hlIdx-1,0);items.forEach((li,i)=>li.classList.toggle('hl',i===hlIdx));e.preventDefault();}
-    else if(e.key==='Enter'&&hlIdx>=0){onSelect(items[hlIdx].dataset.herb);dropdown.classList.remove('open');e.preventDefault();}
+    else if(e.key==='Enter'&&hlIdx>=0){onSelect(items[hlIdx].dataset.herb);dropdown.classList.remove('open');hlIdx=-1;e.preventDefault();}
+    else if(e.key==='Enter'){dropdown.classList.remove('open');hlIdx=-1;if(onEnterNav)onEnterNav();e.preventDefault();}
     else if(e.key==='Escape'){dropdown.classList.remove('open');}
   });
   dropdown.addEventListener('mousedown',e=>{
     const li=e.target.closest('li');
     if(li){onSelect(li.dataset.herb);dropdown.classList.remove('open');}
   });
+}
+
+function navigateToNextHerbRow(rid,sel){
+  const allTrs=[...document.querySelectorAll('#rx-herb-tbody tr[data-rid]')];
+  const idx=allTrs.findIndex(t=>t.dataset.rid===rid);
+  if(idx>=0&&idx<allTrs.length-1){
+    allTrs[idx+1].querySelector(sel)?.focus();
+  } else {
+    addHerbRow('','',false);
+    setTimeout(()=>{
+      const rows=document.querySelectorAll('#rx-herb-tbody tr[data-rid]');
+      if(rows.length)rows[rows.length-1].querySelector(sel)?.focus();
+    },40);
+  }
 }
 
 /* ── 처방 등록 탭 ── */
@@ -313,6 +328,11 @@ function attachRowListeners(tr){
     const row=rxHerbs.find(r=>r.id===rid);
     if(row){row.herb=herb;nameInput.value=herb;}
     updateCells();
+  },()=>{
+    const row=rxHerbs.find(r=>r.id===rid);
+    if(row)row.herb=nameInput.value;
+    updateCells();
+    navigateToNextHerbRow(rid,'.rx-name');
   });
   nameInput.addEventListener('blur',()=>{
     const row=rxHerbs.find(r=>r.id===rid);
@@ -323,6 +343,14 @@ function attachRowListeners(tr){
     const row=rxHerbs.find(r=>r.id===rid);
     if(row)row.qty=qtyInput.value;
     updateCells();
+  });
+  qtyInput.addEventListener('keydown',e=>{
+    if(e.key!=='Enter')return;
+    e.preventDefault();
+    const row=rxHerbs.find(r=>r.id===rid);
+    if(row)row.qty=qtyInput.value;
+    updateCells();
+    navigateToNextHerbRow(rid,'.rx-qty');
   });
   tr.querySelector('.rx-del').addEventListener('click',()=>{
     rxHerbs=rxHerbs.filter(r=>r.id!==rid);
