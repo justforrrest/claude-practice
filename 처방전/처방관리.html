@@ -848,7 +848,12 @@ function renderHistory(){
     </table></div>
   </div>`;
 
-  document.getElementById('hist-q').addEventListener('input',e=>{histSearch=e.target.value;renderHistory();});
+  document.getElementById('hist-q').addEventListener('input',e=>{
+    histSearch=e.target.value;
+    renderHistory();
+    const q=document.getElementById('hist-q');
+    if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}
+  });
   document.getElementById('batch-fees-btn')?.addEventListener('click',batchAddFees);
 
   el.querySelectorAll('.hist-row').forEach(tr=>{
@@ -972,7 +977,12 @@ function renderPatients(){
     </table></div>
   </div>`;
 
-  document.getElementById('pat-search').addEventListener('input',e=>{patSearch=e.target.value;renderPatients();});
+  document.getElementById('pat-search').addEventListener('input',e=>{
+    patSearch=e.target.value;
+    renderPatients();
+    const q=document.getElementById('pat-search');
+    if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}
+  });
   el.querySelectorAll('[data-cho]').forEach(b=>b.addEventListener('click',()=>{patIndex=b.dataset.cho;renderPatients();}));
   el.querySelectorAll('.pat-name-link').forEach(b=>b.addEventListener('click',()=>showPatientDetail(b.dataset.pid)));
   el.querySelectorAll('.pat-del').forEach(b=>b.addEventListener('click',async()=>{
