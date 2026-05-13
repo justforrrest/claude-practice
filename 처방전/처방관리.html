@@ -183,6 +183,7 @@ function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMo
 function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
 function fmtW(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:0});}
 function parseNum(v){return Number(String(v||'').replace(/,/g,''))||0;}
+function normBirth(v){const c=(v||'').replace(/[.\-\/\s]/g,'');if(c.length===8&&/^\d{8}$/.test(c))return`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`;if(c.length===6&&/^\d{6}$/.test(c)){const yy=parseInt(c.slice(0,2));const yr=yy<=30?2000+yy:1900+yy;return`${yr}-${c.slice(2,4)}-${c.slice(4,6)}`;}return v||'';}
 const _CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
 const _NORM={ㄲ:'ㄱ',ㄸ:'ㄷ',ㅃ:'ㅂ',ㅆ:'ㅅ',ㅉ:'ㅈ'};
 function getInitCho(s){const c=(s||'').charCodeAt(0);if(c>=0xAC00&&c<=0xD7A3){const ch=_CHO[Math.floor((c-0xAC00)/(21*28))];return _NORM[ch]||ch;}return (s||'')[0]?.toUpperCase()||'';}
@@ -493,7 +494,7 @@ function renderRegister(){
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group" style="flex:0 0 auto"><label>구분</label><select id="rx-category" style="width:90px"><option value="">-</option><option value="치료"${(rx?.category||'')==='치료'?' selected':''}>치료</option><option value="녹용"${(rx?.category||'')==='녹용'?' selected':''}>녹용</option><option value="건보"${(rx?.category||'')==='건보'?' selected':''}>건보</option></select></div>
-          <div class="form-group" style="flex:0 0 auto"><label>회차</label><div style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="number" id="rx-session-cur" value="${rx?.sessionCur||''}" min="1" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차 중</span><input type="number" id="rx-session-total" value="${rx?.sessionTotal||''}" min="1" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차</span></div></div>
+          <div class="form-group" style="flex:0 0 auto"><label>회차</label><div style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="number" id="rx-session-cur" value="${rx?.sessionCur||''}" min="1" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차 /</span><input type="number" id="rx-session-total" value="${rx?.sessionTotal||''}" min="1" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차</span></div></div>
           <div class="form-group grow"><label>처방명</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="감비탕, 소청룡탕 등"></div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
@@ -656,7 +657,8 @@ function renderRegister(){
     const ageEl=document.getElementById('rx-patient-age');
     if(!ageEl)return;
     if(!birthVal){ageEl.textContent='-';return;}
-    const clean=birthVal.replace(/[.\-\/\s]/g,'');
+    const norm=normBirth(birthVal);
+    const clean=norm.replace(/[.\-\/\s]/g,'');
     if(clean.length!==8||!/^\d{8}$/.test(clean)){ageEl.textContent='-';return;}
     const y=parseInt(clean.slice(0,4)),m=parseInt(clean.slice(4,6))-1,d=parseInt(clean.slice(6,8));
     const birth=new Date(y,m,d);const today=new Date();
@@ -665,7 +667,13 @@ function renderRegister(){
     if(mo<0||(mo===0&&today.getDate()<birth.getDate()))age--;
     ageEl.textContent=(age>=0&&age<150)?String(age):'-';
   };
-  document.getElementById('rx-patient-birth')?.addEventListener('input',updateAge);
+  const birthInp=document.getElementById('rx-patient-birth');
+  birthInp?.addEventListener('input',updateAge);
+  birthInp?.addEventListener('blur',()=>{
+    if(!birthInp.value.trim())return;
+    birthInp.value=normBirth(birthInp.value);
+    updateAge();
+  });
   updateAge();
 
   const setGenderBtns=()=>{
@@ -772,7 +780,7 @@ function renderRegister(){
 async function saveRx(){
   const patientName=document.getElementById('rx-patient').value.trim();
   if(!patientName){alert('환자명을 입력해주세요.');return;}
-  const patientBirth=document.getElementById('rx-patient-birth')?.value||'';
+  const patientBirth=normBirth(document.getElementById('rx-patient-birth')?.value||'');
   let patient=patientsData.find(p=>p.name===patientName);
   if(!patient){
     patient={id:uid(),name:patientName,memo:'',birth:patientBirth,gender:rxGender};
@@ -861,7 +869,7 @@ function renderHistory(){
         list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
           <td>${r.date}</td><td><b>${r.patientName}</b></td>
           <td>${r.category?`<span class="cat-badge cat-${r.category}">${r.category}</span>`:'-'}</td>
-          <td style="white-space:nowrap;color:var(--text-2);font-size:12px">${(r.sessionCur&&r.sessionTotal)?`${r.sessionCur}차 중 ${r.sessionTotal}차`:(r.sessionCur?`${r.sessionCur}차`:(r.sessionTotal?`/ ${r.sessionTotal}차`:'-'))}</td>
+          <td style="white-space:nowrap;color:var(--text-2);font-size:12px">${(r.sessionCur&&r.sessionTotal)?`${r.sessionCur}차 / ${r.sessionTotal}차`:(r.sessionCur?`${r.sessionCur}차`:(r.sessionTotal?`/ ${r.sessionTotal}차`:'-'))}</td>
           <td>${r.diagnosis||'-'}</td>
           <td class="num">${r.packs}첩</td>
           <td class="num">${fmtW(r.fees?r.totalPrice:r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
@@ -1022,7 +1030,6 @@ function renderPatients(){
   patSrEl.addEventListener('input',e=>{if(e.isComposing)return;patSearch=patSrEl.value;renderPatients();const q=document.getElementById('pat-search');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}});
   el.querySelectorAll('[data-cho]').forEach(b=>b.addEventListener('click',()=>{patIndex=b.dataset.cho;renderPatients();}));
 
-  const normBirth=v=>{const c=v.replace(/[.\-\/\s]/g,'');if(c.length===8&&/^\d{8}$/.test(c))return`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`;if(c.length===6&&/^\d{6}$/.test(c)){const yy=parseInt(c.slice(0,2));const yr=yy<=30?2000+yy:1900+yy;return`${yr}-${c.slice(2,4)}-${c.slice(4,6)}`;}return v;};
   const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?a+'세':'-';};
 
   let patCellTimer=null;
