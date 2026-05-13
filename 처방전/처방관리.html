@@ -493,6 +493,7 @@ function renderRegister(){
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group" style="flex:0 0 auto"><label>구분</label><select id="rx-category" style="width:90px"><option value="">-</option><option value="치료"${(rx?.category||'')==='치료'?' selected':''}>치료</option><option value="녹용"${(rx?.category||'')==='녹용'?' selected':''}>녹용</option><option value="건보"${(rx?.category||'')==='건보'?' selected':''}>건보</option></select></div>
+          <div class="form-group" style="flex:0 0 auto"><label>회차</label><div style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="number" id="rx-session-cur" value="${rx?.sessionCur||''}" min="1" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차 중</span><input type="number" id="rx-session-total" value="${rx?.sessionTotal||''}" min="1" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차</span></div></div>
           <div class="form-group grow"><label>처방명</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="감비탕, 소청룡탕 등"></div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
@@ -752,7 +753,7 @@ function renderRegister(){
   autoResize();
 
   // 등록 폼 Enter 키 이동
-  const formNav=['rx-patient','rx-patient-birth','rx-date','rx-category','rx-diagnosis','rx-packs','rx-total-packs','rx-freq','rx-days-display','rx-timing','rx-note'];
+  const formNav=['rx-patient','rx-patient-birth','rx-date','rx-category','rx-session-total','rx-session-cur','rx-diagnosis','rx-packs','rx-total-packs','rx-freq','rx-days-display','rx-timing','rx-note'];
   formNav.forEach((id,i)=>{
     if(i===formNav.length-1)return; // 마지막(메모)은 Enter=줄바꿈 유지
     const el=document.getElementById(id);
@@ -799,6 +800,8 @@ async function saveRx(){
     patientId,patientName:patient.name,
     date:document.getElementById('rx-date').value,
     category:document.getElementById('rx-category')?.value||'',
+    sessionTotal:Number(document.getElementById('rx-session-total')?.value)||null,
+    sessionCur:Number(document.getElementById('rx-session-cur')?.value)||null,
     diagnosis:document.getElementById('rx-diagnosis').value.trim(),
     dosageFreq:Number(document.getElementById('rx-freq')?.value||3),
     dosageTiming:document.getElementById('rx-timing')?.value.trim()||'',
@@ -853,11 +856,12 @@ function renderHistory(){
   </div>
   <div class="card" style="padding:0">
     <div class="tbl-wrap"><table>
-      <thead><tr><th>날짜</th><th>환자</th><th>구분</th><th>처방명</th><th class="num">첩수</th><th class="num">총 금액</th><th>출고</th><th></th></tr></thead>
-      <tbody>${!list.length?`<tr><td colspan="8" class="empty">처방 이력이 없습니다</td></tr>`:
+      <thead><tr><th>날짜</th><th>환자</th><th>구분</th><th>회차</th><th>처방명</th><th class="num">첩수</th><th class="num">총 금액</th><th>출고</th><th></th></tr></thead>
+      <tbody>${!list.length?`<tr><td colspan="9" class="empty">처방 이력이 없습니다</td></tr>`:
         list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
           <td>${r.date}</td><td><b>${r.patientName}</b></td>
           <td>${r.category?`<span class="cat-badge cat-${r.category}">${r.category}</span>`:'-'}</td>
+          <td style="white-space:nowrap;color:var(--text-2);font-size:12px">${(r.sessionCur&&r.sessionTotal)?`${r.sessionCur}차 중 ${r.sessionTotal}차`:(r.sessionCur?`${r.sessionCur}차`:(r.sessionTotal?`/ ${r.sessionTotal}차`:'-'))}</td>
           <td>${r.diagnosis||'-'}</td>
           <td class="num">${r.packs}첩</td>
           <td class="num">${fmtW(r.fees?r.totalPrice:r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
