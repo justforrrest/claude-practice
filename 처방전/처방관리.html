@@ -416,11 +416,29 @@ function renderRegister(){
           <div class="form-group" style="flex:1"><label>첩수</label><input type="number" id="rx-packs" value="${rx?.packs||20}" min="1"></div>
           <div class="form-group" style="flex:1"><label>팩수</label><input type="number" id="rx-total-packs" value="${rx?.totalPacks||45}" min="1"></div>
         </div>
-        <div class="form-row" style="margin-bottom:.75rem">
-          <div class="form-group grow"><label>복용법</label><input type="text" id="rx-dosage" value="${rx?.dosage||''}" placeholder="하루 2회, 식후 30분"></div>
+        <div class="form-row" style="margin-bottom:.75rem;align-items:flex-end;flex-wrap:nowrap;gap:6px">
+          <div class="form-group" style="flex:0 0 auto;min-width:0">
+            <label>하루</label>
+            <div style="display:flex;align-items:center;gap:3px">
+              <input type="number" id="rx-freq" value="${rx?.dosageFreq||3}" min="1" style="width:40px;text-align:center">
+              <span style="font-size:13px;color:var(--text-2)">회</span>
+            </div>
+          </div>
+          <div class="form-group" style="flex:1;min-width:0">
+            <label>복용시기</label>
+            <input type="text" id="rx-timing" value="${rx?.dosageTiming||''}" placeholder="식후 30분">
+          </div>
+          <div class="form-group" style="flex:0 0 auto;min-width:0">
+            <label>총 일수</label>
+            <div style="display:flex;align-items:center;gap:3px">
+              <span id="rx-days-display" style="font-size:13px;font-variant-numeric:tabular-nums;color:var(--text-2);min-width:20px;text-align:right">-</span>
+              <span style="font-size:13px;color:var(--text-2)">일</span>
+            </div>
+          </div>
         </div>
         <div class="form-row">
-          <div class="form-group grow"><label>메모</label><input type="text" id="rx-note" value="${rx?.note||''}" placeholder="메모 (선택)"></div>
+          <div class="form-group grow"><label>메모</label><textarea id="rx-note" placeholder="메모 (선택)" rows="2"
+            style="border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;resize:vertical;">${rx?.note||''}</textarea></div>
         </div>
       </div>
 
@@ -486,8 +504,8 @@ function renderRegister(){
             <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-del-amount">-</td>
           </tr>
           <tr style="border-top:2px solid var(--border)">
-            <td colspan="2" style="padding:8px 0 4px;font-weight:700;color:var(--text-1)">총 합계</td>
-            <td style="padding:8px 0 4px;text-align:right;font-size:18px;font-weight:700;color:var(--violet-d)" id="rx-cost-total">0원</td>
+            <td style="padding:8px 0 4px;font-weight:700;color:var(--text-1)">총 합계</td>
+            <td colspan="2" style="padding:8px 0 4px;text-align:right;font-size:16px;font-weight:700;color:var(--violet-d);white-space:nowrap" id="rx-cost-total">0원</td>
           </tr>
         </table>
         <div style="font-size:11px;color:var(--text-3);margin-top:.5rem" id="rx-cost-info"></div>
@@ -525,7 +543,15 @@ function renderRegister(){
     });
     calcSummary();
   });
-  document.getElementById('rx-total-packs').addEventListener('input',calcSummary);
+  const updateDays=()=>{
+    const tp=Number(document.getElementById('rx-total-packs')?.value||45);
+    const fr=Number(document.getElementById('rx-freq')?.value||1);
+    const el=document.getElementById('rx-days-display');
+    if(el)el.textContent=fr>0?String(Math.floor(tp/fr)):'-';
+  };
+  document.getElementById('rx-total-packs').addEventListener('input',()=>{calcSummary();updateDays();});
+  document.getElementById('rx-freq')?.addEventListener('input',updateDays);
+  updateDays();
 
   ['rx-fee-dispensing','rx-fee-decoction','rx-fee-packaging','rx-fee-delivery'].forEach(id=>{
     const el=document.getElementById(id);
@@ -571,7 +597,9 @@ async function saveRx(){
     patientId,patientName:patient.name,
     date:document.getElementById('rx-date').value,
     diagnosis:document.getElementById('rx-diagnosis').value.trim(),
-    dosage:document.getElementById('rx-dosage').value.trim(),
+    dosageFreq:Number(document.getElementById('rx-freq')?.value||3),
+    dosageTiming:document.getElementById('rx-timing')?.value.trim()||'',
+    days:Math.floor(totalPacks/(Number(document.getElementById('rx-freq')?.value)||3)),
     packs,
     totalPacks,
     herbs:herbs.map(r=>({herb:r.herb,qtyPerPack:Number(r.qty)})),
@@ -648,8 +676,9 @@ function showDetail(id){
       <button class="btn btn-secondary btn-sm" id="close-detail">닫기</button>
     </div>
     <div style="font-size:13px;color:var(--text-2);margin-bottom:.875rem;display:flex;flex-wrap:wrap;gap:12px">
-      ${rx.dosage?`<span>복용법: <b>${rx.dosage}</b></span>`:''}
-      <span>총 일수: <b>${rx.days}일</b></span>
+      ${(rx.dosageFreq||rx.dosageTiming)?`<span>복용법: <b>하루 ${rx.dosageFreq||3}회${rx.dosageTiming?' · '+rx.dosageTiming:''}</b></span>`:''}
+      ${rx.days?`<span>총 일수: <b>${rx.days}일</b></span>`:''}
+      ${(!rx.dosageFreq&&!rx.dosageTiming&&rx.dosage)?`<span>복용법: <b>${rx.dosage}</b></span>`:''}
       <span>첩수: <b>${rx.packs}첩</b></span>
       ${rx.totalPacks?`<span>팩수: <b>${rx.totalPacks}팩</b></span>`:''}
       ${rx.note?`<span>메모: ${rx.note}</span>`:''}
