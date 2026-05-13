@@ -125,6 +125,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
   <div class="modal" id="detail-modal-content"></div>
 </div>
 
+<!-- 환자 수정 모달 -->
+<div class="modal-overlay" id="patient-modal-overlay">
+  <div class="modal" id="patient-modal-content" style="max-width:420px"></div>
+</div>
+
 <!-- 동기화 코드 모달 -->
 <div class="sync-modal-overlay" id="sync-modal-overlay">
   <div class="sync-modal">
@@ -953,7 +958,7 @@ function renderPatients(){
         list.map(p=>{
           const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
           return`<tr>
-            <td><b>${p.name}</b></td><td class="num">${cnt}건</td><td>${p.memo||'-'}</td>
+            <td><b class="pat-name-link" data-pid="${p.id}" style="cursor:pointer;color:var(--violet-d)">${p.name}</b></td><td class="num">${cnt}건</td><td>${p.memo||'-'}</td>
             <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
           </tr>`;
         }).join('')
@@ -963,6 +968,7 @@ function renderPatients(){
 
   document.getElementById('pat-search').addEventListener('input',e=>{patSearch=e.target.value;renderPatients();});
   el.querySelectorAll('[data-cho]').forEach(b=>b.addEventListener('click',()=>{patIndex=b.dataset.cho;renderPatients();}));
+  el.querySelectorAll('.pat-name-link').forEach(b=>b.addEventListener('click',()=>showPatientDetail(b.dataset.pid)));
   el.querySelectorAll('.pat-del').forEach(b=>b.addEventListener('click',async()=>{
     const p=patientsData.find(x=>x.id===b.dataset.pid);
     const cnt=prescriptionsData.filter(r=>r.patientId===b.dataset.pid||r.patientName===p?.name).length;
@@ -973,6 +979,95 @@ function renderPatients(){
   }));
 }
 
+
+function showPatientDetail(pid){
+  const p=patientsData.find(x=>x.id===pid);
+  if(!p)return;
+  const calcAge=birth=>{
+    const clean=(birth||'').replace(/[.\-\/\s]/g,'');
+    if(clean.length!==8||!/^\d{8}$/.test(clean))return'-';
+    const y=parseInt(clean.slice(0,4)),m=parseInt(clean.slice(4,6))-1,d=parseInt(clean.slice(6,8));
+    const b=new Date(y,m,d),today=new Date();
+    let age=today.getFullYear()-b.getFullYear();
+    const mo=today.getMonth()-b.getMonth();
+    if(mo<0||(mo===0&&today.getDate()<b.getDate()))age--;
+    return(age>=0&&age<150)?String(age):'-';
+  };
+  let gender=p.gender||'';
+  const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
+  document.getElementById('patient-modal-content').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div style="font-size:15px;font-weight:700">환자 정보</div>
+      <button class="btn btn-secondary btn-sm" id="close-pat-modal">닫기</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.75rem">
+      <div class="form-row" style="align-items:flex-end;flex-wrap:nowrap;gap:8px">
+        <div class="form-group grow">
+          <label>이름</label>
+          <input type="text" id="pat-edit-name" value="${p.name||''}">
+        </div>
+        <div class="form-group" style="flex-shrink:0">
+          <label>성별</label>
+          <div style="display:flex;gap:3px">
+            <button type="button" id="pat-edit-gender-m" class="btn ${gender==='남'?'btn-primary':'btn-secondary'}" style="padding:7px 12px;font-size:13px">남</button>
+            <button type="button" id="pat-edit-gender-f" class="btn ${gender==='여'?'btn-primary':'btn-secondary'}" style="padding:7px 12px;font-size:13px">여</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-row" style="align-items:flex-end;flex-wrap:nowrap;gap:8px">
+        <div class="form-group" style="flex:1;min-width:0">
+          <label>생년월일</label>
+          <input type="text" id="pat-edit-birth" value="${p.birth||''}" placeholder="19901231" maxlength="10" style="width:100%">
+        </div>
+        <div class="form-group" style="flex-shrink:0">
+          <label>나이</label>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span id="pat-edit-age" style="font-size:13px;color:var(--text-2);font-variant-numeric:tabular-nums;border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;min-width:48px;text-align:center;background:var(--surface)">${calcAge(p.birth)}</span>
+            <span style="font-size:13px;color:var(--text-3)">세</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>메모</label>
+        <textarea id="pat-edit-memo" rows="2" style="border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;resize:none;">${p.memo||''}</textarea>
+      </div>
+      ${cnt?`<div style="font-size:12px;color:var(--text-3)">처방 이력 ${cnt}건</div>`:''}
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-secondary" id="cancel-pat-modal">취소</button>
+      <button class="btn btn-primary" id="save-pat-modal">저장</button>
+    </div>`;
+
+  document.getElementById('patient-modal-overlay').classList.add('open');
+
+  const updatePatAge=()=>{document.getElementById('pat-edit-age').textContent=calcAge(document.getElementById('pat-edit-birth').value);};
+  document.getElementById('pat-edit-birth').addEventListener('input',updatePatAge);
+
+  const setGender=()=>{
+    document.getElementById('pat-edit-gender-m').className=`btn ${gender==='남'?'btn-primary':'btn-secondary'}`;
+    document.getElementById('pat-edit-gender-m').style.cssText='padding:7px 12px;font-size:13px';
+    document.getElementById('pat-edit-gender-f').className=`btn ${gender==='여'?'btn-primary':'btn-secondary'}`;
+    document.getElementById('pat-edit-gender-f').style.cssText='padding:7px 12px;font-size:13px';
+  };
+  document.getElementById('pat-edit-gender-m').addEventListener('click',()=>{gender=gender==='남'?'':'남';setGender();});
+  document.getElementById('pat-edit-gender-f').addEventListener('click',()=>{gender=gender==='여'?'':'여';setGender();});
+
+  const closeModal=()=>document.getElementById('patient-modal-overlay').classList.remove('open');
+  document.getElementById('close-pat-modal').addEventListener('click',closeModal);
+  document.getElementById('cancel-pat-modal').addEventListener('click',closeModal);
+
+  document.getElementById('save-pat-modal').addEventListener('click',async()=>{
+    const newName=document.getElementById('pat-edit-name').value.trim();
+    if(!newName){alert('이름을 입력해주세요.');return;}
+    p.name=newName;
+    p.birth=document.getElementById('pat-edit-birth').value.trim();
+    p.gender=gender;
+    p.memo=document.getElementById('pat-edit-memo').value.trim();
+    await save(RX_KEYS.patients,patientsData);
+    closeModal();
+    renderPatients();
+  });
+}
 
 /* ── 탭 전환 ── */
 function switchTab(tab){
@@ -989,6 +1084,7 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
 
 /* ── 모달 이벤트 ── */
 document.getElementById('detail-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
+document.getElementById('patient-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
 document.getElementById('change-sync-btn').addEventListener('click',()=>{
   document.getElementById('sync-code-input').value=getSyncCode();
   document.getElementById('sync-modal-overlay').classList.add('open');
