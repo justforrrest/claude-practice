@@ -163,7 +163,7 @@ const DEFAULT_PRICES={
   "황백":30.8,"황정":15.8,"후박":8.8
 };
 const DEFAULT_SUPPLIERS=["바른한약","한퓨어","신우한방","옴니허브"];
-const KEYS={inbound:'herb_inbound_v1',outbound:'herb_outbound_v1',settings:'herb_settings_v1',suppliers:'herb_suppliers_v1',pricelist:'herb_pricelist_v1',herbs:'herb_herbs_v1'};
+const KEYS={inbound:'herb_inbound_v1',outbound:'herb_outbound_v1',settings:'herb_settings_v1',suppliers:'herb_suppliers_v1',pricelist:'herb_pricelist_v1',herbs:'herb_herbs_v1',adjust:'herb_adjust_v1'};
 
 /* ── Firebase ── */
 let db;
@@ -194,6 +194,7 @@ let settingsData={prices:{},minStock:{}};
 let suppliersData=[...DEFAULT_SUPPLIERS];
 let pricelistData={}; // {herb:{supplier:price}} 직접 입력 단가
 let herbsData=[...HERBS];
+let adjustData=[];
 let editingInboundId=null,editingOutboundId=null,editingHerbName=null;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
@@ -206,6 +207,7 @@ function calcStock(){
   herbsData.forEach(h=>s[h]=0);
   inboundData.forEach(r=>{if(s[r.herb]!==undefined)s[r.herb]+=Number(r.qty||0);});
   outboundData.forEach(r=>{if(s[r.herb]!==undefined)s[r.herb]-=Number(r.qty||0);});
+  adjustData.forEach(r=>{if(s[r.herb]!==undefined)s[r.herb]+=Number(r.qty||0);});
   return s;
 }
 
@@ -475,8 +477,11 @@ function renderSettings(){
   el.innerHTML=`
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
-      <div class="section-title" style="margin:0">단가 / 최소재고 설정</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <div class="section-title" style="margin:0">약재 설정</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="herb-new-name" placeholder="새 약재명" style="border:1px solid var(--border-2);border-radius:8px;padding:5px 10px;font-size:13px;font-family:var(--font-sans);outline:none;width:120px;">
+        <button class="btn btn-secondary btn-sm" id="herb-add-btn">+ 추가</button>
+        <div style="width:1px;height:18px;background:var(--border);margin:0 2px;"></div>
         <button class="btn btn-secondary btn-sm" id="export-btn" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>내보내기</button>
         <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 16 12 21 17 16"/><line x1="12" y1="21" x2="12" y2="9"/></svg>가져오기<input type="file" id="import-input" accept=".json" style="display:none"></label>
         <button class="btn btn-primary btn-sm" id="settings-save">설정 저장</button>
@@ -484,28 +489,12 @@ function renderSettings(){
     </div>
     <div class="toolbar"><input class="search-input" id="settings-search" placeholder="약재명 검색..." value="${settingsSearch}"></div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>약재명</th><th class="num">단가 (원/g)</th><th class="num">최소재고 (g)</th></tr></thead>
-      <tbody>${herbs.map(h=>`<tr>
-        <td>${h}</td>
-        <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
-        <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
-      </tr>`).join('')}</tbody>
-    </table></div>
-  </div>
-  <div class="card mt">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
-      <div class="section-title" style="margin:0">약재 목록 관리</div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <input type="text" id="herb-new-name" placeholder="새 약재명" style="border:1px solid var(--border-2);border-radius:8px;padding:5px 10px;font-size:13px;font-family:var(--font-sans);outline:none;width:130px;">
-        <button class="btn btn-secondary btn-sm" id="herb-add-btn">+ 추가</button>
-      </div>
-    </div>
-    <div class="toolbar" style="margin-bottom:.75rem;"><input class="search-input" id="herb-list-search" placeholder="약재명 검색..."></div>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>약재명</th><th style="width:80px"></th></tr></thead>
-      <tbody id="herb-list-body">${herbsData.map(h=>{
+      <thead><tr><th>약재명</th><th class="num">단가 (원/g)</th><th class="num">최소재고 (g)</th><th style="width:80px"></th></tr></thead>
+      <tbody>${herbs.map(h=>{
         if(editingHerbName===h)return`<tr style="background:var(--violet-light)">
-          <td><input class="settings-inp herb-rename-inp" type="text" value="${h}" style="width:140px;text-align:left"></td>
+          <td><input class="herb-rename-inp" type="text" value="${h}" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;font-family:var(--font-sans);background:var(--surface);width:120px;"></td>
+          <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
+          <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
           <td style="white-space:nowrap">
             <button class="btn btn-primary btn-sm herb-rename-save" data-old="${h}">✓</button>
             <button class="btn btn-secondary btn-sm herb-rename-cancel" style="margin-left:2px">✕</button>
@@ -513,10 +502,38 @@ function renderSettings(){
         </tr>`;
         return`<tr>
           <td>${h}</td>
+          <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
+          <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
           <td style="white-space:nowrap">
             <button class="btn-edit herb-edit" data-herb="${h}">✎</button>
             <button class="btn-del herb-del" data-herb="${h}">×</button>
           </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>
+  <div class="card mt">
+    <div style="display:flex;align-items:center;margin-bottom:1rem;">
+      <div class="section-title" style="margin:0">재고 조정</div>
+    </div>
+    <div class="form-row" style="flex-wrap:wrap;gap:7px;">
+      <div class="form-group" style="flex:0 0 120px;min-width:0"><label>약재</label><select id="adj-herb" style="width:100%">${herbsData.map(h=>`<option>${h}</option>`).join('')}</select></div>
+      <div class="form-group" style="min-width:0"><label>조정량 (g)</label><input type="number" id="adj-qty" style="width:90px" placeholder="+100 / -50"></div>
+      <div class="form-group" style="min-width:0"><label>날짜</label><input type="date" id="adj-date" value="${todayStr()}" style="width:128px"></div>
+      <div class="form-group" style="flex:1;min-width:0"><label>메모</label><input type="text" id="adj-note" style="width:100%"></div>
+      <div class="form-group" style="align-self:flex-end"><button class="btn btn-primary" id="adj-submit" style="white-space:nowrap;margin-top:auto">등록</button></div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin:.25rem 0 .75rem">양수(+) 입력 시 재고 증가, 음수(-) 입력 시 재고 감소</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>날짜</th><th>약재명</th><th class="num">조정량</th><th>메모</th><th></th></tr></thead>
+      <tbody>${[...adjustData].reverse().slice(0,50).map(r=>{
+        const sign=Number(r.qty)>=0;
+        const display=(sign?'+':'')+Number(r.qty)+'g';
+        return`<tr>
+          <td>${r.date}</td><td>${r.herb}</td>
+          <td class="num" style="color:${sign?'var(--green)':'var(--coral)'};font-weight:600">${display}</td>
+          <td>${r.note||''}</td>
+          <td><button class="btn-del" data-type="adj" data-id="${r.id}">×</button></td>
         </tr>`;
       }).join('')}</tbody>
     </table></div>
@@ -525,7 +542,7 @@ function renderSettings(){
   document.getElementById('settings-search').addEventListener('input',e=>{settingsSearch=e.target.value;renderSettings();});
 
   document.getElementById('settings-save').addEventListener('click',async()=>{
-    el.querySelectorAll('.settings-inp').forEach(inp=>{
+    el.querySelectorAll('.settings-inp[data-field]').forEach(inp=>{
       const h=inp.dataset.herb,v=parseFloat(inp.value)||0;
       if(inp.dataset.field==='price')settingsData.prices[h]=v;
       else settingsData.minStock[h]=v;
@@ -558,15 +575,6 @@ function renderSettings(){
       renderSettings();
     }catch(err){alert('파일 형식이 올바르지 않습니다.');}
     e.target.value='';
-  });
-
-  // 약재 목록 검색 필터
-  document.getElementById('herb-list-search').addEventListener('input',e=>{
-    const q=e.target.value.toLowerCase();
-    el.querySelectorAll('#herb-list-body tr').forEach(tr=>{
-      const name=tr.querySelector('td')?.textContent||'';
-      tr.style.display=name.includes(q)?'':'none';
-    });
   });
 
   // 새 약재 추가
@@ -616,6 +624,30 @@ function renderSettings(){
       renderSettings();renderStock();
     });
   });
+
+  // 재고 조정 등록
+  document.getElementById('adj-submit').addEventListener('click',async()=>{
+    const herb=document.getElementById('adj-herb').value;
+    const qty=parseFloat(document.getElementById('adj-qty').value);
+    const date=document.getElementById('adj-date').value;
+    const note=document.getElementById('adj-note').value.trim();
+    if(!herb||isNaN(qty)||qty===0){alert('약재와 조정량을 입력해주세요.');return;}
+    adjustData.push({id:uid(),herb,qty,date,note});
+    await save(KEYS.adjust,adjustData);
+    document.getElementById('adj-qty').value='';
+    document.getElementById('adj-note').value='';
+    renderSettings();renderStock();
+  });
+
+  // 재고 조정 삭제
+  el.querySelectorAll('.btn-del[data-type="adj"]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      if(!confirm('삭제하시겠습니까?'))return;
+      adjustData=adjustData.filter(r=>r.id!==btn.dataset.id);
+      await save(KEYS.adjust,adjustData);
+      renderSettings();renderStock();
+    });
+  });
 }
 
 /* ── 약재명 변경 (카스케이드) ── */
@@ -623,13 +655,14 @@ async function renameHerb(oldName,newName){
   herbsData=herbsData.map(h=>h===oldName?newName:h);
   inboundData=inboundData.map(r=>r.herb===oldName?{...r,herb:newName}:r);
   outboundData=outboundData.map(r=>r.herb===oldName?{...r,herb:newName}:r);
+  adjustData=adjustData.map(r=>r.herb===oldName?{...r,herb:newName}:r);
   ['prices','minStock'].forEach(k=>{
     if(settingsData[k][oldName]!==undefined){settingsData[k][newName]=settingsData[k][oldName];delete settingsData[k][oldName];}
   });
   if(pricelistData[oldName]){pricelistData[newName]=pricelistData[oldName];delete pricelistData[oldName];}
   await Promise.all([
     save(KEYS.herbs,herbsData),save(KEYS.inbound,inboundData),save(KEYS.outbound,outboundData),
-    save(KEYS.settings,settingsData),save(KEYS.pricelist,pricelistData),
+    save(KEYS.settings,settingsData),save(KEYS.pricelist,pricelistData),save(KEYS.adjust,adjustData),
   ]);
   renderSettings();renderStock();
 }
@@ -753,13 +786,14 @@ function renderTab(tab){
 
 /* ── 초기화 ── */
 (async()=>{
-  const[ib,ob,st,sp,pl,hb]=await Promise.all([load(KEYS.inbound),load(KEYS.outbound),load(KEYS.settings),load(KEYS.suppliers),load(KEYS.pricelist),load(KEYS.herbs)]);
+  const[ib,ob,st,sp,pl,hb,adj]=await Promise.all([load(KEYS.inbound),load(KEYS.outbound),load(KEYS.settings),load(KEYS.suppliers),load(KEYS.pricelist),load(KEYS.herbs),load(KEYS.adjust)]);
   if(ib&&Array.isArray(ib))inboundData=ib;
   if(ob&&Array.isArray(ob))outboundData=ob;
   if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;}
   if(sp&&Array.isArray(sp)&&sp.length>0)suppliersData=sp;
   if(pl&&typeof pl==='object'&&!Array.isArray(pl))pricelistData=pl;
   if(hb&&Array.isArray(hb)&&hb.length>0)herbsData=hb;
+  if(adj&&Array.isArray(adj))adjustData=adj;
   document.getElementById('sync-code-display').textContent=getSyncCode();
   setSyncStatus('☁ 동기화됨');
   setStatus('불러옴 ✓');
