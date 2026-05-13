@@ -964,12 +964,25 @@ function renderPatients(){
   </div>
   <div class="card" style="padding:0">
     <div class="tbl-wrap"><table>
-      <thead><tr><th>환자명</th><th class="num">처방 건수</th><th>메모</th><th></th></tr></thead>
-      <tbody>${!list.length?`<tr><td colspan="4" class="empty">환자가 없습니다</td></tr>`:
+      <thead><tr><th>환자명</th><th>성별</th><th>생년월일</th><th>나이</th><th>메모</th><th class="num">처방이력</th><th></th></tr></thead>
+      <tbody>${!list.length?`<tr><td colspan="7" class="empty">환자가 없습니다</td></tr>`:
         list.map(p=>{
           const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
+          const clean=(p.birth||'').replace(/[.\-\/\s]/g,'');
+          let age='-';
+          if(clean.length===8&&/^\d{8}$/.test(clean)){
+            const by=parseInt(clean.slice(0,4)),bm=parseInt(clean.slice(4,6))-1,bd=parseInt(clean.slice(6,8));
+            const t=new Date();let a=t.getFullYear()-by;
+            if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;
+            if(a>=0&&a<150)age=a+'세';
+          }
           return`<tr>
-            <td><b class="pat-name-link" data-pid="${p.id}" style="cursor:pointer;color:var(--violet-d)">${p.name}</b></td><td class="num">${cnt}건</td><td>${p.memo||'-'}</td>
+            <td><b class="pat-name-link" data-pid="${p.id}" style="cursor:pointer;color:var(--violet-d)">${p.name}</b></td>
+            <td>${p.gender||'-'}</td>
+            <td>${p.birth||'-'}</td>
+            <td>${age}</td>
+            <td style="color:var(--text-3);font-size:12px">${p.memo||'-'}</td>
+            <td class="num">${cnt}건</td>
             <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
           </tr>`;
         }).join('')
