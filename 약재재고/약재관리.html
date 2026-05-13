@@ -84,6 +84,11 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 input[type=number]{-moz-appearance:textfield;}
 .empty{text-align:center;color:var(--text-3);padding:2.5rem;font-size:13px;}
 .mt{margin-top:.875rem;}
+.herb-ac-wrap{position:relative;}
+.herb-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border-2);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);list-style:none;margin:2px 0 0;padding:4px 0;max-height:200px;overflow-y:auto;z-index:200;display:none;}
+.herb-dropdown.open{display:block;}
+.herb-dropdown li{padding:7px 12px;font-size:13px;cursor:pointer;color:var(--text-1);}
+.herb-dropdown li:hover,.herb-dropdown li.hl{background:var(--violet-light);color:var(--violet-d);}
 </style>
 </head>
 <body>
@@ -704,8 +709,10 @@ function renderAdjust(){
     </div>
     <div class="form-row" style="flex-wrap:wrap;gap:7px;">
       <div class="form-group" style="flex:0 0 140px;min-width:0"><label>약재</label>
-        <input type="text" id="adj-herb" list="adj-herb-list" placeholder="약재" style="width:100%" autocomplete="off">
-        <datalist id="adj-herb-list">${herbsData.map(h=>`<option value="${h}">`).join('')}</datalist>
+        <div class="herb-ac-wrap">
+          <input type="text" id="adj-herb" placeholder="약재" style="width:100%" autocomplete="off">
+          <ul id="adj-herb-dropdown" class="herb-dropdown"></ul>
+        </div>
       </div>
       <div class="form-group" style="min-width:0"><label>조정량 (g)</label><input type="number" id="adj-qty" style="width:90px" placeholder="+100 / -50"></div>
       <div class="form-group" style="min-width:0"><label>날짜</label><input type="date" id="adj-date" value="${todayStr()}" style="width:128px"></div>
@@ -751,6 +758,33 @@ function renderAdjust(){
       renderAdjust();renderStock();
     });
   });
+
+  (function(){
+    const inp=document.getElementById('adj-herb');
+    const dd=document.getElementById('adj-herb-dropdown');
+    let hlIdx=-1;
+    function open(q){
+      const list=herbsData.filter(h=>h.includes(q));
+      if(!list.length){dd.classList.remove('open');return;}
+      dd.innerHTML=list.map(h=>`<li data-v="${h}">${h}</li>`).join('');
+      dd.classList.add('open');
+      hlIdx=-1;
+      dd.querySelectorAll('li').forEach(li=>{
+        li.addEventListener('mousedown',e=>{e.preventDefault();inp.value=li.dataset.v;dd.classList.remove('open');});
+      });
+    }
+    inp.addEventListener('input',()=>{const q=inp.value.trim();q?open(q):dd.classList.remove('open');});
+    inp.addEventListener('focus',()=>{const q=inp.value.trim();if(q)open(q);});
+    inp.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('open'),150));
+    inp.addEventListener('keydown',e=>{
+      const items=dd.querySelectorAll('li');
+      if(!items.length)return;
+      if(e.key==='ArrowDown'){e.preventDefault();hlIdx=Math.min(hlIdx+1,items.length-1);items.forEach((li,i)=>li.classList.toggle('hl',i===hlIdx));}
+      else if(e.key==='ArrowUp'){e.preventDefault();hlIdx=Math.max(hlIdx-1,0);items.forEach((li,i)=>li.classList.toggle('hl',i===hlIdx));}
+      else if(e.key==='Enter'&&hlIdx>=0){inp.value=items[hlIdx].dataset.v;dd.classList.remove('open');}
+      else if(e.key==='Escape'){dd.classList.remove('open');}
+    });
+  })();
 }
 
 let settingsSearch='';
