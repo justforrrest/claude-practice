@@ -98,6 +98,7 @@ body{
 .tab.active{color:var(--violet);border-bottom-color:var(--violet);font-weight:600;}
 .tab:not(.active):hover{color:var(--text-1);background:var(--violet-light);}
 .tab[draggable]{cursor:grab;-webkit-user-drag:element;user-select:none;}
+.tab > *{pointer-events:none;}
 .tab.drag-over{background:var(--violet-light);color:var(--text-1);}
 
 .view{display:none;}.view.active{display:block;}
@@ -739,19 +740,25 @@ let dragSrcMainTab=null;
 function initTabDrag(){
   document.querySelectorAll('.tab').forEach(t=>{
     t.draggable=true;
-    t.addEventListener('dragstart',e=>{dragSrcMainTab=t;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',t.dataset.tab);t.style.opacity='0.5';});
+    t.addEventListener('dragstart',e=>{dragSrcMainTab=t;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',t.dataset.tab);setTimeout(()=>t.style.opacity='0.5',0);});
     t.addEventListener('dragend',()=>{t.style.opacity='';document.querySelectorAll('.tab').forEach(x=>x.classList.remove('drag-over'));});
-    t.addEventListener('dragenter',e=>{e.preventDefault();if(t!==dragSrcMainTab)t.classList.add('drag-over');});
-    t.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';});
-    t.addEventListener('dragleave',()=>t.classList.remove('drag-over'));
-    t.addEventListener('drop',e=>{
-      e.preventDefault();t.classList.remove('drag-over');
-      if(!dragSrcMainTab||dragSrcMainTab===t)return;
-      const container=document.querySelector('.tabs');
-      container.insertBefore(dragSrcMainTab,t);
-      const order=[...container.querySelectorAll('.tab')].map(b=>b.dataset.tab);
-      save(KEYS.tabOrder,order);
-    });
+  });
+  const container=document.querySelector('.tabs');
+  container.addEventListener('dragenter',e=>e.preventDefault());
+  container.addEventListener('dragover',e=>{
+    e.preventDefault();e.dataTransfer.dropEffect='move';
+    const target=e.target.closest('.tab');
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('drag-over'));
+    if(target&&target!==dragSrcMainTab)target.classList.add('drag-over');
+  });
+  container.addEventListener('drop',e=>{
+    e.preventDefault();
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('drag-over'));
+    const target=e.target.closest('.tab');
+    if(!dragSrcMainTab||!target||dragSrcMainTab===target)return;
+    container.insertBefore(dragSrcMainTab,target);
+    const order=[...container.querySelectorAll('.tab')].map(b=>b.dataset.tab);
+    save(KEYS.tabOrder,order);
   });
 }
 
