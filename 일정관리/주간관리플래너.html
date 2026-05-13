@@ -729,6 +729,10 @@ function applyTabOrder(order){
     const btn=container.querySelector('[data-tab="'+id+'"]');
     if(btn)container.appendChild(btn);
   });
+  // 저장 순서에 없는 새 탭은 뒤에 추가
+  container.querySelectorAll('.tab').forEach(btn=>{
+    if(!order.includes(btn.dataset.tab))container.appendChild(btn);
+  });
 }
 let dragSrcMainTab=null;
 function initTabDrag(){
