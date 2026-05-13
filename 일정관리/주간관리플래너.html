@@ -736,7 +736,7 @@ function applyTabOrder(order){
     if(!order.includes(btn.dataset.tab))container.appendChild(btn);
   });
 }
-let dragSrcMainTab=null;
+let dragSrcMainTab=null,lastDragX=0,lastDragY=0;
 function initTabDrag(){
   document.querySelectorAll('.tab').forEach(t=>{
     t.draggable=true;
@@ -747,14 +747,16 @@ function initTabDrag(){
   container.addEventListener('dragenter',e=>e.preventDefault());
   container.addEventListener('dragover',e=>{
     e.preventDefault();e.dataTransfer.dropEffect='move';
-    const target=e.target.closest('.tab');
+    lastDragX=e.clientX;lastDragY=e.clientY;
+    const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('.tab');
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('drag-over'));
     if(target&&target!==dragSrcMainTab)target.classList.add('drag-over');
   });
   container.addEventListener('drop',e=>{
     e.preventDefault();
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('drag-over'));
-    const target=e.target.closest('.tab');
+    const x=e.clientX||lastDragX,y=e.clientY||lastDragY;
+    const target=document.elementFromPoint(x,y)?.closest('.tab');
     if(!dragSrcMainTab||!target||dragSrcMainTab===target)return;
     container.insertBefore(dragSrcMainTab,target);
     const order=[...container.querySelectorAll('.tab')].map(b=>b.dataset.tab);
