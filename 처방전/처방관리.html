@@ -360,7 +360,7 @@ function addHerbRow(herb='',qty='',focus=false){
   tr.innerHTML=`
     <td style="width:28px;color:var(--text-3);font-size:12px;text-align:center">${rxHerbs.length}</td>
     <td style="min-width:130px"><div class="herb-ac-wrap"><input class="rx-name" type="text" value="${herb}" placeholder="약재명" autocomplete="off"><ul class="herb-dropdown"></ul></div></td>
-    <td style="width:90px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1"></td>
+    <td style="width:90px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right"></td>
     <td class="num rx-total-g" style="width:80px">${qty?fmt(Number(qty)*packs)+'g':'-'}</td>
     <td class="num rx-price" style="width:90px">${herb&&qty?fmtW(getPrice(herb)*Number(qty))+'원':'-'}</td>
     <td style="width:32px"><button class="btn-del rx-del">×</button></td>`;
