@@ -454,10 +454,13 @@ function renderRegister(){
             <label>생년월일</label>
             <input type="text" id="rx-patient-birth" value="${rxPatBirth}" placeholder="19901231" maxlength="10" style="width:100%">
           </div>
-          <div style="display:flex;align-items:center;gap:4px;padding-bottom:7px;white-space:nowrap;flex-shrink:0">
-            <span style="font-size:13px;color:var(--text-3)">만</span>
-            <span id="rx-patient-age" style="font-size:13px;color:var(--text-2);min-width:18px;text-align:right;font-variant-numeric:tabular-nums">-</span>
-            <span style="font-size:13px;color:var(--text-3)">세</span>
+          <div class="form-group" style="flex-shrink:0">
+            <label>나이</label>
+            <div style="display:flex;align-items:center;gap:4px;height:33px;white-space:nowrap">
+              <span style="font-size:13px;color:var(--text-3)">만</span>
+              <span id="rx-patient-age" style="font-size:13px;color:var(--text-2);min-width:18px;text-align:right;font-variant-numeric:tabular-nums">-</span>
+              <span style="font-size:13px;color:var(--text-3)">세</span>
+            </div>
           </div>
         </div>
         <div style="height:1px;background:var(--border);margin-bottom:.75rem"></div>
