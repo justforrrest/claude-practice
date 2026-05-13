@@ -164,6 +164,7 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
 function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
 function fmtW(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:0});}
+function parseNum(v){return Number(String(v||'').replace(/,/g,''))||0;}
 
 /* ── 약재 기본 단가 (약재관리와 동일) ── */
 const DEFAULT_PRICES={
@@ -271,10 +272,10 @@ function calcSummary(){
   const perPack   =rxHerbs.reduce((s,r)=>s+getPrice(r.herb)*Number(r.qty||0),0);
   const herbPrice =perPack*packs;
   const totalG    =rxHerbs.reduce((s,r)=>s+Number(r.qty||0),0)*packs;
-  const dPrice=Number(document.getElementById('rx-fee-dispensing')?.value||0);
-  const tPrice=Number(document.getElementById('rx-fee-decoction')?.value||0);
-  const pPrice=Number(document.getElementById('rx-fee-packaging')?.value||0);
-  const lPrice=Number(document.getElementById('rx-fee-delivery')?.value||0);
+  const dPrice=parseNum(document.getElementById('rx-fee-dispensing')?.value);
+  const tPrice=parseNum(document.getElementById('rx-fee-decoction')?.value);
+  const pPrice=parseNum(document.getElementById('rx-fee-packaging')?.value);
+  const lPrice=parseNum(document.getElementById('rx-fee-delivery')?.value);
   const dTotal=dPrice*totalPacks;
   const grandTotal=herbPrice+dTotal+tPrice+pPrice+lPrice;
   const upd=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
@@ -289,7 +290,7 @@ function calcSummary(){
   upd('rx-cost-info',`1첩 약재비 ${fmtW(perPack)}원 · 약재 ${rxHerbs.filter(r=>r.herb).length}종`);
   // 물양 계산
   const perPackG=rxHerbs.reduce((s,r)=>s+Number(r.qty||0),0);
-  const packMl=Number(document.getElementById('rx-water-pack-ml')?.value||rxConfig.decoction_ml||110);
+  const packMl=parseNum(document.getElementById('rx-water-pack-ml')?.value)||rxConfig.decoction_ml||110;
   const gasum=Math.round(totalG*1.3+110*(totalPacks+1)+400);
   upd('rx-water-per-pack',fmt(perPackG));
   upd('rx-water-total-herb',fmt(totalG));
@@ -360,7 +361,7 @@ function addHerbRow(herb='',qty='',focus=false){
   tr.innerHTML=`
     <td style="width:28px;color:var(--text-3);font-size:12px;text-align:center">${rxHerbs.length}</td>
     <td style="min-width:130px"><div class="herb-ac-wrap"><input class="rx-name" type="text" value="${herb}" placeholder="약재명" autocomplete="off"><ul class="herb-dropdown"></ul></div></td>
-    <td style="width:90px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right"></td>
+    <td style="width:90px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right;border:none;background:transparent;outline:none;padding:4px 0;width:100%;"></td>
     <td class="num rx-total-g" style="width:80px">${qty?fmt(Number(qty)*packs)+'g':'-'}</td>
     <td class="num rx-price" style="width:90px">${herb&&qty?fmtW(getPrice(herb)*Number(qty))+'원':'-'}</td>
     <td style="width:32px"><button class="btn-del rx-del">×</button></td>`;
@@ -502,7 +503,7 @@ function renderRegister(){
             <td style="padding:5px 0;font-weight:600;color:var(--text-2);width:68px">조제비</td>
             <td style="padding:5px 3px">
               <div style="display:flex;align-items:center;gap:5px">
-                <input id="rx-fee-dispensing" type="text" inputmode="numeric" value="${rx?.fees?.dispensing??rxConfig.dispensing_price??300}"
+                <input id="rx-fee-dispensing" type="text" inputmode="numeric" value="${fmtW(rx?.fees?.dispensing??rxConfig.dispensing_price??300)}"
                   style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
                 <span style="font-size:12px;color:var(--text-3)">원</span>
                 <span style="font-size:12px;color:var(--text-3)">×</span>
@@ -516,7 +517,7 @@ function renderRegister(){
             <td style="padding:5px 0;font-weight:600;color:var(--text-2);width:68px">탕전비</td>
             <td style="padding:5px 3px">
               <div style="display:flex;align-items:center;gap:5px">
-                <input id="rx-fee-decoction" type="text" inputmode="numeric" value="${rx?.fees?.decoction??rxConfig.decoction_price??10000}"
+                <input id="rx-fee-decoction" type="text" inputmode="numeric" value="${fmtW(rx?.fees?.decoction??rxConfig.decoction_price??10000)}"
                   style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
                 <span style="font-size:12px;color:var(--text-3)">원</span>
               </div>
@@ -527,7 +528,7 @@ function renderRegister(){
             <td style="padding:5px 0;font-weight:600;color:var(--text-2);width:68px">포장비</td>
             <td style="padding:5px 3px">
               <div style="display:flex;align-items:center;gap:5px">
-                <input id="rx-fee-packaging" type="text" inputmode="numeric" value="${rx?.fees?.packaging??rxConfig.packaging_price??3000}"
+                <input id="rx-fee-packaging" type="text" inputmode="numeric" value="${fmtW(rx?.fees?.packaging??rxConfig.packaging_price??3000)}"
                   style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
                 <span style="font-size:12px;color:var(--text-3)">원</span>
               </div>
@@ -538,7 +539,7 @@ function renderRegister(){
             <td style="padding:5px 0;font-weight:600;color:var(--text-2);width:68px">배송비</td>
             <td style="padding:5px 3px">
               <div style="display:flex;align-items:center;gap:5px">
-                <input id="rx-fee-delivery" type="text" inputmode="numeric" value="${rx?.fees?.delivery??rxConfig.delivery_price??5000}"
+                <input id="rx-fee-delivery" type="text" inputmode="numeric" value="${fmtW(rx?.fees?.delivery??rxConfig.delivery_price??5000)}"
                   style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
                 <span style="font-size:12px;color:var(--text-3)">원</span>
               </div>
@@ -596,13 +597,18 @@ function renderRegister(){
   updateDays();
 
   const packMlEl=document.getElementById('rx-water-pack-ml');
-  if(packMlEl){packMlEl.addEventListener('input',calcSummary);packMlEl.addEventListener('focus',e=>e.target.select());}
+  if(packMlEl){
+    packMlEl.addEventListener('input',calcSummary);
+    packMlEl.addEventListener('focus',e=>{e.target.value=String(parseNum(e.target.value)||'');e.target.select();});
+    packMlEl.addEventListener('blur',e=>{const v=parseNum(e.target.value);e.target.value=v?fmtW(v):'';calcSummary();});
+  }
 
   ['rx-fee-dispensing','rx-fee-decoction','rx-fee-packaging','rx-fee-delivery'].forEach(id=>{
     const el=document.getElementById(id);
     if(!el)return;
     el.addEventListener('input',calcSummary);
-    el.addEventListener('focus',e=>e.target.select());
+    el.addEventListener('focus',e=>{e.target.value=String(parseNum(e.target.value)||'');e.target.select();});
+    el.addEventListener('blur',e=>{const v=parseNum(e.target.value);e.target.value=v?fmtW(v):'';calcSummary();});
   });
 
   const noteEl=document.getElementById('rx-note');
@@ -636,10 +642,10 @@ async function saveRx(){
   const totalPacks=Number(document.getElementById('rx-total-packs').value)||45;
   const perPack=herbs.reduce((s,r)=>s+getPrice(r.herb)*Number(r.qty),0);
   const fees={
-    dispensing:Number(document.getElementById('rx-fee-dispensing')?.value||0),
-    decoction: Number(document.getElementById('rx-fee-decoction')?.value||0),
-    packaging: Number(document.getElementById('rx-fee-packaging')?.value||0),
-    delivery:  Number(document.getElementById('rx-fee-delivery')?.value||0),
+    dispensing:parseNum(document.getElementById('rx-fee-dispensing')?.value),
+    decoction: parseNum(document.getElementById('rx-fee-decoction')?.value),
+    packaging: parseNum(document.getElementById('rx-fee-packaging')?.value),
+    delivery:  parseNum(document.getElementById('rx-fee-delivery')?.value),
   };
   const totalPrice=perPack*packs+fees.dispensing*totalPacks+fees.decoction+fees.packaging+fees.delivery;
   const entry={
@@ -654,7 +660,7 @@ async function saveRx(){
     totalPacks,
     herbs:herbs.map(r=>({herb:r.herb,qtyPerPack:Number(r.qty)})),
     fees,totalPrice,
-    packMl:Number(document.getElementById('rx-water-pack-ml')?.value||rxConfig.decoction_ml||110),
+    packMl:parseNum(document.getElementById('rx-water-pack-ml')?.value)||rxConfig.decoction_ml||110,
     note:document.getElementById('rx-note').value.trim(),
     outboundAt:editingRxId?(prescriptionsData.find(r=>r.id===editingRxId)?.outboundAt||null):null,
   };
