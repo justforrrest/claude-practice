@@ -369,118 +369,139 @@ function renderRegister(){
   const patOpts=`<option value="">환자 선택</option>`+patientsData.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
 
   el.innerHTML=`
-  <div class="card">
-    <div class="section-title" style="margin-bottom:.875rem">${isEdit?'처방 수정':'새 처방 등록'}</div>
-    <div class="form-row" style="margin-bottom:.75rem">
-      <div class="form-group" style="min-width:0">
-        <label>환자</label>
-        <div style="display:flex;gap:6px"><select id="rx-patient" style="width:130px">${patOpts}</select><button class="btn btn-secondary btn-sm" id="rx-quick-patient" style="white-space:nowrap">+ 신규</button></div>
+  <div style="display:flex;gap:1rem;align-items:flex-start">
+
+    <!-- 좌측: 약재 목록 -->
+    <div style="flex:1;min-width:0">
+      <div class="card" style="margin-bottom:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+          <span class="section-title" style="margin:0">약재 목록</span>
+          <button class="btn btn-secondary btn-sm" id="rx-add-herb">+ 약재 추가</button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="rx-table">
+            <thead><tr>
+              <th style="width:28px">#</th>
+              <th>약재명</th>
+              <th class="num" style="width:90px">첩당 (g)</th>
+              <th class="num" style="width:80px">총량 (g)</th>
+              <th class="num" style="width:90px">1첩 금액</th>
+              <th style="width:32px"></th>
+            </tr></thead>
+            <tbody id="rx-herb-tbody"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="form-group" style="flex:1"></div>
-      <div class="form-group"><label>처방일</label><input type="date" id="rx-date" value="${rx?.date||todayStr()}"></div>
-      <div class="form-group" style="min-width:70px"><label>총 일수</label><input type="number" id="rx-days" value="${rx?.days||15}" min="1" style="width:80px"></div>
-      <div class="form-group" style="min-width:70px"><label>첩수</label><input type="number" id="rx-packs" value="${rx?.packs||20}" min="1" style="width:80px"></div>
-      <div class="form-group" style="min-width:70px"><label>팩수</label><input type="number" id="rx-total-packs" value="${rx?.totalPacks||45}" min="1" style="width:80px"></div>
     </div>
-    <div class="form-row">
-      <div class="form-group grow"><label>처방명</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="예: 감비탕, 소청룡탕 등"></div>
-      <div class="form-group grow"><label>복용법</label><input type="text" id="rx-dosage" value="${rx?.dosage||''}" placeholder="예: 하루 2회, 식후 30분"></div>
-      <div class="form-group grow"><label>메모</label><input type="text" id="rx-note" value="${rx?.note||''}" placeholder="메모 (선택)"></div>
-    </div>
-  </div>
 
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
-      <span class="section-title" style="margin:0">약재 목록</span>
-      <button class="btn btn-secondary btn-sm" id="rx-add-herb">+ 약재 추가</button>
-    </div>
-    <div class="tbl-wrap">
-      <table class="rx-table">
-        <thead><tr>
-          <th style="width:28px">#</th>
-          <th>약재명</th>
-          <th class="num" style="width:90px">첩당 (g)</th>
-          <th class="num" style="width:80px">총량 (g)</th>
-          <th class="num" style="width:90px">1첩 금액</th>
-          <th style="width:32px"></th>
-        </tr></thead>
-        <tbody id="rx-herb-tbody"></tbody>
-      </table>
-    </div>
-  </div>
+    <!-- 우측: 처방 등록 + 처방 비용 + 저장 -->
+    <div style="width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:1rem">
 
-  <div class="card" style="padding:1rem 1.25rem">
-    <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.75rem">처방 비용</div>
-    <table style="width:100%;border-collapse:collapse;font-size:13px">
-      <tr>
-        <td style="padding:5px 0;font-weight:600;color:var(--text-2);width:68px">약재비</td>
-        <td style="padding:5px 8px">
-          <div style="display:flex;align-items:center;gap:5px">
-            <span id="rx-cost-herb-desc" style="width:64px;text-align:right;display:inline-block;font-size:13px;color:var(--text-2)">-</span>
-            <span style="font-size:12px;color:var(--text-3)">첩</span>
+      <!-- 처방 등록 -->
+      <div class="card" style="margin-bottom:0">
+        <div class="section-title" style="margin-bottom:.875rem">${isEdit?'처방 수정':'새 처방 등록'}</div>
+        <div class="form-row" style="margin-bottom:.75rem">
+          <div class="form-group" style="min-width:0;flex:1">
+            <label>환자</label>
+            <div style="display:flex;gap:6px"><select id="rx-patient" style="width:100%">${patOpts}</select><button class="btn btn-secondary btn-sm" id="rx-quick-patient" style="white-space:nowrap">+ 신규</button></div>
           </div>
-        </td>
-        <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-herb-amount">0원</td>
-      </tr>
-      <tr>
-        <td style="padding:5px 0;font-weight:600;color:var(--text-2)">조제비</td>
-        <td style="padding:5px 8px">
-          <div style="display:flex;align-items:center;gap:5px">
-            <input id="rx-fee-dispensing" type="text" inputmode="numeric" value="${rx?.fees?.dispensing??rxConfig.dispensing_price??300}"
-              style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
-            <span style="font-size:12px;color:var(--text-3)">원</span>
-            <span style="font-size:12px;color:var(--text-3)">×</span>
-            <span id="rx-cost-disp-packs" style="width:22px;text-align:right;display:inline-block;font-size:13px;color:var(--text-2)">${rx?.totalPacks||45}</span>
-            <span style="font-size:12px;color:var(--text-3)">팩</span>
-          </div>
-        </td>
-        <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-disp-amount">-</td>
-      </tr>
-      <tr>
-        <td style="padding:5px 0;font-weight:600;color:var(--text-2)">탕전비</td>
-        <td style="padding:5px 8px">
-          <div style="display:flex;align-items:center;gap:5px">
-            <input id="rx-fee-decoction" type="text" inputmode="numeric" value="${rx?.fees?.decoction??rxConfig.decoction_price??10000}"
-              style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
-            <span style="font-size:12px;color:var(--text-3)">원</span>
-          </div>
-        </td>
-        <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-deco-amount">-</td>
-      </tr>
-      <tr>
-        <td style="padding:5px 0;font-weight:600;color:var(--text-2)">포장비</td>
-        <td style="padding:5px 8px">
-          <div style="display:flex;align-items:center;gap:5px">
-            <input id="rx-fee-packaging" type="text" inputmode="numeric" value="${rx?.fees?.packaging??rxConfig.packaging_price??3000}"
-              style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
-            <span style="font-size:12px;color:var(--text-3)">원</span>
-          </div>
-        </td>
-        <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-pack-amount">-</td>
-      </tr>
-      <tr>
-        <td style="padding:5px 0;font-weight:600;color:var(--text-2)">배송비</td>
-        <td style="padding:5px 8px">
-          <div style="display:flex;align-items:center;gap:5px">
-            <input id="rx-fee-delivery" type="text" inputmode="numeric" value="${rx?.fees?.delivery??rxConfig.delivery_price??5000}"
-              style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
-            <span style="font-size:12px;color:var(--text-3)">원</span>
-          </div>
-        </td>
-        <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-del-amount">-</td>
-      </tr>
-      <tr style="border-top:2px solid var(--border)">
-        <td colspan="2" style="padding:8px 0 4px;font-weight:700;color:var(--text-1)">총 합계</td>
-        <td style="padding:8px 0 4px;text-align:right;font-size:18px;font-weight:700;color:var(--violet-d)" id="rx-cost-total">0원</td>
-      </tr>
-    </table>
-    <div style="font-size:11px;color:var(--text-3);margin-top:.5rem" id="rx-cost-info"></div>
-  </div>
+        </div>
+        <div class="form-row" style="margin-bottom:.75rem">
+          <div class="form-group" style="flex:1"><label>처방일</label><input type="date" id="rx-date" value="${rx?.date||todayStr()}"></div>
+          <div class="form-group" style="flex:1"><label>총 일수</label><input type="number" id="rx-days" value="${rx?.days||15}" min="1"></div>
+        </div>
+        <div class="form-row" style="margin-bottom:.75rem">
+          <div class="form-group" style="flex:1"><label>첩수</label><input type="number" id="rx-packs" value="${rx?.packs||20}" min="1"></div>
+          <div class="form-group" style="flex:1"><label>팩수</label><input type="number" id="rx-total-packs" value="${rx?.totalPacks||45}" min="1"></div>
+        </div>
+        <div class="form-row" style="margin-bottom:.75rem">
+          <div class="form-group grow"><label>처방명</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="감비탕, 소청룡탕 등"></div>
+        </div>
+        <div class="form-row" style="margin-bottom:.75rem">
+          <div class="form-group grow"><label>복용법</label><input type="text" id="rx-dosage" value="${rx?.dosage||''}" placeholder="하루 2회, 식후 30분"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group grow"><label>메모</label><input type="text" id="rx-note" value="${rx?.note||''}" placeholder="메모 (선택)"></div>
+        </div>
+      </div>
 
-  <div style="display:flex;gap:8px;justify-content:flex-end">
-    ${isEdit?`<button class="btn btn-secondary" id="rx-cancel">취소</button>`:''}
-    <button class="btn btn-primary" id="rx-save">${isEdit?'수정 저장':'처방 저장'}</button>
-  </div>`;
+      <!-- 처방 비용 -->
+      <div class="card" style="padding:1rem 1.25rem;margin-bottom:0">
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.75rem">처방 비용</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <tr>
+            <td style="padding:5px 0;font-weight:600;color:var(--text-2);width:68px">약재비</td>
+            <td style="padding:5px 8px">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span id="rx-cost-herb-desc" style="width:64px;text-align:right;display:inline-block;font-size:13px;color:var(--text-2)">-</span>
+                <span style="font-size:12px;color:var(--text-3)">첩</span>
+              </div>
+            </td>
+            <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-herb-amount">0원</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;font-weight:600;color:var(--text-2)">조제비</td>
+            <td style="padding:5px 8px">
+              <div style="display:flex;align-items:center;gap:5px">
+                <input id="rx-fee-dispensing" type="text" inputmode="numeric" value="${rx?.fees?.dispensing??rxConfig.dispensing_price??300}"
+                  style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
+                <span style="font-size:12px;color:var(--text-3)">원</span>
+                <span style="font-size:12px;color:var(--text-3)">×</span>
+                <span id="rx-cost-disp-packs" style="width:22px;text-align:right;display:inline-block;font-size:13px;color:var(--text-2)">${rx?.totalPacks||45}</span>
+                <span style="font-size:12px;color:var(--text-3)">팩</span>
+              </div>
+            </td>
+            <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-disp-amount">-</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;font-weight:600;color:var(--text-2)">탕전비</td>
+            <td style="padding:5px 8px">
+              <div style="display:flex;align-items:center;gap:5px">
+                <input id="rx-fee-decoction" type="text" inputmode="numeric" value="${rx?.fees?.decoction??rxConfig.decoction_price??10000}"
+                  style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
+                <span style="font-size:12px;color:var(--text-3)">원</span>
+              </div>
+            </td>
+            <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-deco-amount">-</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;font-weight:600;color:var(--text-2)">포장비</td>
+            <td style="padding:5px 8px">
+              <div style="display:flex;align-items:center;gap:5px">
+                <input id="rx-fee-packaging" type="text" inputmode="numeric" value="${rx?.fees?.packaging??rxConfig.packaging_price??3000}"
+                  style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
+                <span style="font-size:12px;color:var(--text-3)">원</span>
+              </div>
+            </td>
+            <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-pack-amount">-</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;font-weight:600;color:var(--text-2)">배송비</td>
+            <td style="padding:5px 8px">
+              <div style="display:flex;align-items:center;gap:5px">
+                <input id="rx-fee-delivery" type="text" inputmode="numeric" value="${rx?.fees?.delivery??rxConfig.delivery_price??5000}"
+                  style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
+                <span style="font-size:12px;color:var(--text-3)">원</span>
+              </div>
+            </td>
+            <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-del-amount">-</td>
+          </tr>
+          <tr style="border-top:2px solid var(--border)">
+            <td colspan="2" style="padding:8px 0 4px;font-weight:700;color:var(--text-1)">총 합계</td>
+            <td style="padding:8px 0 4px;text-align:right;font-size:18px;font-weight:700;color:var(--violet-d)" id="rx-cost-total">0원</td>
+          </tr>
+        </table>
+        <div style="font-size:11px;color:var(--text-3);margin-top:.5rem" id="rx-cost-info"></div>
+      </div>
+
+      <!-- 저장 버튼 -->
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        ${isEdit?`<button class="btn btn-secondary" id="rx-cancel">취소</button>`:''}
+        <button class="btn btn-primary" id="rx-save">${isEdit?'수정 저장':'처방 저장'}</button>
+      </div>
+
+    </div><!-- /우측 -->
+  </div><!-- /2컬럼 -->`;
 
   // 환자 선택 설정
   if(rx) document.getElementById('rx-patient').value=rx.patientId||'';
