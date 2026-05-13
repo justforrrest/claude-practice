@@ -153,6 +153,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
   <div class="modal" id="patient-modal-content" style="max-width:420px"></div>
 </div>
 
+<!-- 처방 이력 팝업 모달 -->
+<div class="modal-overlay" id="rx-history-modal-overlay">
+  <div class="modal" id="rx-history-modal-content" style="max-width:500px"></div>
+</div>
+
 <!-- 동기화 코드 모달 -->
 <div class="sync-modal-overlay" id="sync-modal-overlay">
   <div class="sync-modal">
@@ -1113,7 +1118,7 @@ function updatePatList(){
         <td class="pat-age-cell" data-pid="${p.id}" style="${SEP};text-align:center">${ageOf(p.birth)}</td>
         <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="memo" value="${(p.memo||'').replace(/"/g,'&quot;')}" style="color:var(--text-3)"></td>
         <td style="${SEP};text-align:center;width:52px">${medBadge}</td>
-        <td class="num" style="${SEP}">${cnt}건</td>
+        <td class="num" style="${SEP};text-align:center"><button class="btn btn-sm btn-secondary rx-hist-btn" data-pid="${p.id}" style="min-width:40px">${cnt}건</button></td>
         <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
       </tr>`;
     }).join('');
@@ -1151,6 +1156,7 @@ function updatePatList(){
       else{const nextTr=tr.nextElementSibling;if(nextTr){const f=nextTr.querySelector('.pat-cell-inp');if(f)f.focus();}}
     });
   });
+  tbody.querySelectorAll('.rx-hist-btn').forEach(b=>b.addEventListener('click',()=>showRxHistory(b.dataset.pid)));
   tbody.querySelectorAll('.pat-del').forEach(b=>b.addEventListener('click',async()=>{
     const p=patientsData.find(x=>x.id===b.dataset.pid);
     const cnt=prescriptionsData.filter(r=>r.patientId===b.dataset.pid||r.patientName===p?.name).length;
@@ -1161,6 +1167,41 @@ function updatePatList(){
   }));
 }
 
+
+function showRxHistory(pid){
+  const p=patientsData.find(x=>x.id===pid);
+  if(!p)return;
+  const list=prescriptionsData
+    .filter(r=>r.patientId===pid||r.patientName===p.name)
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  const rows=list.length
+    ?list.map(r=>{
+        const session=(r.sessionCur&&r.sessionTotal)?`${r.sessionCur}/${r.sessionTotal}회`:'-';
+        return`<tr>
+          <td style="text-align:center;white-space:nowrap">${r.date||'-'}</td>
+          <td style="text-align:center">${r.category||'-'}</td>
+          <td style="text-align:center">${session}</td>
+          <td>${r.diagnosis||'-'}</td>
+        </tr>`;
+      }).join('')
+    :`<tr><td colspan="4" class="empty">처방 이력이 없습니다</td></tr>`;
+  document.getElementById('rx-history-modal-content').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div style="font-size:15px;font-weight:700">${p.name} 처방 이력</div>
+      <button class="btn btn-secondary btn-sm" id="close-rx-hist">닫기</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="text-align:center;width:94px">처방날짜</th>
+        <th style="text-align:center;width:60px">구분</th>
+        <th style="text-align:center;width:62px">회차</th>
+        <th style="text-align:center">처방명</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  document.getElementById('rx-history-modal-overlay').classList.add('open');
+  document.getElementById('close-rx-hist').addEventListener('click',()=>document.getElementById('rx-history-modal-overlay').classList.remove('open'));
+}
 
 function showPatientDetail(pid){
   const p=patientsData.find(x=>x.id===pid);
@@ -1267,6 +1308,7 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
 /* ── 모달 이벤트 ── */
 document.getElementById('detail-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
 document.getElementById('patient-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
+document.getElementById('rx-history-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
 document.getElementById('change-sync-btn').addEventListener('click',()=>{
   document.getElementById('sync-code-input').value=getSyncCode();
   document.getElementById('sync-modal-overlay').classList.add('open');
