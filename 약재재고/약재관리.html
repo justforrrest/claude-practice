@@ -412,6 +412,7 @@ let adjustData=[];
 let editingInboundId=null,editingOutboundId=null,editingHerbName=null;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function focusEnd(id){const el=document.getElementById(id);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}}
 function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
 function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
 function getPrice(h){return settingsData.prices[h]??DEFAULT_PRICES[h]??0;}
@@ -466,8 +467,8 @@ function renderStock(){
     </div>
   </div>`;
   const ssEl=document.getElementById('stock-search');
-  ssEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){stockSearch=ssEl.value;renderStock();document.getElementById('stock-search')?.focus();}});
-  ssEl.addEventListener('input',e=>{if(e.target.value===''){stockSearch='';renderStock();document.getElementById('stock-search')?.focus();}});
+  ssEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){stockSearch=ssEl.value;renderStock();focusEnd('stock-search');}});
+  ssEl.addEventListener('input',e=>{if(e.target.value===''){stockSearch='';renderStock();focusEnd('stock-search');}});
   document.getElementById('low-only-btn').addEventListener('click',()=>{showLowOnly=!showLowOnly;renderStock();});
   el.querySelectorAll('[data-st-cho]').forEach(btn=>{
     btn.addEventListener('click',()=>{stockConsonant=btn.dataset.stCho;renderStock();});
@@ -808,8 +809,8 @@ function renderSettings(){
   });
 
   const stSrEl=document.getElementById('settings-search');
-  stSrEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){settingsSearch=stSrEl.value;renderSettings();document.getElementById('settings-search')?.focus();}});
-  stSrEl.addEventListener('input',e=>{if(e.target.value===''){settingsSearch='';renderSettings();document.getElementById('settings-search')?.focus();}});
+  stSrEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){settingsSearch=stSrEl.value;renderSettings();focusEnd('settings-search');}});
+  stSrEl.addEventListener('input',e=>{if(e.target.value===''){settingsSearch='';renderSettings();focusEnd('settings-search');}});
 
   document.getElementById('settings-save').addEventListener('click',async()=>{
     el.querySelectorAll('.settings-inp[data-field]').forEach(inp=>{
@@ -996,8 +997,8 @@ function renderPricelist(){
   });
 
   const plSrEl=document.getElementById('pl-search');
-  plSrEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){pricelistSearch=plSrEl.value;renderPricelist();document.getElementById('pl-search')?.focus();}});
-  plSrEl.addEventListener('input',e=>{if(e.target.value===''){pricelistSearch='';renderPricelist();document.getElementById('pl-search')?.focus();}});
+  plSrEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){pricelistSearch=plSrEl.value;renderPricelist();focusEnd('pl-search');}});
+  plSrEl.addEventListener('input',e=>{if(e.target.value===''){pricelistSearch='';renderPricelist();focusEnd('pl-search');}});
 
   document.getElementById('pl-save').addEventListener('click',async()=>{
     el.querySelectorAll('.pl-inp').forEach(inp=>{
