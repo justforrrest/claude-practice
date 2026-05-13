@@ -501,15 +501,15 @@ function renderRegister(){
           </div>
         </div>
         <div style="height:1px;background:var(--border);margin-bottom:.75rem"></div>
-        <div class="form-row" style="margin-bottom:.75rem">
-          <div class="form-group" style="flex:1"><label>처방일</label><input type="date" id="rx-date" value="${rx?.date||todayStr()}"></div>
-        </div>
         <div class="form-row" style="margin-bottom:.75rem;flex-wrap:nowrap;align-items:flex-end">
+          <div class="form-group" style="flex:0 0 auto"><label>처방일</label><input type="date" id="rx-date" value="${rx?.date||todayStr()}"></div>
           <div class="form-group" style="flex:0 0 auto"><label>구분</label><select id="rx-category" style="width:62px;padding-right:4px"><option value="">-</option><option value="치료"${(rx?.category||'')==='치료'?' selected':''}>치료</option><option value="녹용"${(rx?.category||'')==='녹용'?' selected':''}>녹용</option><option value="건보"${(rx?.category||'')==='건보'?' selected':''}>건보</option></select></div>
           <div class="form-group" style="flex:0 0 auto"><label>회차</label><div style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="text" inputmode="numeric" id="rx-session-cur" value="${rx?.sessionCur||''}" placeholder="-" maxlength="1" style="width:28px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차 /</span><input type="text" inputmode="numeric" id="rx-session-total" value="${rx?.sessionTotal||''}" placeholder="-" maxlength="1" style="width:28px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차</span></div></div>
+        </div>
+        <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group grow"><label>처방명</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="감비탕, 소청룡탕 등"></div>
         </div>
-        <div class="form-row" style="margin-bottom:.75rem;align-items:flex-end;flex-wrap:nowrap">
+        <div class="form-row" style="margin-bottom:.75rem;flex-wrap:nowrap;align-items:flex-end">
           <div class="form-group" style="flex:1"><label>첩수</label><input type="number" id="rx-packs" value="${rx?.packs||20}" min="1"></div>
           <div class="form-group" style="flex:1"><label>팩수</label><input type="number" id="rx-total-packs" value="${rx?.totalPacks||45}" min="1"></div>
           <div class="form-group" style="flex:1;min-width:0">
@@ -520,15 +520,15 @@ function renderRegister(){
             </div>
           </div>
         </div>
-        <div class="form-row" style="margin-bottom:.75rem;align-items:flex-end;flex-wrap:nowrap;gap:10px">
-          <div class="form-group" style="flex:0 0 auto;min-width:0">
-            <label>1일</label>
+        <div class="form-row" style="margin-bottom:.75rem;flex-wrap:nowrap;align-items:flex-end">
+          <div class="form-group" style="flex:1">
+            <label>1일 복용</label>
             <div style="display:flex;align-items:center;gap:4px">
-              <input type="text" inputmode="numeric" id="rx-freq" value="${rx?.dosageFreq||3}" style="width:40px;text-align:center">
-              <span style="font-size:13px;color:var(--text-2)">회</span>
+              <input type="text" inputmode="numeric" id="rx-freq" value="${rx?.dosageFreq||3}" style="flex:1;min-width:0;text-align:center">
+              <span style="font-size:13px;color:var(--text-2);flex-shrink:0">회</span>
             </div>
           </div>
-          <div class="form-group" style="flex:1;min-width:0">
+          <div class="form-group" style="flex:2;min-width:0">
             <label>복용시기</label>
             <input type="text" id="rx-timing" value="${rx?.dosageTiming||'식사 무관'}" placeholder="식사 무관">
           </div>
