@@ -355,8 +355,8 @@ function attachRowListeners(tr){
     const packs=Number(document.getElementById('rx-packs')?.value||20);
     const qty=Number(row.qty||0);
     if(totalGCell)totalGCell.textContent=qty?fmt(qty*packs)+'g':'-';
-    if(priceCell)priceCell.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty)+'원':'-';
-    if(totalPriceCell)totalPriceCell.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty*packs)+'원':'-';
+    if(priceCell)priceCell.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty):'-';
+    if(totalPriceCell)totalPriceCell.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty*packs):'-';
     calcSummary();
   };
   suchiInput?.addEventListener('input',()=>{const row=rxHerbs.find(r=>r.id===rid);if(row)row.suchi=suchiInput.value;});
@@ -432,8 +432,8 @@ function addHerbRow(herb='',suchi='',qty='',focus=false){
     <td style="width:60px"><input class="rx-suchi" type="text" value="${suchi}" placeholder="" style="border:none;background:transparent;outline:none;padding:4px 0;width:100%;font-size:13px;"></td>
     <td style="width:65px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right;border:none;background:transparent;outline:none;padding:4px 0;width:100%;"></td>
     <td class="num rx-total-g" style="width:65px">${qn?fmt(qn*packs)+'g':'-'}</td>
-    <td class="num rx-price" style="width:72px">${herb&&qn?fmtW(getPrice(herb)*qn)+'원':'-'}</td>
-    <td class="num rx-total-price" style="width:72px">${herb&&qn?fmtW(getPrice(herb)*qn*packs)+'원':'-'}</td>
+    <td class="num rx-price" style="width:72px">${herb&&qn?fmtW(getPrice(herb)*qn):'-'}</td>
+    <td class="num rx-total-price" style="width:72px">${herb&&qn?fmtW(getPrice(herb)*qn*packs):'-'}</td>
     <td style="width:32px"><button class="btn-del rx-del">×</button></td>`;
   tbody.appendChild(tr);
   attachRowListeners(tr);
@@ -466,7 +466,7 @@ function renderRegister(){
               <th class="num" style="width:65px">첩당g</th>
               <th class="num" style="width:65px">총량g</th>
               <th class="num" style="width:72px">1첩 금액</th>
-              <th class="num" style="width:72px">총금액</th>
+              <th class="num" style="width:72px">총 금액</th>
               <th style="width:32px"></th>
             </tr></thead>
             <tbody id="rx-herb-tbody"></tbody>
@@ -755,7 +755,7 @@ function renderRegister(){
       const cell=tr.querySelector('.rx-total-g');
       if(cell)cell.textContent=qty?fmt(qty*packs)+'g':'-';
       const tpc=tr.querySelector('.rx-total-price');
-      if(tpc)tpc.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty*packs)+'원':'-';
+      if(tpc)tpc.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty*packs):'-';
     });
     calcSummary();
   });
@@ -991,15 +991,15 @@ function showDetail(id){
       ${rx.note?`<span>메모: ${rx.note}</span>`:''}
     </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>#</th><th>약재명</th><th>수치</th><th class="num">첩당g</th><th class="num">총량g</th><th class="num">1첩 금액</th><th class="num">총금액</th></tr></thead>
+      <thead><tr><th>#</th><th>약재명</th><th>수치</th><th class="num">첩당g</th><th class="num">총량g</th><th class="num">1첩 금액</th><th class="num">총 금액</th></tr></thead>
       <tbody>${rx.herbs.map((h,i)=>`<tr>
         <td style="color:var(--text-3);font-size:12px">${i+1}</td>
         <td>${h.herb}</td>
         <td>${h.suchi||''}</td>
         <td class="num">${h.qtyPerPack}g</td>
         <td class="num">${fmt(h.qtyPerPack*packs)}g</td>
-        <td class="num">${fmtW(getPrice(h.herb)*h.qtyPerPack)}원</td>
-        <td class="num">${fmtW(getPrice(h.herb)*h.qtyPerPack*packs)}원</td>
+        <td class="num">${fmtW(getPrice(h.herb)*h.qtyPerPack)}</td>
+        <td class="num">${fmtW(getPrice(h.herb)*h.qtyPerPack*packs)}</td>
       </tr>`).join('')}</tbody>
     </table></div>
     ${rx.fees?(()=>{
