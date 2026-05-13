@@ -210,13 +210,13 @@ const RX_KEYS={patients:'rx_patients_v1',prescriptions:'rx_prescriptions_v1',con
 const HERB_KEYS={herbs:'herb_herbs_v1',settings:'herb_settings_v1',outbound:'herb_outbound_v1'};
 
 let rxConfig={
-  dispensing_price:0,          // 조제비 단가 (원/팩)
-  decoction_ml:120,            // 탕전비 ml/팩
-  decoction_price:0,           // 탕전비 금액
-  packaging_desc:'',           // 포장비 설명
-  packaging_price:0,           // 포장비 금액
-  delivery_desc:'',            // 배송비 설명
-  delivery_price:0,            // 배송비 금액
+  dispensing_price:300,
+  decoction_ml:120,
+  decoction_price:10000,
+  packaging_desc:'',
+  packaging_price:3000,
+  delivery_desc:'',
+  delivery_price:5000,
 };
 
 function getPrice(h){return settingsData.prices[h]??DEFAULT_PRICES[h]??0;}
