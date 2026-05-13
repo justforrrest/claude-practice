@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>약재 재고 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F4F2FF;--surface:#FFFFFF;--surface-2:#F0EEFF;
+  --border:rgba(0,0,0,0.08);--border-2:rgba(0,0,0,0.12);
+  --violet:#5b21b6;--violet-d:#7c3aed;--violet-light:#EDE9FE;
+  --coral:#EF4444;--coral-light:#FEF2F2;
+  --green:#10B981;--green-light:#D1FAE5;
+  --amber:#F59E0B;--amber-light:#FEF3C7;
+  --text-1:#0f0f10;--text-2:#374151;--text-3:#6b7280;
+  --font-sans:'Inter',sans-serif;--radius:10px;
+}
+body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-height:100vh;padding:1.5rem 1rem;}
+.container{max-width:960px;margin:0 auto;}
+.app-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1.25rem;padding:.875rem 1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.app-title{font-size:15px;font-weight:700;color:var(--text-1);}
+.app-meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-3);flex-wrap:wrap;}
+.sync-code-box{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-weight:600;letter-spacing:1px;color:var(--violet-d);font-size:12px;}
+.tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:1.25rem;}
+.tab{background:none;border:none;padding:8px 16px;font-size:13px;font-family:var(--font-sans);color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;border-radius:6px 6px 0 0;transition:color .15s,background .15s;}
+.tab.active{color:var(--violet-d);border-bottom-color:var(--violet-d);font-weight:600;}
+.tab:not(.active):hover{color:var(--text-1);background:var(--violet-light);}
+.view{display:none;}.view.active{display:block;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.75rem;margin-bottom:1rem;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.875rem 1rem;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.stat-num{font-size:26px;font-weight:700;color:var(--violet-d);line-height:1.2;}
+.stat-num.warn{color:var(--coral);}
+.stat-num.muted{color:var(--text-3);}
+.stat-label{font-size:11px;color:var(--text-3);margin-top:3px;}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:.875rem;}
+.search-input{flex:1;min-width:160px;border:1px solid var(--border-2);border-radius:8px;padding:7px 12px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);}
+.search-input:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
+.btn{border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-family:var(--font-sans);cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+.btn-primary{background:var(--violet-d);color:#fff;}
+.btn-primary:hover{opacity:.85;}
+.btn-secondary{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
+.btn-secondary:hover{background:var(--violet-light);color:var(--text-1);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-del{background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-3);padding:3px 6px;border-radius:4px;transition:all .15s;}
+.btn-del:hover{background:var(--coral-light);color:var(--coral);}
+.toggle-btn{background:none;border:1px solid var(--border-2);border-radius:20px;padding:5px 12px;font-size:12px;font-family:var(--font-sans);cursor:pointer;color:var(--text-3);transition:all .15s;}
+.toggle-btn.on{background:var(--coral-light);border-color:var(--coral);color:var(--coral);font-weight:600;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:8px 10px;font-weight:600;color:var(--text-3);font-size:11px;border-bottom:2px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.03em;}
+td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-2);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--surface-2);}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-ok{background:var(--green-light);color:#065F46;}
+.badge-low{background:var(--coral-light);color:#991B1B;}
+.badge-zero{background:#F3F4F6;color:var(--text-3);}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.form-group{display:flex;flex-direction:column;gap:4px;min-width:110px;}
+.form-group.grow{flex:1;}
+label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;}
+input[type=text],input[type=number],input[type=date],select{border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;}
+input:focus,select:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
+.section-title{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.75rem;}
+.settings-inp{border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;width:76px;font-family:var(--font-sans);text-align:right;background:var(--surface);}
+.settings-inp:focus{border-color:var(--violet-d);outline:none;box-shadow:0 0 0 2px var(--violet-light);}
+.empty{text-align:center;color:var(--text-3);padding:2.5rem;font-size:13px;}
+.mt{margin-top:.875rem;}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="app-header">
+    <div class="app-title">약재 재고 관리</div>
+    <div class="app-meta">
+      <span>동기화 코드</span>
+      <span class="sync-code-box" id="sync-code-display">-</span>
+      <span id="sync-status"></span>
+      <span id="status-bar">불러오는 중...</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="stock">재고현황</button>
+    <button class="tab" data-tab="inbound">입고</button>
+    <button class="tab" data-tab="outbound">출고</button>
+    <button class="tab" data-tab="settings">설정</button>
+  </div>
+
+  <div class="view active" id="view-stock"></div>
+  <div class="view" id="view-inbound"></div>
+  <div class="view" id="view-outbound"></div>
+  <div class="view" id="view-settings"></div>
+
+</div>
+<script>
+/* ── 약재 목록 ── */
+const HERBS=[
+  "가자","갈근","감국","감수","감초","강활1","강활2","강황","건강","건율",
+  "건지황","결명자","계지","계혈등","고량강","고본","고삼","과루인","곽향1","곽향2",
+  "관동화","구기자","구척","귀판","금은화","길경","나복자","남성1","남성2","단삼",
+  "담두시","당귀1","당귀2","당삼","대두황권","대복피","대추","대황","도인","독활",
+  "두충","등심초","마자인","마황","만형자","망초","맥문동","맥아","모과","모려",
+  "목단피","목통","목향","몰약","문합","박하","반하","방기1","방기2","방기3",
+  "방풍1","방풍2","백강잠","백개자","백두구","백부근","백선피","백자인","백작약","백지",
+  "백질려","백출","백편두","백하수오","백합","복령","복분자","봉출","부소맥","부자",
+  "비파엽","빈랑","사삼","사인","산사","산수유","산약","산조인","삼릉","상백피",
+  "생강","생지황","석고","석곡","석창포","선복화","세신","소목","소엽","소자",
+  "소회향","속단","숙지황","승마","시호1","시호2","신곡","신이화","아교","애엽",
+  "야교등","여정자","연교","연육","오가피","오공","오매","오미자","오수유","오약",
+  "용골","용담초","우방자","우슬","울금","원육","원지","위령선","유백피","유향",
+  "육계","육두구","육종용","음양곽","의이인","익모초","익지인","인삼","인진","자완",
+  "자충","저근백피","저령","적석지","적하수오","전호","조협","조구등","죽여1","죽여2",
+  "죽엽","지각","지골피","지룡","지모","지부자","지실","진교","진피1","진피2",
+  "차전자","창이자","창출1","창출2","천궁1","천궁2","천련자","천마","천문동","천오",
+  "천초","천화분","청상자","청피","초두구","치자","택사1","택사2","토사자","파고지",
+  "파극천","패모","포공영","합환피","해동피","행인","향부자","향시","현삼","현호색",
+  "형개","홍화","활석","황금","황기","황련","황백","황정","후박"
+];
+const DEFAULT_PRICES={
+  "가자":6.7,"갈근":18.3,"감국":19.5,"감수":45.2,"감초":30,"강활1":40,"강활2":45.7,
+  "강황":8.3,"건강":9.5,"건율":34.7,"건지황":18.3,"결명자":0,"계지":4.8,"계혈등":4.7,
+  "고량강":17,"고본":64,"고삼":9,"과루인":10.8,"곽향1":13.8,"곽향2":7,"관동화":121.7,
+  "구기자":13.7,"구척":23.8,"귀판":31.7,"금은화":43,"길경":11.5,"나복자":6,"남성1":52,
+  "남성2":26,"단삼":12.5,"담두시":13.3,"당귀1":31.7,"당귀2":23,"당삼":51,"대두황권":26,
+  "대복피":5.3,"대추":21.2,"대황":13,"도인":13.3,"독활":31.2,"두충":21.4,"등심초":65,
+  "마자인":8,"마황":8.5,"만형자":22.5,"망초":5,"맥문동":39.2,"맥아":7.5,"모과":9.8,
+  "모려":8,"목단피":33.7,"목통":10.7,"목향":12.2,"몰약":17.5,"문합":15,"박하":21.8,
+  "반하":41,"방기1":70.2,"방기2":5.8,"방기3":23.8,"방풍1":11.7,"방풍2":22.6,"백강잠":33,
+  "백개자":6.3,"백두구":21,"백부근":23.3,"백선피":0,"백자인":39.8,"백작약":19.6,"백지":26.4,
+  "백질려":16,"백출":13,"백편두":10.5,"백하수오":49.8,"백합":16.7,"복령":8.7,"복분자":10.4,
+  "봉출":10.8,"부소맥":10.3,"부자":18.3,"비파엽":9,"빈랑":9,"사삼":27.2,"사인":21.8,
+  "산사":7,"산수유":26,"산약":18.3,"산조인":251.6,"삼릉":9.2,"상백피":35,"생강":20,
+  "생지황":19,"석고":5.5,"석곡":20.8,"석창포":31.3,"선복화":33.3,"세신":145.2,"소목":6.2,
+  "소엽":12,"소자":7.5,"소회향":8.3,"속단":10.8,"숙지황":20,"승마":31.7,"시호1":74.8,
+  "시호2":15.3,"신곡":8,"신이화":36,"아교":26.7,"애엽":24.7,"야교등":11.3,"여정자":6.7,
+  "연교":28,"연육":9.2,"오가피":16.5,"오공":936,"오매":11.7,"오미자":23.5,"오수유":15.2,
+  "오약":9.2,"용골":14,"용담초":47.2,"우방자":10.2,"우슬":17.7,"울금":11.2,"원육":20.5,
+  "원지":68,"위령선":29,"유백피":33.6,"유향":14.7,"육계":14.8,"육두구":25.8,"육종용":22,
+  "음양곽":31,"의이인":15.8,"익모초":12.5,"익지인":22.8,"인삼":120,"인진":12,"자완":38,
+  "자충":52,"저근백피":23.3,"저령":46.7,"적석지":8.2,"적하수오":20,"전호":23,"조협":13,
+  "조구등":18.3,"죽여1":15.4,"죽여2":0,"죽엽":7.5,"지각":10,"지골피":21.7,"지룡":50.8,
+  "지모":16.7,"지부자":9.3,"지실":16.7,"진교":23.3,"진피1":17.6,"진피2":68.3,"차전자":23.3,
+  "창이자":6.8,"창출1":25,"창출2":21.7,"천궁1":10.8,"천궁2":20.8,"천련자":11.6,"천마":52.8,
+  "천문동":29.8,"천오":22,"천초":22.6,"천화분":23.5,"청상자":14.2,"청피":7.3,"초두구":11.7,
+  "치자":26,"택사1":28.2,"택사2":11,"토사자":17.2,"파고지":14.2,"파극천":35,"패모":32,
+  "포공영":8.7,"합환피":18.2,"해동피":8,"행인":12,"향부자":14.7,"향시":39,"현삼":27.5,
+  "현호색":59.7,"형개":17.6,"홍화":44.2,"활석":8.5,"황금":22.5,"황기":16.8,"황련":136.8,
+  "황백":30.8,"황정":15.8,"후박":8.8
+};
+const SUPPLIERS=["옴니허브","신우한방","한퓨어","바른한약"];
+const KEYS={inbound:'herb_inbound_v1',outbound:'herb_outbound_v1',settings:'herb_settings_v1'};
+
+/* ── Firebase ── */
+let db;
+try{
+  firebase.initializeApp({apiKey:"AIzaSyBlmjCfXn80Ybew7xkIPkrqyOBxulWL_aM",authDomain:"weekly-planner-a2f78.firebaseapp.com",projectId:"weekly-planner-a2f78",storageBucket:"weekly-planner-a2f78.firebasestorage.app",messagingSenderId:"497461587642",appId:"1:497461587642:web:9ddbdcf093497aa7495c83"});
+  db=firebase.firestore();
+}catch(e){
+  db={collection:()=>({doc:()=>({get:async()=>({exists:false}),set:async()=>{}})})};
+}
+
+/* ── 동기화 ── */
+function getSyncCode(){let c=localStorage.getItem('b6ix_sync');if(!c){c=Math.random().toString(36).substr(2,3).toUpperCase()+Math.random().toString(36).substr(2,3).toUpperCase();localStorage.setItem('b6ix_sync',c);}return c;}
+function setSyncStatus(t){const el=document.getElementById('sync-status');if(el)el.textContent=t;}
+function setStatus(t){const el=document.getElementById('status-bar');if(el)el.textContent=t;}
+async function load(key){
+  try{const doc=await db.collection('users').doc(getSyncCode()).collection('data').doc(key).get();if(doc.exists){const v=doc.data().value;localStorage.setItem(key,JSON.stringify(v));return v;}}catch(e){}
+  try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;}
+}
+async function save(key,val){
+  try{localStorage.setItem(key,JSON.stringify(val));setStatus('저장됨 ✓');}catch(e){return;}
+  try{setSyncStatus('동기화 중...');await db.collection('users').doc(getSyncCode()).collection('data').doc(key).set({value:val,ts:Date.now()});setSyncStatus('☁ 동기화됨');}catch(e){setSyncStatus('오프라인');}
+}
+
+/* ── 데이터 ── */
+let inboundData=[];
+let outboundData=[];
+let settingsData={prices:{},minStock:{}};
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
+function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
+function getPrice(h){return settingsData.prices[h]??DEFAULT_PRICES[h]??0;}
+function getMinStock(h){return settingsData.minStock[h]??0;}
+function calcStock(){
+  const s={};
+  HERBS.forEach(h=>s[h]=0);
+  inboundData.forEach(r=>{if(s[r.herb]!==undefined)s[r.herb]+=Number(r.qty||0);});
+  outboundData.forEach(r=>{if(s[r.herb]!==undefined)s[r.herb]-=Number(r.qty||0);});
+  return s;
+}
+
+/* ── 재고현황 ── */
+let stockSearch='',showLowOnly=false;
+function renderStock(){
+  const el=document.getElementById('view-stock');
+  const stock=calcStock();
+  const lowCount=HERBS.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]<m;}).length;
+  const zeroCount=HERBS.filter(h=>stock[h]<=0).length;
+  let herbs=HERBS;
+  if(stockSearch)herbs=herbs.filter(h=>h.includes(stockSearch));
+  if(showLowOnly)herbs=herbs.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]<m;});
+  el.innerHTML=`
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num">${HERBS.length}</div><div class="stat-label">전체 약재</div></div>
+    <div class="stat-card"><div class="stat-num warn">${lowCount}</div><div class="stat-label">부족 약재</div></div>
+    <div class="stat-card"><div class="stat-num muted">${zeroCount}</div><div class="stat-label">재고 없음</div></div>
+  </div>
+  <div class="card">
+    <div class="toolbar">
+      <input class="search-input" id="stock-search" placeholder="약재명 검색..." value="${stockSearch}">
+      <button class="toggle-btn${showLowOnly?' on':''}" id="low-only-btn">부족만 보기</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>약재명</th><th class="num">현재고 (g)</th><th class="num">최소재고 (g)</th><th class="num">단가 (원/g)</th><th>상태</th></tr></thead>
+        <tbody>${herbs.length===0?'<tr><td colspan="5" class="empty">검색 결과 없음</td></tr>':herbs.map(h=>{
+          const s=stock[h],m=getMinStock(h),p=getPrice(h);
+          let badge,bs;
+          if(s<=0){badge='없음';bs='badge-zero';}
+          else if(m>0&&s<m){badge='부족';bs='badge-low';}
+          else{badge='정상';bs='badge-ok';}
+          return`<tr><td>${h}</td><td class="num"${s<0?' style="color:var(--coral)"':''}>${fmt(s)}</td><td class="num">${m>0?fmt(m):'-'}</td><td class="num">${p>0?fmt(p):'-'}</td><td><span class="badge ${bs}">${badge}</span></td></tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+  document.getElementById('stock-search').addEventListener('input',e=>{stockSearch=e.target.value;renderStock();});
+  document.getElementById('low-only-btn').addEventListener('click',()=>{showLowOnly=!showLowOnly;renderStock();});
+}
+
+/* ── 입고 ── */
+function renderInbound(){
+  const el=document.getElementById('view-inbound');
+  const recent=[...inboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).slice(0,50);
+  el.innerHTML=`
+  <div class="card">
+    <div class="section-title">입고 등록</div>
+    <div class="form-row">
+      <div class="form-group grow"><label>약재</label><select id="in-herb"><option value="">약재 선택</option>${HERBS.map(h=>`<option>${h}</option>`).join('')}</select></div>
+      <div class="form-group"><label>수량 (g)</label><input type="number" id="in-qty" min="0" step="0.1" placeholder="0.0" style="width:90px"></div>
+      <div class="form-group"><label>날짜</label><input type="date" id="in-date" value="${todayStr()}"></div>
+      <div class="form-group"><label>공급업체</label><select id="in-sup">${SUPPLIERS.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="form-group grow"><label>메모</label><input type="text" id="in-note" placeholder="메모 (선택)"></div>
+      <div class="form-group" style="justify-content:flex-end"><button class="btn btn-primary" id="in-submit" style="margin-top:auto">등록</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">입고 이력 (최근 50건)</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th>공급업체</th><th>메모</th><th></th></tr></thead>
+      <tbody>${recent.length===0?'<tr><td colspan="6" class="empty">입고 이력이 없습니다</td></tr>':recent.map(r=>`<tr>
+        <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
+        <td>${r.supplier||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
+        <td><button class="btn-del" data-id="${r.id}" data-type="ib">×</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>`;
+  document.getElementById('in-submit').addEventListener('click',async()=>{
+    const herb=document.getElementById('in-herb').value;
+    const qty=parseFloat(document.getElementById('in-qty').value);
+    const date=document.getElementById('in-date').value;
+    const supplier=document.getElementById('in-sup').value;
+    const note=document.getElementById('in-note').value.trim();
+    if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
+    inboundData.push({id:uid(),herb,qty,date,supplier,note});
+    await save(KEYS.inbound,inboundData);
+    document.getElementById('in-qty').value='';
+    document.getElementById('in-note').value='';
+    renderInbound();
+  });
+  el.querySelectorAll('.btn-del[data-type="ib"]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      if(!confirm('삭제하시겠습니까?'))return;
+      inboundData=inboundData.filter(r=>r.id!==btn.dataset.id);
+      await save(KEYS.inbound,inboundData);
+      renderInbound();
+    });
+  });
+}
+
+/* ── 출고 ── */
+function renderOutbound(){
+  const el=document.getElementById('view-outbound');
+  const recent=[...outboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).slice(0,50);
+  el.innerHTML=`
+  <div class="card">
+    <div class="section-title">출고 등록</div>
+    <div class="form-row">
+      <div class="form-group grow"><label>약재</label><select id="out-herb"><option value="">약재 선택</option>${HERBS.map(h=>`<option>${h}</option>`).join('')}</select></div>
+      <div class="form-group"><label>수량 (g)</label><input type="number" id="out-qty" min="0" step="0.1" placeholder="0.0" style="width:90px"></div>
+      <div class="form-group"><label>날짜</label><input type="date" id="out-date" value="${todayStr()}"></div>
+      <div class="form-group"><label>용도</label><input type="text" id="out-purpose" placeholder="처방, 폐기 등"></div>
+      <div class="form-group grow"><label>메모</label><input type="text" id="out-note" placeholder="메모 (선택)"></div>
+      <div class="form-group" style="justify-content:flex-end"><button class="btn btn-primary" id="out-submit" style="margin-top:auto">등록</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">출고 이력 (최근 50건)</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th>용도</th><th>메모</th><th></th></tr></thead>
+      <tbody>${recent.length===0?'<tr><td colspan="6" class="empty">출고 이력이 없습니다</td></tr>':recent.map(r=>`<tr>
+        <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
+        <td>${r.purpose||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
+        <td><button class="btn-del" data-id="${r.id}" data-type="ob">×</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>`;
+  document.getElementById('out-submit').addEventListener('click',async()=>{
+    const herb=document.getElementById('out-herb').value;
+    const qty=parseFloat(document.getElementById('out-qty').value);
+    const date=document.getElementById('out-date').value;
+    const purpose=document.getElementById('out-purpose').value.trim();
+    const note=document.getElementById('out-note').value.trim();
+    if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
+    outboundData.push({id:uid(),herb,qty,date,purpose,note});
+    await save(KEYS.outbound,outboundData);
+    document.getElementById('out-qty').value='';
+    document.getElementById('out-purpose').value='';
+    document.getElementById('out-note').value='';
+    renderOutbound();
+  });
+  el.querySelectorAll('.btn-del[data-type="ob"]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      if(!confirm('삭제하시겠습니까?'))return;
+      outboundData=outboundData.filter(r=>r.id!==btn.dataset.id);
+      await save(KEYS.outbound,outboundData);
+      renderOutbound();
+    });
+  });
+}
+
+/* ── 설정 ── */
+let settingsSearch='';
+function renderSettings(){
+  const el=document.getElementById('view-settings');
+  let herbs=HERBS;
+  if(settingsSearch)herbs=herbs.filter(h=>h.includes(settingsSearch));
+  el.innerHTML=`
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+      <div class="section-title" style="margin:0">단가 / 최소재고 설정</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" id="export-btn">내보내기 (JSON)</button>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center">가져오기 (JSON)<input type="file" id="import-input" accept=".json" style="display:none"></label>
+        <button class="btn btn-primary btn-sm" id="settings-save">설정 저장</button>
+      </div>
+    </div>
+    <div class="toolbar"><input class="search-input" id="settings-search" placeholder="약재명 검색..." value="${settingsSearch}"></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>약재명</th><th class="num">단가 (원/g)</th><th class="num">최소재고 (g)</th></tr></thead>
+      <tbody>${herbs.map(h=>`<tr>
+        <td>${h}</td>
+        <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
+        <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>`;
+
+  document.getElementById('settings-search').addEventListener('input',e=>{settingsSearch=e.target.value;renderSettings();});
+
+  document.getElementById('settings-save').addEventListener('click',async()=>{
+    el.querySelectorAll('.settings-inp').forEach(inp=>{
+      const h=inp.dataset.herb,v=parseFloat(inp.value)||0;
+      if(inp.dataset.field==='price')settingsData.prices[h]=v;
+      else settingsData.minStock[h]=v;
+    });
+    await save(KEYS.settings,settingsData);
+    alert('설정이 저장되었습니다.');
+    renderStock();
+  });
+
+  document.getElementById('export-btn').addEventListener('click',()=>{
+    const data={inbound:inboundData,outbound:outboundData,settings:settingsData};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='herb_data_'+todayStr()+'.json';a.click();
+  });
+
+  document.getElementById('import-input').addEventListener('change',async e=>{
+    const file=e.target.files[0];if(!file)return;
+    try{
+      const text=await file.text();
+      const data=JSON.parse(text);
+      if(data.inbound&&Array.isArray(data.inbound)){inboundData=data.inbound.map(r=>({...r,id:r.id||uid()}));await save(KEYS.inbound,inboundData);}
+      if(data.outbound&&Array.isArray(data.outbound)){outboundData=data.outbound.map(r=>({...r,id:r.id||uid()}));await save(KEYS.outbound,outboundData);}
+      if(data.settings){
+        if(data.settings.prices)settingsData.prices={...settingsData.prices,...data.settings.prices};
+        if(data.settings.minStock)settingsData.minStock={...settingsData.minStock,...data.settings.minStock};
+        await save(KEYS.settings,settingsData);
+      }
+      alert(`가져오기 완료 — 입고 ${inboundData.length}건, 출고 ${outboundData.length}건`);
+      renderSettings();
+    }catch(err){alert('파일 형식이 올바르지 않습니다.');}
+    e.target.value='';
+  });
+}
+
+/* ── 탭 ── */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('view-'+t.dataset.tab).classList.add('active');
+    renderTab(t.dataset.tab);
+  });
+});
+function renderTab(tab){
+  if(tab==='stock')renderStock();
+  else if(tab==='inbound')renderInbound();
+  else if(tab==='outbound')renderOutbound();
+  else if(tab==='settings')renderSettings();
+}
+
+/* ── 초기화 ── */
+(async()=>{
+  const[ib,ob,st]=await Promise.all([load(KEYS.inbound),load(KEYS.outbound),load(KEYS.settings)]);
+  if(ib&&Array.isArray(ib))inboundData=ib;
+  if(ob&&Array.isArray(ob))outboundData=ob;
+  if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;}
+  document.getElementById('sync-code-display').textContent=getSyncCode();
+  setSyncStatus('☁ 동기화됨');
+  setStatus('불러옴 ✓');
+  renderStock();
+})();
+</script>
+</body>
+</html>
