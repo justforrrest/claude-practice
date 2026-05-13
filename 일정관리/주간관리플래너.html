@@ -265,12 +265,14 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 }
 .emotion-card-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .emotion-card-header .field-label{margin:0;font-size:11px;}
-.emotion-card textarea{
+.emotion-card textarea,.emotion-editable{
   font-size:13px;border:none;background:transparent;
   outline:none;width:100%;resize:none;min-height:26px;
   color:var(--text-1);font-family:var(--font-sans);
   overflow:hidden;
 }
+.emotion-editable{line-height:1.6;cursor:text;word-break:break-word;}
+.em-bullet{color:var(--text-3);}
 
 /* ── Weekly Plan Table ── */
 #week-grid{overflow-x:auto;}
@@ -489,21 +491,21 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
                 <span class="badge badge-bad">BAD</span>
                 <label class="field-label">오늘 아쉽거나 슬펐던 감정</label>
               </div>
-              <textarea id="e-bad" placeholder="어떤 상황에서 어떤 감정을 느꼈나요?"></textarea>
+              <div contenteditable="true" class="emotion-editable" id="e-bad"></div>
             </div>
             <div class="emotion-card" style="border-color:#C0DD97;">
               <div class="emotion-card-header">
                 <span class="badge badge-good">GOOD</span>
                 <label class="field-label">오늘 좋았거나 만족스런 감정</label>
               </div>
-              <textarea id="e-good" placeholder="어떤 상황에서 어떤 감정을 느꼈나요?"></textarea>
+              <div contenteditable="true" class="emotion-editable" id="e-good"></div>
             </div>
             <div class="emotion-card" style="border-color:#B5D4F4;">
               <div class="emotion-card-header">
                 <span class="badge badge-next">NEXT</span>
                 <label class="field-label">내일 아침에 맞이할 감정을 지금 선택하세요</label>
               </div>
-              <textarea id="e-next" placeholder="내일을 위한 의도..."></textarea>
+              <div contenteditable="true" class="emotion-editable" id="e-next"></div>
             </div>
           </div>
         </div>
@@ -1183,12 +1185,17 @@ function renderDailyBody(){
   tbody.querySelectorAll('.add-checkout-btn').forEach(btn=>{btn.addEventListener('click',()=>{const bi=btn.dataset.bi;entry.blocks[bi].checkouts.push({text:'',done:false});renderDaily();focusLastInput(bi,'.checkout-text');});});
   tbody.querySelectorAll('.check-del-btn').forEach(btn=>{btn.addEventListener('click',()=>{entry.blocks[btn.dataset.bi].checks.splice(Number(btn.dataset.ci),1);renderDaily();});});
   tbody.querySelectorAll('.checkout-del-btn').forEach(btn=>{btn.addEventListener('click',()=>{entry.blocks[btn.dataset.bi].checkouts.splice(Number(btn.dataset.ci),1);renderDaily();});});
-  const bulletize=t=>{if(!t||!t.trim())return'• ';return t.split('\n').map(l=>l&&!l.startsWith('• ')?'• '+l:l).join('\n');};
-  document.getElementById('e-bad').value=bulletize(entry.bad||'');
-  document.getElementById('e-good').value=bulletize(entry.good||'');
-  document.getElementById('e-next').value=bulletize(entry.next||'');
-  const autoResize=el=>{el.style.height='auto';el.style.height=el.scrollHeight+'px';};
-  ['bad','good','next'].forEach(k=>{const el=document.getElementById('e-'+k);el.oninput=()=>{entry[k]=el.value;autoResize(el);};el.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();save(KEYS.daily,dailyData);}else if(e.key==='Enter'&&e.shiftKey){e.preventDefault();const s=el.selectionStart,v=el.value;el.value=v.slice(0,s)+'\n• '+v.slice(el.selectionEnd);el.selectionStart=el.selectionEnd=s+3;entry[k]=el.value;autoResize(el);}});autoResize(el);});
+  const toBulletHtml=t=>{if(!t||!t.trim())return'<span class="em-bullet">•</span>&nbsp;';return t.split('\n').map(l=>l?'<span class="em-bullet">•</span>&nbsp;'+l.replace(/^[••][\s ]*/,''):'').join('<br>');};
+  ['bad','good','next'].forEach(k=>{
+    const el=document.getElementById('e-'+k);
+    el.innerHTML=toBulletHtml(entry[k]||'');
+    el.addEventListener('input',()=>{entry[k]=el.innerText.replace(/\n$/,'');});
+    el.addEventListener('keydown',ev=>{
+      if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();save(KEYS.daily,dailyData);}
+      else if(ev.key==='Enter'&&ev.shiftKey){ev.preventDefault();document.execCommand('insertHTML',false,'<br><span class="em-bullet">•</span>&nbsp;');entry[k]=el.innerText.replace(/\n$/,'');}
+    });
+    el.addEventListener('paste',ev=>{ev.preventDefault();document.execCommand('insertText',false,ev.clipboardData.getData('text/plain'));});
+  });
 }
 function renderDaily(){
   calendarViewDate=new Date(currentDailyDate);
