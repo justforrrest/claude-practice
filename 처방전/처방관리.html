@@ -433,12 +433,19 @@ function renderRegister(){
       <!-- 처방 등록 -->
       <div class="card" style="margin-bottom:0">
         <div class="section-title" style="margin-bottom:.875rem">${isEdit?'처방 수정':'새 처방 등록'}</div>
-        <div class="form-row" style="margin-bottom:.75rem">
+        <div class="form-row" style="margin-bottom:.75rem;align-items:flex-end;flex-wrap:nowrap;gap:8px">
           <div class="form-group grow">
             <label>이름</label>
             <div class="herb-ac-wrap">
               <input type="text" id="rx-patient" placeholder="환자명" autocomplete="off" value="${rx?.patientName||''}">
               <ul class="herb-dropdown" id="rx-patient-dropdown"></ul>
+            </div>
+          </div>
+          <div class="form-group" style="flex-shrink:0">
+            <label>성별</label>
+            <div style="display:flex;gap:3px">
+              <button type="button" id="rx-gender-m" class="btn btn-sm ${rxGender==='남'?'btn-primary':'btn-secondary'}">남</button>
+              <button type="button" id="rx-gender-f" class="btn btn-sm ${rxGender==='여'?'btn-primary':'btn-secondary'}">여</button>
             </div>
           </div>
         </div>
@@ -451,10 +458,6 @@ function renderRegister(){
             <span style="font-size:13px;color:var(--text-3)">만</span>
             <span id="rx-patient-age" style="font-size:13px;color:var(--text-2);min-width:18px;text-align:right;font-variant-numeric:tabular-nums">-</span>
             <span style="font-size:13px;color:var(--text-3)">세</span>
-          </div>
-          <div style="display:flex;gap:3px;flex-shrink:0;padding-bottom:2px">
-            <button type="button" id="rx-gender-m" class="btn btn-sm ${rxGender==='남'?'btn-primary':'btn-secondary'}">남</button>
-            <button type="button" id="rx-gender-f" class="btn btn-sm ${rxGender==='여'?'btn-primary':'btn-secondary'}">여</button>
           </div>
         </div>
         <div style="height:1px;background:var(--border);margin-bottom:.75rem"></div>
