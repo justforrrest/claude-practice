@@ -1181,7 +1181,7 @@ function showRxHistory(pid){
           <td style="text-align:center;white-space:nowrap">${r.date||'-'}</td>
           <td style="text-align:center">${r.category||'-'}</td>
           <td style="text-align:center">${session}</td>
-          <td>${r.diagnosis||'-'}</td>
+          <td style="text-align:center">${r.diagnosis||'-'}</td>
         </tr>`;
       }).join('')
     :`<tr><td colspan="4" class="empty">처방 이력이 없습니다</td></tr>`;
