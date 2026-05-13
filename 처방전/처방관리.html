@@ -479,7 +479,7 @@ function renderRegister(){
               <ul class="herb-dropdown" id="rx-patient-dropdown"></ul>
             </div>
           </div>
-          <div class="form-group" style="flex-shrink:0">
+          <div class="form-group" style="flex-shrink:0;align-items:flex-end">
             <label>성별</label>
             <div style="display:flex;gap:3px">
               <button type="button" id="rx-gender-m" class="btn ${rxGender==='남'?'btn-primary':'btn-ghost'}" style="padding:7px 12px;font-size:13px">남</button>
@@ -492,7 +492,7 @@ function renderRegister(){
             <label>생년월일</label>
             <input type="text" id="rx-patient-birth" value="${rxPatBirth}" placeholder="1990-12-31" maxlength="10" style="width:100%">
           </div>
-          <div class="form-group" style="flex-shrink:0">
+          <div class="form-group" style="flex-shrink:0;align-items:flex-end">
             <label>나이</label>
             <div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
               <span id="rx-patient-age" style="font-size:13px;color:var(--text-2);font-variant-numeric:tabular-nums;border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;min-width:48px;text-align:center;background:var(--surface)">-</span>
