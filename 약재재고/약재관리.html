@@ -1142,6 +1142,8 @@ function renderTab(tab){
   if(pl&&typeof pl==='object'&&!Array.isArray(pl))pricelistData=pl;
   if(hb&&Array.isArray(hb)&&hb.length>0)herbsData=hb;
   if(adj&&Array.isArray(adj))adjustData=adj;
+  const needsMinInit=herbsData.some(h=>settingsData.minStock[h]===undefined);
+  if(needsMinInit){herbsData.forEach(h=>{if(settingsData.minStock[h]===undefined)settingsData.minStock[h]=200;});await save(KEYS.settings,settingsData);}
   document.getElementById('sync-code-display').textContent=getSyncCode();
   setSyncStatus('☁ 동기화됨');
   setStatus('불러옴 ✓');
