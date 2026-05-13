@@ -875,10 +875,8 @@ function renderHistory(){
     </div>`;
     const patEl=document.getElementById('hist-q-pat');
     const dxEl=document.getElementById('hist-q-dx');
-    patEl.addEventListener('input',e=>{if(e.isComposing)return;histPatSearch=patEl.value;updateHistList();});
-    patEl.addEventListener('compositionend',()=>{histPatSearch=patEl.value;updateHistList();});
-    dxEl.addEventListener('input',e=>{if(e.isComposing)return;histDxSearch=dxEl.value;updateHistList();});
-    dxEl.addEventListener('compositionend',()=>{histDxSearch=dxEl.value;updateHistList();});
+    patEl.addEventListener('input',()=>{histPatSearch=patEl.value;updateHistList();});
+    dxEl.addEventListener('input',()=>{histDxSearch=dxEl.value;updateHistList();});
   }
   const bw=document.getElementById('hist-batch-wrap');
   if(bw){
@@ -1024,8 +1022,7 @@ function renderPatients(){
       </table></div>
     </div>`;
     const srEl=document.getElementById('pat-search');
-    srEl.addEventListener('input',e=>{if(e.isComposing)return;patSearch=srEl.value;updatePatList();});
-    srEl.addEventListener('compositionend',()=>{patSearch=srEl.value;updatePatList();});
+    srEl.addEventListener('input',()=>{patSearch=srEl.value;updatePatList();});
     el.querySelectorAll('[data-cho]').forEach(b=>b.addEventListener('click',()=>{
       patIndex=b.dataset.cho;
       el.querySelectorAll('[data-cho]').forEach(x=>{x.classList.toggle('btn-primary',x.dataset.cho===patIndex);x.classList.toggle('btn-secondary',x.dataset.cho!==patIndex);});
