@@ -758,7 +758,7 @@ function renderSettings(){
         <button class="pl-cho-btn${!settingsConsonant?' active':''}" data-st-cho="">전체</button>
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${settingsConsonant===c?' active':''}" data-st-cho="${c}">${c}</button>`).join('')}
       </div>
-      <input class="search-input" id="settings-search" placeholder="검색..." value="${settingsSearch}" style="width:20px;min-width:0;flex-shrink:0;">
+      <input class="search-input" id="settings-search" placeholder="검색..." value="${settingsSearch}" style="width:20px;min-width:0;flex:none;">
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>약재명</th><th class="num">단가 (원/g)</th><th class="num">최소재고 (g)</th></tr></thead>
@@ -943,7 +943,7 @@ function renderPricelist(){
         <button class="pl-cho-btn${!pricelistConsonant?' active':''}" data-cho="">전체</button>
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${pricelistConsonant===c?' active':''}" data-cho="${c}">${c}</button>`).join('')}
       </div>
-      <input class="search-input" id="pl-search" placeholder="검색..." value="${pricelistSearch}" style="width:20px;min-width:0;flex-shrink:0;">
+      <input class="search-input" id="pl-search" placeholder="검색..." value="${pricelistSearch}" style="width:20px;min-width:0;flex:none;">
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.875rem;">
       ${suppliersData.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--text-2);">${s}<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:0 0 0 2px;line-height:1;" title="${DEFAULT_SUPPLIERS.includes(s)?'기본 도매처는 삭제 불가':'삭제'}">${DEFAULT_SUPPLIERS.includes(s)?'':'×'}</button></span>`).join('')}
