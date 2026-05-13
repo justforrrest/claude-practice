@@ -967,19 +967,28 @@ function renderPatients(){
   </div>
   <div class="card" style="padding:0">
     <div class="tbl-wrap"><table>
-      <thead><tr><th>환자명</th><th>성별</th><th>생년월일</th><th>나이</th><th>메모</th><th class="num">처방이력</th><th></th></tr></thead>
+      <thead><tr>
+        <th style="text-align:center;border-right:1px solid var(--border-2)">환자명</th>
+        <th style="text-align:center;border-right:1px solid var(--border-2)">성별</th>
+        <th style="text-align:center;border-right:1px solid var(--border-2)">생년월일</th>
+        <th style="text-align:center;border-right:1px solid var(--border-2)">나이</th>
+        <th style="text-align:center;border-right:1px solid var(--border-2)">메모</th>
+        <th style="text-align:center;border-right:1px solid var(--border-2)">처방이력</th>
+        <th></th>
+      </tr></thead>
       <tbody>${!list.length?`<tr><td colspan="7" class="empty">환자가 없습니다</td></tr>`:
         list.map(p=>{
           const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
           const fmtBirth=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');return c.length===8&&/^\d{8}$/.test(c)?`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`:b||'';};
           const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?a+'세':'-';};
+          const SEP='border-right:1px solid var(--border-2)';
           return`<tr data-pid="${p.id}">
-            <td><input class="pat-cell-inp" data-pid="${p.id}" data-field="name" data-orig="${p.name}" value="${p.name}" style="font-weight:600;color:var(--violet-d)"></td>
-            <td><input class="pat-cell-inp" data-pid="${p.id}" data-field="gender" value="${p.gender||''}" style="width:36px"></td>
-            <td><input class="pat-cell-inp" data-pid="${p.id}" data-field="birth" value="${fmtBirth(p.birth)}" placeholder="19901231" style="min-width:90px"></td>
-            <td class="pat-age-cell" data-pid="${p.id}">${ageOf(p.birth)}</td>
-            <td><input class="pat-cell-inp" data-pid="${p.id}" data-field="memo" value="${(p.memo||'').replace(/"/g,'&quot;')}" style="color:var(--text-3)"></td>
-            <td class="num">${cnt}건</td>
+            <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="name" data-orig="${p.name}" value="${p.name}" style="font-weight:600;color:var(--violet-d)"></td>
+            <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="gender" value="${p.gender||''}" style="width:36px"></td>
+            <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="birth" value="${fmtBirth(p.birth)}" style="min-width:90px"></td>
+            <td class="pat-age-cell" data-pid="${p.id}" style="${SEP}">${ageOf(p.birth)}</td>
+            <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="memo" value="${(p.memo||'').replace(/"/g,'&quot;')}" style="color:var(--text-3)"></td>
+            <td class="num" style="${SEP}">${cnt}건</td>
             <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
           </tr>`;
         }).join('')
