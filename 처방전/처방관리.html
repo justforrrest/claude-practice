@@ -609,7 +609,7 @@ function renderConfig(){
       <tr style="border-bottom:1px solid var(--border)">
         <td style="padding:12px 0;font-weight:600;color:var(--text-2);width:80px">조제비</td>
         <td style="padding:12px 8px">
-          <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
             ${cfgInp('cfg-dispensing-price',c.dispensing_price)}
             <span style="color:var(--text-3)">원 / 팩</span>
           </div>
@@ -618,7 +618,7 @@ function renderConfig(){
       <tr style="border-bottom:1px solid var(--border)">
         <td style="padding:12px 0;font-weight:600;color:var(--text-2)">탕전비</td>
         <td style="padding:12px 8px">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
             ${cfgInp('cfg-decoction-ml',c.decoction_ml,'80px')}
             <span style="color:var(--text-3)">ml / 팩</span>
             <span style="color:var(--border-2);margin:0 4px">·</span>
@@ -630,7 +630,7 @@ function renderConfig(){
       <tr style="border-bottom:1px solid var(--border)">
         <td style="padding:12px 0;font-weight:600;color:var(--text-2)">포장비</td>
         <td style="padding:12px 8px">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
             ${cfgInp('cfg-packaging-desc',c.packaging_desc,'180px','text')}
             ${cfgInp('cfg-packaging-price',c.packaging_price)}
             <span style="color:var(--text-3)">원</span>
@@ -640,7 +640,7 @@ function renderConfig(){
       <tr>
         <td style="padding:12px 0;font-weight:600;color:var(--text-2)">배송비</td>
         <td style="padding:12px 8px">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
             ${cfgInp('cfg-delivery-desc',c.delivery_desc,'180px','text')}
             ${cfgInp('cfg-delivery-price',c.delivery_price)}
             <span style="color:var(--text-3)">원</span>
