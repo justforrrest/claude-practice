@@ -1118,7 +1118,7 @@ function updatePatList(){
         <td class="pat-age-cell" data-pid="${p.id}" style="${SEP};text-align:center">${ageOf(p.birth)}</td>
         <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="memo" value="${(p.memo||'').replace(/"/g,'&quot;')}" style="color:var(--text-3)"></td>
         <td style="${SEP};text-align:center;width:52px">${medBadge}</td>
-        <td class="num" style="${SEP};text-align:center"><button class="btn btn-sm btn-secondary rx-hist-btn" data-pid="${p.id}" style="min-width:40px">${cnt}건</button></td>
+        <td class="num" style="${SEP};text-align:center"><span class="rx-hist-btn" data-pid="${p.id}" style="cursor:pointer;color:var(--violet-d);font-weight:600">${cnt}건</span></td>
         <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
       </tr>`;
     }).join('');
