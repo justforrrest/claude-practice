@@ -126,6 +126,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
       <span id="sync-status"></span>
       <button class="btn btn-secondary btn-sm" id="import-btn">📥 가져오기</button>
       <input type="file" id="import-file" accept=".json" style="display:none">
+      <button class="btn btn-secondary btn-sm" id="export-btn">💾 저장</button>
       <span id="status-bar">불러오는 중...</span>
     </div>
   </div>
@@ -343,18 +344,22 @@ function attachRowListeners(tr){
   const nameInput=tr.querySelector('.rx-name');
   const dropdown=tr.querySelector('.herb-dropdown');
   const qtyInput=tr.querySelector('.rx-qty');
+  const suchiInput=tr.querySelector('.rx-suchi');
   const totalGCell=tr.querySelector('.rx-total-g');
   const priceCell=tr.querySelector('.rx-price');
+  const totalPriceCell=tr.querySelector('.rx-total-price');
 
   const updateCells=()=>{
     const row=rxHerbs.find(r=>r.id===rid);
     if(!row)return;
     const packs=Number(document.getElementById('rx-packs')?.value||20);
     const qty=Number(row.qty||0);
-    if(totalGCell)totalGCell.textContent=fmt(qty*packs)+'g';
-    if(priceCell)priceCell.textContent=fmtW(getPrice(row.herb)*qty)+'원';
+    if(totalGCell)totalGCell.textContent=qty?fmt(qty*packs)+'g':'-';
+    if(priceCell)priceCell.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty)+'원':'-';
+    if(totalPriceCell)totalPriceCell.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty*packs)+'원':'-';
     calcSummary();
   };
+  suchiInput?.addEventListener('input',()=>{const row=rxHerbs.find(r=>r.id===rid);if(row)row.suchi=suchiInput.value;});
 
   setupHerbAC(nameInput,dropdown,(herb)=>{
     const row=rxHerbs.find(r=>r.id===rid);
@@ -412,20 +417,23 @@ function attachRowListeners(tr){
   });
 }
 
-function addHerbRow(herb='',qty='',focus=false){
+function addHerbRow(herb='',suchi='',qty='',focus=false){
   const id=uid();
-  rxHerbs.push({id,herb,qty});
+  rxHerbs.push({id,herb,suchi,qty});
   const tbody=document.getElementById('rx-herb-tbody');
   if(!tbody)return;
   const packs=Number(document.getElementById('rx-packs')?.value||20);
   const tr=document.createElement('tr');
   tr.dataset.rid=id;
+  const qn=Number(qty);
   tr.innerHTML=`
     <td style="width:28px;color:var(--text-3);font-size:12px;text-align:center">${rxHerbs.length}</td>
-    <td style="min-width:130px"><div class="herb-ac-wrap"><input class="rx-name" type="text" value="${herb}" placeholder="약재명" autocomplete="off"><ul class="herb-dropdown"></ul></div></td>
-    <td style="width:90px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right;border:none;background:transparent;outline:none;padding:4px 0;width:100%;"></td>
-    <td class="num rx-total-g" style="width:80px">${qty?fmt(Number(qty)*packs)+'g':'-'}</td>
-    <td class="num rx-price" style="width:90px">${herb&&qty?fmtW(getPrice(herb)*Number(qty))+'원':'-'}</td>
+    <td style="min-width:100px"><div class="herb-ac-wrap"><input class="rx-name" type="text" value="${herb}" placeholder="약재명" autocomplete="off"><ul class="herb-dropdown"></ul></div></td>
+    <td style="width:60px"><input class="rx-suchi" type="text" value="${suchi}" placeholder="" style="border:none;background:transparent;outline:none;padding:4px 0;width:100%;font-size:13px;"></td>
+    <td style="width:65px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right;border:none;background:transparent;outline:none;padding:4px 0;width:100%;"></td>
+    <td class="num rx-total-g" style="width:65px">${qn?fmt(qn*packs)+'g':'-'}</td>
+    <td class="num rx-price" style="width:72px">${herb&&qn?fmtW(getPrice(herb)*qn)+'원':'-'}</td>
+    <td class="num rx-total-price" style="width:72px">${herb&&qn?fmtW(getPrice(herb)*qn*packs)+'원':'-'}</td>
     <td style="width:32px"><button class="btn-del rx-del">×</button></td>`;
   tbody.appendChild(tr);
   attachRowListeners(tr);
@@ -454,9 +462,11 @@ function renderRegister(){
             <thead><tr>
               <th style="width:28px">#</th>
               <th>약재명</th>
-              <th class="num" style="width:90px">첩당 (g)</th>
-              <th class="num" style="width:80px">총량 (g)</th>
-              <th class="num" style="width:90px">1첩 금액</th>
+              <th style="width:60px">수치</th>
+              <th class="num" style="width:65px">첩당g</th>
+              <th class="num" style="width:65px">총량g</th>
+              <th class="num" style="width:72px">1첩 금액</th>
+              <th class="num" style="width:72px">총금액</th>
               <th style="width:32px"></th>
             </tr></thead>
             <tbody id="rx-herb-tbody"></tbody>
@@ -732,7 +742,7 @@ function renderRegister(){
   const initHerbs=[...rxHerbs];
   rxHerbs=[];
   if(initHerbs.length===0) addHerbRow('','',false);
-  else initHerbs.forEach(r=>addHerbRow(r.herb,r.qty,false));
+  else initHerbs.forEach(r=>addHerbRow(r.herb,r.suchi||'',r.qty,false));
   calcSummary();
 
   // 첩수·팩수 변경 시 총량·합계 업데이트
@@ -744,6 +754,8 @@ function renderRegister(){
       const qty=Number(row.qty||0);
       const cell=tr.querySelector('.rx-total-g');
       if(cell)cell.textContent=qty?fmt(qty*packs)+'g':'-';
+      const tpc=tr.querySelector('.rx-total-price');
+      if(tpc)tpc.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty*packs)+'원':'-';
     });
     calcSummary();
   });
@@ -833,7 +845,7 @@ async function saveRx(){
     days:Number(document.getElementById('rx-days-display')?.value)||0,
     packs,
     totalPacks,
-    herbs:herbs.map(r=>({herb:r.herb,qtyPerPack:Number(r.qty)})),
+    herbs:herbs.map(r=>({herb:r.herb,suchi:r.suchi||'',qtyPerPack:Number(r.qty)})),
     fees,totalPrice,
     packMl:parseNum(document.getElementById('rx-water-pack-ml')?.value)||rxConfig.decoction_ml||110,
     note:document.getElementById('rx-note').value.trim(),
@@ -1055,10 +1067,10 @@ function renderPatients(){
           <th style="text-align:center;border-right:1px solid var(--border-2);width:44px">성별</th>
           <th style="text-align:center;border-right:1px solid var(--border-2);width:100px">생년월일</th>
           <th style="text-align:center;border-right:1px solid var(--border-2);width:44px">나이</th>
-          <th style="text-align:center;border-right:1px solid var(--border-2)">메모</th>
-          <th style="text-align:center;border-right:1px solid var(--border-2);width:52px">복약</th>
+          <th style="text-align:center;border-right:1px solid var(--border-2);width:120px">메모</th>
+          <th style="text-align:center;border-right:1px solid var(--border-2);width:68px">복약</th>
           <th style="text-align:center;border-right:1px solid var(--border-2);width:60px">처방이력</th>
-          <th style="width:32px"></th>
+          <th style="text-align:center;width:32px">삭제</th>
         </tr></thead>
         <tbody id="pat-tbody"></tbody>
       </table></div>
@@ -1267,6 +1279,16 @@ document.getElementById('sync-apply-btn').addEventListener('click',()=>{
 });
 document.getElementById('sync-code-input').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase();});
 document.getElementById('sync-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
+
+/* ── JSON 내보내기 ── */
+document.getElementById('export-btn').addEventListener('click',()=>{
+  const data={patients:patientsData,prescriptions:prescriptionsData,exported:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`처방관리_${todayStr()}.json`;
+  a.click();URL.revokeObjectURL(a.href);
+});
 
 /* ── JSON 가져오기 ── */
 document.getElementById('import-btn').addEventListener('click',()=>document.getElementById('import-file').click());
