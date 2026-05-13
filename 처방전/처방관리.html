@@ -413,7 +413,8 @@ function renderRegister(){
         <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group" style="min-width:0;flex:1">
             <label>환자</label>
-            <div style="display:flex;gap:6px"><select id="rx-patient" style="width:100%">${patOpts}</select><button class="btn btn-secondary btn-sm" id="rx-quick-patient" style="white-space:nowrap">+ 신규</button></div>
+            <input type="text" id="rx-patient" list="rx-patient-list" placeholder="환자명 입력" autocomplete="off" value="${rx?.patientName||''}">
+            <datalist id="rx-patient-list">${patientsData.map(p=>`<option value="${p.name}">`).join('')}</datalist>
           </div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
@@ -565,8 +566,7 @@ function renderRegister(){
     </div><!-- /우측 -->
   </div><!-- /2컬럼 -->`;
 
-  // 환자 선택 설정
-  if(rx) document.getElementById('rx-patient').value=rx.patientId||'';
+  // 환자명 초기값은 template에서 설정됨
 
   // 약재 행 초기화 — addHerbRow가 rxHerbs에 push하므로, 먼저 기존 목록 저장 후 clear
   if(rx && rxHerbs.length===0) rxHerbs=rx.herbs.map(h=>({id:uid(),herb:h.herb,qty:h.qtyPerPack}));
@@ -620,24 +620,21 @@ function renderRegister(){
 
   document.getElementById('rx-add-herb').addEventListener('click',()=>addHerbRow('','',true));
 
-  document.getElementById('rx-quick-patient').addEventListener('click',()=>{
-    const name=prompt('환자 이름:');
-    if(!name?.trim())return;
-    const p={id:uid(),name:name.trim(),memo:''};
-    patientsData.push(p);
-    save(RX_KEYS.patients,patientsData);
-    renderRegister();
-    setTimeout(()=>document.getElementById('rx-patient').value=p.id,30);
-  });
+
 
   document.getElementById('rx-save').addEventListener('click',saveRx);
   if(isEdit) document.getElementById('rx-cancel').addEventListener('click',()=>{editingRxId=null;rxHerbs=[];renderRegister();});
 }
 
 async function saveRx(){
-  const patientId=document.getElementById('rx-patient').value;
-  const patient=patientsData.find(p=>p.id===patientId);
-  if(!patient){alert('환자를 선택해주세요.');return;}
+  const patientName=document.getElementById('rx-patient').value.trim();
+  if(!patientName){alert('환자명을 입력해주세요.');return;}
+  let patient=patientsData.find(p=>p.name===patientName);
+  if(!patient){
+    patient={id:uid(),name:patientName,memo:''};
+    patientsData.push(patient);
+    await save(RX_KEYS.patients,patientsData);
+  }
   const herbs=rxHerbs.filter(r=>r.herb&&Number(r.qty)>0);
   if(!herbs.length){alert('약재를 1종 이상 입력해주세요.');return;}
   const packs=Number(document.getElementById('rx-packs').value)||20;
@@ -783,7 +780,7 @@ function showDetail(id){
         ...(f.delivery>0?[{label:'배송비',desc:'',amount:f.delivery}]:[]),
       ];
       return`<div style="margin-top:.875rem;background:var(--surface-2);border-radius:8px;padding:.875rem 1rem">
-        <div style="font-size:11px;color:var(--text-3);text-align:right;margin-bottom:.5rem">1첩당 ${fmt(perPackG)}g &nbsp;·&nbsp; 약재총량 ${fmt(totalG)}g &nbsp;·&nbsp; ${rx.herbs.length}종</div>
+        <div style="font-size:11px;color:var(--text-3);text-align:right;margin-bottom:.5rem">1첩당 ${fmt(perPackG)}g &nbsp;·&nbsp; 약재총량 ${fmt(totalG)}g &nbsp;·&nbsp; 약재수 ${rx.herbs.length}종</div>
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           ${rows.map(r=>`<tr><td style="padding:3px 0;font-weight:600;color:var(--text-2);width:70px">${r.label}</td><td style="padding:3px 8px;color:var(--text-3);white-space:nowrap">${r.desc}</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums">${fmtW(r.amount)}원</td></tr>`).join('')}
           <tr style="border-top:2px solid var(--border)"><td colspan="2" style="padding:6px 0 2px;font-weight:700">총 합계</td><td style="padding:6px 0 2px;text-align:right;font-size:16px;font-weight:700;color:var(--violet-d)">${fmtW(rx.totalPrice)}원</td></tr>
