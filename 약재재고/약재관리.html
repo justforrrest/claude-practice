@@ -599,6 +599,16 @@ function renderInbound(){
     const supplier=document.getElementById('in-sup').value;
     const note=document.getElementById('in-note').value.trim();
     if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
+    if(price>0){
+      const stockBefore=calcStock()[herb]||0;
+      const curPrice=getPrice(herb);
+      const newPrice=stockBefore<=0
+        ?price
+        :Math.round((stockBefore*curPrice+qty*price)/(stockBefore+qty)*10)/10;
+      if(!settingsData.prices)settingsData.prices={};
+      settingsData.prices[herb]=newPrice;
+      await save(KEYS.settings,settingsData);
+    }
     inboundData.push({id:uid(),herb,qty,price,amount,date,supplier,note});
     await save(KEYS.inbound,inboundData);
     qtyEl.value='';priceEl.value='';amountEl.value='';
