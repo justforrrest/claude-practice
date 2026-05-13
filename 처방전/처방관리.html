@@ -1020,7 +1020,7 @@ function renderPatients(){
         list.map(p=>{
           const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
           const fmtBirth=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');return c.length===8&&/^\d{8}$/.test(c)?`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`:b||'';};
-          const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?a+'세':'-';};
+          const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?String(a):'-';};
           const SEP='border-right:1px solid var(--border-2)';
           return`<tr data-pid="${p.id}">
             <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="name" data-orig="${p.name}" value="${p.name}" style="font-weight:600;color:var(--violet-d);text-align:center"></td>
@@ -1041,7 +1041,7 @@ function renderPatients(){
   patSrEl.addEventListener('input',e=>{if(e.target.value===''){patSearch='';renderPatients();focusEnd('pat-search');}});
   el.querySelectorAll('[data-cho]').forEach(b=>b.addEventListener('click',()=>{patIndex=b.dataset.cho;renderPatients();}));
 
-  const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?a+'세':'-';};
+  const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?String(a):'-';};
 
   let patCellTimer=null;
   el.querySelectorAll('.pat-cell-inp').forEach(inp=>{
