@@ -97,7 +97,7 @@ body{
 }
 .tab.active{color:var(--violet);border-bottom-color:var(--violet);font-weight:600;}
 .tab:not(.active):hover{color:var(--text-1);background:var(--violet-light);}
-.tab[draggable]{cursor:grab;}
+.tab[draggable]{cursor:grab;-webkit-user-drag:element;user-select:none;}
 .tab.drag-over{background:var(--violet-light);color:var(--text-1);}
 
 .view{display:none;}.view.active{display:block;}
@@ -406,6 +406,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 .mplan-event-inp{flex:1;border:none;background:transparent;font-size:7px;color:var(--text-1);font-family:var(--font-sans);outline:none;min-width:0;padding:0;}
 .mplan-event-del{background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-3);padding:0 1px;line-height:1;flex-shrink:0;}
 .mplan-event-del:hover{color:#EF4444;}
+.mplan-memo-inp{flex:1;border:none;background:transparent;font-size:12px;color:var(--text-1);font-family:var(--font-sans);outline:none;padding:2px 0;}
 </style>
 </head>
 <body>
@@ -643,8 +644,8 @@ function getDayIndex(dateStr){const d=new Date(dateStr);const day=d.getDay();ret
 function setStatus(t){document.getElementById('status-bar').textContent=t;}
 
 /* Firebase 초기화 */
-firebase.initializeApp({apiKey:"AIzaSyBlmjCfXn80Ybew7xkIPkrqyOBxulWL_aM",authDomain:"weekly-planner-a2f78.firebaseapp.com",projectId:"weekly-planner-a2f78",storageBucket:"weekly-planner-a2f78.firebasestorage.app",messagingSenderId:"497461587642",appId:"1:497461587642:web:9ddbdcf093497aa7495c83"});
-const db=firebase.firestore();
+let db;
+try{firebase.initializeApp({apiKey:"AIzaSyBlmjCfXn80Ybew7xkIPkrqyOBxulWL_aM",authDomain:"weekly-planner-a2f78.firebaseapp.com",projectId:"weekly-planner-a2f78",storageBucket:"weekly-planner-a2f78.firebasestorage.app",messagingSenderId:"497461587642",appId:"1:497461587642:web:9ddbdcf093497aa7495c83"});db=firebase.firestore();}catch(e){db={collection:()=>({doc:()=>({get:async()=>({exists:false}),set:async()=>{}})})};}
 
 /* 동기화 코드 */
 function getSyncCode(){let c=localStorage.getItem('b6ix_sync');if(!c){c=Math.random().toString(36).substr(2,3).toUpperCase()+Math.random().toString(36).substr(2,3).toUpperCase();localStorage.setItem('b6ix_sync',c);}return c;}
@@ -1584,7 +1585,7 @@ document.getElementById('wr-next').onclick=()=>{currentWRDate.setDate(currentWRD
 /* ══ MONTHLY PLAN ══ */
 let mPlanData={};let currentMPlanDate=new Date();
 function getMPlanEvents(ds){if(!mPlanData[ds])mPlanData[ds]=[];return mPlanData[ds];}
-function getMPlanMemo(mk){return mPlanData['memo:'+mk]||'';}
+function getMPlanMemo(mk){const v=mPlanData['memo:'+mk];if(!v)return[''];if(typeof v==='string')return v?v.split('\n'):[''];return v;}
 function renderMPlan(){
   const con=document.getElementById('view-mplan');con.innerHTML='';
   const y=currentMPlanDate.getFullYear();const m=currentMPlanDate.getMonth();
@@ -1653,14 +1654,26 @@ function renderMPlan(){
   const mk=monthKey(currentMPlanDate);
   const memoCard=document.createElement('div');memoCard.className='card';
   const memoTitle=document.createElement('div');memoTitle.className='section-title';memoTitle.style.fontSize='13px';memoTitle.textContent='이번 달 Task';
-  const memoTa=document.createElement('textarea');
-  memoTa.style.cssText='min-height:32px;resize:none;overflow:hidden;';
-  memoTa.placeholder='이번 달 할 일을 적어두세요...';memoTa.value=getMPlanMemo(mk);
-  const autoResizeMemo=()=>{memoTa.style.height='auto';memoTa.style.height=memoTa.scrollHeight+'px';};
-  memoTa.addEventListener('input',()=>{mPlanData['memo:'+mk]=memoTa.value;autoResizeMemo();});
-  memoTa.addEventListener('blur',()=>save(KEYS.mplan,mPlanData));
-  memoCard.appendChild(memoTitle);memoCard.appendChild(memoTa);con.appendChild(memoCard);
-  autoResizeMemo();
+  const memoList=document.createElement('div');
+  function renderMemoRows(){
+    memoList.innerHTML='';
+    const arr=getMPlanMemo(mk);
+    arr.forEach((text,idx)=>{
+      const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:4px;padding:1px 0;';
+      const dot=document.createElement('span');dot.style.cssText='font-size:9px;color:var(--text-3);flex-shrink:0;';dot.textContent='•';
+      const inp=document.createElement('input');inp.type='text';inp.className='mplan-memo-inp';inp.value=text;inp.placeholder=idx===0?'이번 달 할 일을 적어두세요...':'';
+      inp.addEventListener('input',()=>{const a=getMPlanMemo(mk);a[idx]=inp.value;mPlanData['memo:'+mk]=a;});
+      inp.addEventListener('blur',()=>save(KEYS.mplan,mPlanData));
+      inp.addEventListener('keydown',(e)=>{
+        const a=getMPlanMemo(mk);
+        if(e.key==='Enter'){e.preventDefault();a.splice(idx+1,0,'');mPlanData['memo:'+mk]=a;renderMemoRows();memoList.querySelectorAll('.mplan-memo-inp')[idx+1].focus();}
+        else if(e.key==='Backspace'&&inp.value===''&&a.length>1){e.preventDefault();a.splice(idx,1);mPlanData['memo:'+mk]=a;save(KEYS.mplan,mPlanData);renderMemoRows();const ins=memoList.querySelectorAll('.mplan-memo-inp');if(ins.length)ins[Math.max(0,idx-1)].focus();}
+      });
+      row.appendChild(dot);row.appendChild(inp);memoList.appendChild(row);
+    });
+  }
+  renderMemoRows();
+  memoCard.appendChild(memoTitle);memoCard.appendChild(memoList);con.appendChild(memoCard);
   // 이벤트 핸들러
   con.querySelectorAll('.mplan-event-inp').forEach(inp=>{
     inp.addEventListener('input',()=>{getMPlanEvents(inp.dataset.date)[Number(inp.dataset.ei)].text=inp.value;});
