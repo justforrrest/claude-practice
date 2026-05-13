@@ -83,6 +83,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 /* 환자관리 표 열 구분선 */
 #view-patients table td{border-right:1px solid var(--border-2);}
 #view-patients table td:last-child{border-right:none;}
+/* 처방이력 표 열 구분선 + 가운데 정렬 */
+#hist-table th,#hist-table td{border-right:1px solid var(--border-2);text-align:center;}
+#hist-table th:last-child,#hist-table td:last-child{border-right:none;}
 /* 구분 뱃지 */
 .cat-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
 .cat-치료{background:#D1FAE5;color:#065F46;}
@@ -183,6 +186,7 @@ function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMo
 function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
 function fmtW(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:0});}
 function parseNum(v){return Number(String(v||'').replace(/,/g,''))||0;}
+function focusEnd(id){const el=document.getElementById(id);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}}
 function normBirth(v){const c=(v||'').replace(/[.\-\/\s]/g,'');if(c.length===8&&/^\d{8}$/.test(c))return`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`;if(c.length===6&&/^\d{6}$/.test(c)){const yy=parseInt(c.slice(0,2));const yr=yy<=30?2000+yy:1900+yy;return`${yr}-${c.slice(2,4)}-${c.slice(4,6)}`;}return v||'';}
 const _CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
 const _NORM={ㄲ:'ㄱ',ㄸ:'ㄷ',ㅃ:'ㅂ',ㅆ:'ㅅ',ㅉ:'ㅈ'};
@@ -494,7 +498,7 @@ function renderRegister(){
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group" style="flex:0 0 auto"><label>구분</label><select id="rx-category" style="width:90px"><option value="">-</option><option value="치료"${(rx?.category||'')==='치료'?' selected':''}>치료</option><option value="녹용"${(rx?.category||'')==='녹용'?' selected':''}>녹용</option><option value="건보"${(rx?.category||'')==='건보'?' selected':''}>건보</option></select></div>
-          <div class="form-group" style="flex:0 0 auto"><label>회차</label><div style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="number" id="rx-session-cur" value="${rx?.sessionCur||''}" min="1" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차 /</span><input type="number" id="rx-session-total" value="${rx?.sessionTotal||''}" min="1" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차</span></div></div>
+          <div class="form-group" style="flex:0 0 auto"><label>회차</label><div style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="text" inputmode="numeric" id="rx-session-cur" value="${rx?.sessionCur||''}" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차 /</span><input type="text" inputmode="numeric" id="rx-session-total" value="${rx?.sessionTotal||''}" placeholder="-" style="width:44px;text-align:center"><span style="font-size:13px;color:var(--text-3)">차</span></div></div>
           <div class="form-group grow"><label>처방명</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="감비탕, 소청룡탕 등"></div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
@@ -808,8 +812,8 @@ async function saveRx(){
     patientId,patientName:patient.name,
     date:document.getElementById('rx-date').value,
     category:document.getElementById('rx-category')?.value||'',
-    sessionTotal:Number(document.getElementById('rx-session-total')?.value)||null,
-    sessionCur:Number(document.getElementById('rx-session-cur')?.value)||null,
+    sessionTotal:parseInt(document.getElementById('rx-session-total')?.value)||null,
+    sessionCur:parseInt(document.getElementById('rx-session-cur')?.value)||null,
     diagnosis:document.getElementById('rx-diagnosis').value.trim(),
     dosageFreq:Number(document.getElementById('rx-freq')?.value||3),
     dosageTiming:document.getElementById('rx-timing')?.value.trim()||'',
@@ -863,8 +867,8 @@ function renderHistory(){
     ${prescriptionsData.some(r=>!r.fees)?`<button class="btn btn-secondary btn-sm" id="batch-fees-btn">비용 일괄 적용</button>`:''}
   </div>
   <div class="card" style="padding:0">
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>날짜</th><th>환자</th><th>구분</th><th>회차</th><th>처방명</th><th class="num">첩수</th><th class="num">총 금액</th><th>출고</th><th></th></tr></thead>
+    <div class="tbl-wrap"><table id="hist-table">
+      <thead><tr><th>날짜</th><th>환자</th><th>구분</th><th>회차</th><th>처방명</th><th>첩수</th><th>총 금액</th><th>출고</th><th>수정/삭제</th></tr></thead>
       <tbody>${!list.length?`<tr><td colspan="9" class="empty">처방 이력이 없습니다</td></tr>`:
         list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
           <td>${r.date}</td><td><b>${r.patientName}</b></td>
@@ -884,8 +888,8 @@ function renderHistory(){
   </div>`;
 
   const histQEl=document.getElementById('hist-q');
-  histQEl.addEventListener('compositionend',()=>{histSearch=histQEl.value;renderHistory();const q=document.getElementById('hist-q');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}});
-  histQEl.addEventListener('input',e=>{if(e.isComposing)return;histSearch=histQEl.value;renderHistory();const q=document.getElementById('hist-q');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}});
+  histQEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){histSearch=histQEl.value;renderHistory();focusEnd('hist-q');}});
+  histQEl.addEventListener('input',e=>{if(e.target.value===''){histSearch='';renderHistory();focusEnd('hist-q');}});
   document.getElementById('batch-fees-btn')?.addEventListener('click',batchAddFees);
 
   el.querySelectorAll('.hist-row').forEach(tr=>{
@@ -1026,8 +1030,8 @@ function renderPatients(){
   </div>`;
 
   const patSrEl=document.getElementById('pat-search');
-  patSrEl.addEventListener('compositionend',()=>{patSearch=patSrEl.value;renderPatients();const q=document.getElementById('pat-search');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}});
-  patSrEl.addEventListener('input',e=>{if(e.isComposing)return;patSearch=patSrEl.value;renderPatients();const q=document.getElementById('pat-search');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}});
+  patSrEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){patSearch=patSrEl.value;renderPatients();focusEnd('pat-search');}});
+  patSrEl.addEventListener('input',e=>{if(e.target.value===''){patSearch='';renderPatients();focusEnd('pat-search');}});
   el.querySelectorAll('[data-cho]').forEach(b=>b.addEventListener('click',()=>{patIndex=b.dataset.cho;renderPatients();}));
 
   const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?a+'세':'-';};
