@@ -319,6 +319,12 @@ function calcSummary(){
   upd('rx-water-gasum',fmtW(gasum));
 }
 
+function autoCategory(){
+  const hasDeerVelvet=rxHerbs.some(r=>r.herb&&r.herb.includes('녹용'));
+  const cat=document.getElementById('rx-category');
+  if(cat&&hasDeerVelvet)cat.value='녹용';
+}
+
 function attachRowListeners(tr){
   const rid=tr.dataset.rid;
   const nameInput=tr.querySelector('.rx-name');
@@ -341,10 +347,12 @@ function attachRowListeners(tr){
     const row=rxHerbs.find(r=>r.id===rid);
     if(row){row.herb=herb;nameInput.value=herb;}
     updateCells();
+    autoCategory();
   },()=>{
     const row=rxHerbs.find(r=>r.id===rid);
     if(row)row.herb=nameInput.value;
     updateCells();
+    autoCategory();
     navigateToNextHerbRow(rid,'.rx-name');
   });
   nameInput.addEventListener('blur',()=>{
@@ -357,6 +365,7 @@ function attachRowListeners(tr){
     const row=rxHerbs.find(r=>r.id===rid);
     if(row)row.herb=nameInput.value;
     updateCells();
+    autoCategory();
   });
   qtyInput.addEventListener('input',()=>{
     const row=rxHerbs.find(r=>r.id===rid);
@@ -976,13 +985,13 @@ function renderPatients(){
   <div class="card" style="padding:0">
     <div class="tbl-wrap"><table>
       <thead><tr>
-        <th style="text-align:center;border-right:1px solid var(--border-2)">환자명</th>
-        <th style="text-align:center;border-right:1px solid var(--border-2)">성별</th>
-        <th style="text-align:center;border-right:1px solid var(--border-2)">생년월일</th>
-        <th style="text-align:center;border-right:1px solid var(--border-2)">나이</th>
+        <th style="text-align:center;border-right:1px solid var(--border-2);width:72px">환자명</th>
+        <th style="text-align:center;border-right:1px solid var(--border-2);width:44px">성별</th>
+        <th style="text-align:center;border-right:1px solid var(--border-2);width:100px">생년월일</th>
+        <th style="text-align:center;border-right:1px solid var(--border-2);width:44px">나이</th>
         <th style="text-align:center;border-right:1px solid var(--border-2)">메모</th>
-        <th style="text-align:center;border-right:1px solid var(--border-2)">처방이력</th>
-        <th></th>
+        <th style="text-align:center;border-right:1px solid var(--border-2);width:60px">처방이력</th>
+        <th style="width:32px"></th>
       </tr></thead>
       <tbody>${!list.length?`<tr><td colspan="7" class="empty">환자가 없습니다</td></tr>`:
         list.map(p=>{
@@ -991,10 +1000,10 @@ function renderPatients(){
           const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?a+'세':'-';};
           const SEP='border-right:1px solid var(--border-2)';
           return`<tr data-pid="${p.id}">
-            <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="name" data-orig="${p.name}" value="${p.name}" style="font-weight:600;color:var(--violet-d)"></td>
-            <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="gender" value="${p.gender||''}" style="width:36px"></td>
-            <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="birth" value="${fmtBirth(p.birth)}" style="min-width:90px"></td>
-            <td class="pat-age-cell" data-pid="${p.id}" style="${SEP}">${ageOf(p.birth)}</td>
+            <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="name" data-orig="${p.name}" value="${p.name}" style="font-weight:600;color:var(--violet-d);text-align:center"></td>
+            <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="gender" value="${p.gender||''}" style="width:36px;text-align:center"></td>
+            <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="birth" value="${fmtBirth(p.birth)}" style="min-width:90px;text-align:center"></td>
+            <td class="pat-age-cell" data-pid="${p.id}" style="${SEP};text-align:center">${ageOf(p.birth)}</td>
             <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="memo" value="${(p.memo||'').replace(/"/g,'&quot;')}" style="color:var(--text-3)"></td>
             <td class="num" style="${SEP}">${cnt}건</td>
             <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
