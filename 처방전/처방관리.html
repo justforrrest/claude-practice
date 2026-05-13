@@ -595,7 +595,7 @@ function renderPatients(){
 /* ── 설정 탭 ── */
 function cfgInp(id,val,w='120px',type='number'){
   return `<input id="${id}" type="${type}" value="${val??''}"
-    style="width:${w};text-align:${type==='number'?'right':'left'};border:1px solid var(--border-2);border-radius:8px;
+    style="width:${w};text-align:right;border:1px solid var(--border-2);border-radius:8px;
            padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;
            background:var(--surface);color:var(--text-1);" ${type==='number'?'min="0"':''}>`;
 }
