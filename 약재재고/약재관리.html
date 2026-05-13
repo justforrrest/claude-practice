@@ -704,7 +704,7 @@ function renderAdjust(){
     </div>
     <div class="form-row" style="flex-wrap:wrap;gap:7px;">
       <div class="form-group" style="flex:0 0 140px;min-width:0"><label>약재</label>
-        <input type="text" id="adj-herb" list="adj-herb-list" placeholder="약재 선택 또는 입력" style="width:100%" autocomplete="off">
+        <input type="text" id="adj-herb" list="adj-herb-list" placeholder="약재" style="width:100%" autocomplete="off">
         <datalist id="adj-herb-list">${herbsData.map(h=>`<option value="${h}">`).join('')}</datalist>
       </div>
       <div class="form-group" style="min-width:0"><label>조정량 (g)</label><input type="number" id="adj-qty" style="width:90px" placeholder="+100 / -50"></div>
