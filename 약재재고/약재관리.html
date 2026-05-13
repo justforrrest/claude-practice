@@ -933,7 +933,7 @@ function renderPricelist(){
     const entries=suppliersData.map(s=>ep(h,s));
     const nums=entries.map(e=>e.val).filter(v=>v!=='');
     const minVal=nums.length>=2?Math.min(...nums):null;
-    return`<tr><td>${h}</td>${suppliersData.map((s,i)=>{
+    return`<tr><td style="background:var(--surface-2)">${h}</td>${suppliersData.map((s,i)=>{
       const e=entries[i];
       const isMin=minVal!==null&&e.val!==''&&e.val===minVal;
       const tdStyle=isMin?'background:var(--green-light)':'';
@@ -943,7 +943,7 @@ function renderPricelist(){
       return`<td class="num" style="${tdStyle}"><input class="pl-inp" data-herb="${h}" data-sup="${s}" type="number" min="0" step="0.1" value="${e.val}" placeholder="—" style="color:${color};${fw}" ${title}></td>`;
     }).join('')}</tr>`;
   }).join('');
-  const thead=`<thead><tr><th>약재명</th>${suppliersData.map(s=>`<th class="num" style="width:85px">${s}</th>`).join('')}</tr></thead>`;
+  const thead=`<thead><tr><th style="background:var(--surface-2)">약재명</th>${suppliersData.map(s=>`<th class="num" style="width:85px">${s}</th>`).join('')}</tr></thead>`;
   const half=Math.ceil(herbs.length/2);
   const leftHerbs=herbs.slice(0,half);
   const rightHerbs=herbs.slice(half);
@@ -964,7 +964,7 @@ function renderPricelist(){
       <div style="flex:1;"></div>
       <button class="btn btn-primary btn-sm" id="pl-save">저장</button>
     </div>
-    <div style="display:flex;gap:1rem;align-items:flex-start;">
+    <div style="display:flex;gap:2.5rem;align-items:flex-start;">
       <div class="tbl-wrap" style="flex:1;min-width:0;"><table>${thead}<tbody>${makeRows(leftHerbs)}</tbody></table></div>
       <div class="tbl-wrap" style="flex:1;min-width:0;"><table>${thead}<tbody>${makeRows(rightHerbs)}</tbody></table></div>
     </div>
