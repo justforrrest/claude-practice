@@ -328,6 +328,12 @@ function attachRowListeners(tr){
     navigateToNextHerbRow(rid,'.rx-name');
   });
   nameInput.addEventListener('blur',()=>{
+    if(!nameInput.value.trim()){
+      rxHerbs=rxHerbs.filter(r=>r.id!==rid);
+      tr.remove();
+      calcSummary();
+      return;
+    }
     const row=rxHerbs.find(r=>r.id===rid);
     if(row)row.herb=nameInput.value;
     updateCells();
