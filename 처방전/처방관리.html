@@ -346,9 +346,13 @@ function attachRowListeners(tr){
   nameInput.addEventListener('keydown',e=>{
     if(e.key==='Backspace'&&!nameInput.value){
       e.preventDefault();
+      const allTrs=[...document.querySelectorAll('#rx-herb-tbody tr[data-rid]')];
+      const idx=allTrs.findIndex(t=>t.dataset.rid===rid);
+      const prevInput=idx>0?allTrs[idx-1].querySelector('.rx-name'):null;
       rxHerbs=rxHerbs.filter(r=>r.id!==rid);
       tr.remove();
       calcSummary();
+      if(prevInput){prevInput.focus();const l=prevInput.value.length;prevInput.setSelectionRange(l,l);}
     }
   });
   qtyInput.addEventListener('keydown',e=>{
