@@ -423,13 +423,14 @@ function calcStock(){
 }
 
 /* ── 재고현황 ── */
-let stockSearch='',showLowOnly=false;
+let stockSearch='',showLowOnly=false,stockConsonant='';
 function renderStock(){
   const el=document.getElementById('view-stock');
   const stock=calcStock();
   const lowCount=herbsData.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]<m;}).length;
   const zeroCount=herbsData.filter(h=>stock[h]<=0).length;
   let herbs=herbsData;
+  if(stockConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===stockConsonant);
   if(stockSearch)herbs=herbs.filter(h=>h.includes(stockSearch));
   if(showLowOnly)herbs=herbs.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]<m;});
   el.innerHTML=`
@@ -440,8 +441,12 @@ function renderStock(){
   </div>
   <div class="card">
     <div class="toolbar">
-      <input class="search-input" id="stock-search" placeholder="약재명 검색..." value="${stockSearch}">
+      <input class="search-input" id="stock-search" placeholder="약재명 검색..." value="${stockSearch}" style="width:150px;min-width:0;flex:none;">
       <button class="toggle-btn${showLowOnly?' on':''}" id="low-only-btn">부족만 보기</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:3px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:.875rem;">
+      <button class="pl-cho-btn${!stockConsonant?' active':''}" data-st-cho="">전체</button>
+      ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${stockConsonant===c?' active':''}" data-st-cho="${c}">${c}</button>`).join('')}
     </div>
     <div class="tbl-wrap">
       <table>
@@ -459,6 +464,9 @@ function renderStock(){
   </div>`;
   document.getElementById('stock-search').addEventListener('input',e=>{stockSearch=e.target.value;renderStock();});
   document.getElementById('low-only-btn').addEventListener('click',()=>{showLowOnly=!showLowOnly;renderStock();});
+  el.querySelectorAll('[data-st-cho]').forEach(btn=>{
+    btn.addEventListener('click',()=>{stockConsonant=btn.dataset.stCho;renderStock();});
+  });
 }
 
 /* ── 입고 ── */
