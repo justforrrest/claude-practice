@@ -1071,6 +1071,7 @@ document.querySelector('.tabs').addEventListener('drop',e=>{
   const si=all.indexOf(dragSrcTab),ti=all.indexOf(t);
   tabs.insertBefore(dragSrcTab,si<ti?t.nextSibling:t);
   t.classList.remove('drag-over');
+  localStorage.setItem('tabOrder',JSON.stringify([...tabs.querySelectorAll('.tab')].map(x=>x.dataset.tab)));
 });
 function renderTab(tab){
   if(tab==='stock')renderStock();
@@ -1094,6 +1095,14 @@ function renderTab(tab){
   document.getElementById('sync-code-display').textContent=getSyncCode();
   setSyncStatus('☁ 동기화됨');
   setStatus('불러옴 ✓');
+  const savedTabOrder=JSON.parse(localStorage.getItem('tabOrder')||'null');
+  if(savedTabOrder){
+    const tabsEl=document.querySelector('.tabs');
+    savedTabOrder.forEach(tabKey=>{
+      const btn=tabsEl.querySelector(`[data-tab="${tabKey}"]`);
+      if(btn)tabsEl.appendChild(btn);
+    });
+  }
   renderStock();
   document.getElementById('save-all-btn').addEventListener('click',async()=>{
     setStatus('저장 중...');
