@@ -267,43 +267,28 @@ function navigateToNextHerbRow(rid,sel){
 }
 
 /* ── 처방 등록 탭 ── */
-function buildCostRows(herbPrice, packs, totalPacks){
-  const c=rxConfig;
-  const rows=[];
-  rows.push({label:'약재비', desc:`${packs}첩`, amount:herbPrice});
-  if(c.dispensing_price>0) rows.push({label:'조제비', desc:`${fmtW(c.dispensing_price)}원 × ${totalPacks}팩`, amount:c.dispensing_price*totalPacks});
-  if(c.decoction_price>0)  rows.push({label:'탕전비', desc:c.decoction_ml?`${c.decoction_ml}ml × ${totalPacks}팩 = ${c.decoction_ml*totalPacks}ml`:'', amount:c.decoction_price});
-  if(c.packaging_price>0)  rows.push({label:'포장비', desc:c.packaging_desc||'', amount:c.packaging_price});
-  if(c.delivery_price>0)   rows.push({label:'배송비', desc:c.delivery_desc||'', amount:c.delivery_price});
-  return rows;
-}
-
 function calcSummary(){
-  const packs    =Number(document.getElementById('rx-packs')?.value||20);
+  const packs     =Number(document.getElementById('rx-packs')?.value||20);
   const totalPacks=Number(document.getElementById('rx-total-packs')?.value||45);
-  const perPack  =rxHerbs.reduce((s,r)=>s+getPrice(r.herb)*Number(r.qty||0),0);
-  const herbPrice=perPack*packs;
-  const totalG   =rxHerbs.reduce((s,r)=>s+Number(r.qty||0),0)*packs;
-  const rows=buildCostRows(herbPrice,packs,totalPacks);
-  const grandTotal=rows.reduce((s,r)=>s+r.amount,0);
-  const sumEl=document.getElementById('rx-summary');
-  if(!sumEl)return;
-  sumEl.innerHTML=`
-    <div style="width:100%">
-      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">처방 비용</div>
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        ${rows.map(r=>`<tr>
-          <td style="padding:4px 0;font-weight:600;color:var(--text-2);width:70px">${r.label}</td>
-          <td style="padding:4px 8px;color:var(--text-3)">${r.desc}</td>
-          <td style="padding:4px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)">${fmtW(r.amount)}원</td>
-        </tr>`).join('')}
-        <tr style="border-top:2px solid var(--border)">
-          <td colspan="2" style="padding:8px 0 4px;font-weight:700;color:var(--text-1)">총 합계</td>
-          <td style="padding:8px 0 4px;text-align:right;font-size:18px;font-weight:700;color:var(--violet-d)">${fmtW(grandTotal)}원</td>
-        </tr>
-      </table>
-      <div style="font-size:11px;color:var(--text-3);margin-top:.5rem">약재 총량 ${fmt(totalG)}g · 1첩 약재비 ${fmtW(perPack)}원</div>
-    </div>`;
+  const perPack   =rxHerbs.reduce((s,r)=>s+getPrice(r.herb)*Number(r.qty||0),0);
+  const herbPrice =perPack*packs;
+  const totalG    =rxHerbs.reduce((s,r)=>s+Number(r.qty||0),0)*packs;
+  const dPrice=Number(document.getElementById('rx-fee-dispensing')?.value||0);
+  const tPrice=Number(document.getElementById('rx-fee-decoction')?.value||0);
+  const pPrice=Number(document.getElementById('rx-fee-packaging')?.value||0);
+  const lPrice=Number(document.getElementById('rx-fee-delivery')?.value||0);
+  const dTotal=dPrice*totalPacks;
+  const grandTotal=herbPrice+dTotal+tPrice+pPrice+lPrice;
+  const upd=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  upd('rx-cost-herb-desc',packs+'첩');
+  upd('rx-cost-herb-amount',fmtW(herbPrice)+'원');
+  upd('rx-cost-disp-desc',`${fmtW(dPrice)}원 × ${totalPacks}팩`);
+  upd('rx-cost-disp-amount',dPrice>0?fmtW(dTotal)+'원':'-');
+  upd('rx-cost-deco-amount',tPrice>0?fmtW(tPrice)+'원':'-');
+  upd('rx-cost-pack-amount',pPrice>0?fmtW(pPrice)+'원':'-');
+  upd('rx-cost-del-amount', lPrice>0?fmtW(lPrice)+'원':'-');
+  upd('rx-cost-total',fmtW(grandTotal)+'원');
+  upd('rx-cost-info',`약재 총량 ${fmt(totalG)}g · 1첩 약재비 ${fmtW(perPack)}원`);
 }
 
 function attachRowListeners(tr){
@@ -424,7 +409,66 @@ function renderRegister(){
         <tbody id="rx-herb-tbody"></tbody>
       </table>
     </div>
-    <div id="rx-summary" class="summary-row"></div>
+  </div>
+
+  <div class="card" style="padding:1rem 1.25rem">
+    <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.75rem">처방 비용</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <tr>
+        <td style="padding:5px 0;font-weight:600;color:var(--text-2);width:68px">약재비</td>
+        <td style="padding:5px 8px;color:var(--text-3)" id="rx-cost-herb-desc">-</td>
+        <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-herb-amount">0원</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 0;font-weight:600;color:var(--text-2)">조제비</td>
+        <td style="padding:5px 8px">
+          <div style="display:flex;align-items:center;gap:5px">
+            <input id="rx-fee-dispensing" type="number" value="${rx?.fees?.dispensing??rxConfig.dispensing_price??300}" min="0"
+              style="width:72px;padding:4px 6px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;text-align:right">
+            <span style="font-size:12px;color:var(--text-3)" id="rx-cost-disp-desc">원/팩</span>
+          </div>
+        </td>
+        <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-disp-amount">-</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 0;font-weight:600;color:var(--text-2)">탕전비</td>
+        <td style="padding:5px 8px">
+          <div style="display:flex;align-items:center;gap:5px">
+            <input id="rx-fee-decoction" type="number" value="${rx?.fees?.decoction??rxConfig.decoction_price??10000}" min="0"
+              style="width:72px;padding:4px 6px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;text-align:right">
+            <span style="font-size:12px;color:var(--text-3)">원</span>
+          </div>
+        </td>
+        <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-deco-amount">-</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 0;font-weight:600;color:var(--text-2)">포장비</td>
+        <td style="padding:5px 8px">
+          <div style="display:flex;align-items:center;gap:5px">
+            <input id="rx-fee-packaging" type="number" value="${rx?.fees?.packaging??rxConfig.packaging_price??3000}" min="0"
+              style="width:72px;padding:4px 6px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;text-align:right">
+            <span style="font-size:12px;color:var(--text-3)">원</span>
+          </div>
+        </td>
+        <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-pack-amount">-</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 0;font-weight:600;color:var(--text-2)">배송비</td>
+        <td style="padding:5px 8px">
+          <div style="display:flex;align-items:center;gap:5px">
+            <input id="rx-fee-delivery" type="number" value="${rx?.fees?.delivery??rxConfig.delivery_price??5000}" min="0"
+              style="width:72px;padding:4px 6px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;text-align:right">
+            <span style="font-size:12px;color:var(--text-3)">원</span>
+          </div>
+        </td>
+        <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-del-amount">-</td>
+      </tr>
+      <tr style="border-top:2px solid var(--border)">
+        <td colspan="2" style="padding:8px 0 4px;font-weight:700;color:var(--text-1)">총 합계</td>
+        <td style="padding:8px 0 4px;text-align:right;font-size:18px;font-weight:700;color:var(--violet-d)" id="rx-cost-total">0원</td>
+      </tr>
+    </table>
+    <div style="font-size:11px;color:var(--text-3);margin-top:.5rem" id="rx-cost-info"></div>
   </div>
 
   <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -457,6 +501,13 @@ function renderRegister(){
   });
   document.getElementById('rx-total-packs').addEventListener('input',calcSummary);
 
+  ['rx-fee-dispensing','rx-fee-decoction','rx-fee-packaging','rx-fee-delivery'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('input',calcSummary);
+    el.addEventListener('focus',e=>e.target.select());
+  });
+
   document.getElementById('rx-add-herb').addEventListener('click',()=>addHerbRow('','',true));
 
   document.getElementById('rx-quick-patient').addEventListener('click',()=>{
@@ -480,7 +531,15 @@ async function saveRx(){
   const herbs=rxHerbs.filter(r=>r.herb&&Number(r.qty)>0);
   if(!herbs.length){alert('약재를 1종 이상 입력해주세요.');return;}
   const packs=Number(document.getElementById('rx-packs').value)||20;
+  const totalPacks=Number(document.getElementById('rx-total-packs').value)||45;
   const perPack=herbs.reduce((s,r)=>s+getPrice(r.herb)*Number(r.qty),0);
+  const fees={
+    dispensing:Number(document.getElementById('rx-fee-dispensing')?.value||0),
+    decoction: Number(document.getElementById('rx-fee-decoction')?.value||0),
+    packaging: Number(document.getElementById('rx-fee-packaging')?.value||0),
+    delivery:  Number(document.getElementById('rx-fee-delivery')?.value||0),
+  };
+  const totalPrice=perPack*packs+fees.dispensing*totalPacks+fees.decoction+fees.packaging+fees.delivery;
   const entry={
     id:editingRxId||uid(),
     patientId,patientName:patient.name,
@@ -488,9 +547,9 @@ async function saveRx(){
     diagnosis:document.getElementById('rx-diagnosis').value.trim(),
     dosage:document.getElementById('rx-dosage').value.trim(),
     packs,days:Number(document.getElementById('rx-days').value)||15,
-    totalPacks:Number(document.getElementById('rx-total-packs').value)||45,
+    totalPacks,
     herbs:herbs.map(r=>({herb:r.herb,qtyPerPack:Number(r.qty)})),
-    totalPrice:perPack*packs,
+    fees,totalPrice,
     note:document.getElementById('rx-note').value.trim(),
     outboundAt:editingRxId?(prescriptionsData.find(r=>r.id===editingRxId)?.outboundAt||null):null,
   };
@@ -525,7 +584,7 @@ function renderHistory(){
           <td>${r.date}</td><td><b>${r.patientName}</b></td>
           <td>${r.diagnosis||'-'}</td>
           <td class="num">${r.packs}첩</td>
-          <td class="num">${fmtW(r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
+          <td class="num">${fmtW(r.fees?r.totalPrice:r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
           <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-secondary btn-sm ob-btn" data-rxid="${r.id}">출고 반영</button>`}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-secondary btn-sm edit-btn" data-rxid="${r.id}">수정</button>
@@ -579,11 +638,27 @@ function showDetail(id){
         <td class="num">${fmtW(getPrice(h.herb)*h.qtyPerPack)}원</td>
       </tr>`).join('')}</tbody>
     </table></div>
-    <div class="summary-row" style="margin-top:.875rem">
+    ${rx.fees?(()=>{
+      const f=rx.fees,tp=rx.totalPacks||45;
+      const rows=[
+        {label:'약재비',desc:`${packs}첩`,amount:herbTotal},
+        ...(f.dispensing>0?[{label:'조제비',desc:`${fmtW(f.dispensing)}원 × ${tp}팩`,amount:f.dispensing*tp}]:[]),
+        ...(f.decoction>0?[{label:'탕전비',desc:'',amount:f.decoction}]:[]),
+        ...(f.packaging>0?[{label:'포장비',desc:'',amount:f.packaging}]:[]),
+        ...(f.delivery>0?[{label:'배송비',desc:'',amount:f.delivery}]:[]),
+      ];
+      return`<div style="margin-top:.875rem;background:var(--surface-2);border-radius:8px;padding:.875rem 1rem">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          ${rows.map(r=>`<tr><td style="padding:3px 0;font-weight:600;color:var(--text-2);width:70px">${r.label}</td><td style="padding:3px 8px;color:var(--text-3)">${r.desc}</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums">${fmtW(r.amount)}원</td></tr>`).join('')}
+          <tr style="border-top:2px solid var(--border)"><td colspan="2" style="padding:6px 0 2px;font-weight:700">총 합계</td><td style="padding:6px 0 2px;text-align:right;font-size:16px;font-weight:700;color:var(--violet-d)">${fmtW(rx.totalPrice)}원</td></tr>
+        </table>
+        <div style="font-size:11px;color:var(--text-3);margin-top:.4rem">약재 총량 ${fmt(totalG)}g · 약재 수 ${rx.herbs.length}종</div>
+      </div>`;
+    })():`<div class="summary-row" style="margin-top:.875rem">
       <div class="summary-item"><span class="summary-label">약재 수</span><span class="summary-value">${rx.herbs.length}종</span></div>
       <div class="summary-item"><span class="summary-label">총 처방량</span><span class="summary-value">${fmt(totalG)}g</span></div>
       <div class="summary-item"><span class="summary-label">총 금액</span><span class="summary-value big">${fmtW(herbTotal)}원</span></div>
-    </div>`;
+    </div>`}`;
   document.getElementById('detail-modal-overlay').classList.add('open');
   document.getElementById('close-detail').addEventListener('click',()=>document.getElementById('detail-modal-overlay').classList.remove('open'));
 }
