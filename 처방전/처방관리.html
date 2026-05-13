@@ -410,11 +410,11 @@ function renderRegister(){
           <div class="form-group" style="flex:1"><label>처방일</label><input type="date" id="rx-date" value="${rx?.date||todayStr()}"></div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
-          <div class="form-group" style="flex:1"><label>첩수</label><input type="number" id="rx-packs" value="${rx?.packs||20}" min="1"></div>
-          <div class="form-group" style="flex:1"><label>팩수</label><input type="number" id="rx-total-packs" value="${rx?.totalPacks||45}" min="1"></div>
+          <div class="form-group grow"><label>처방명</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="감비탕, 소청룡탕 등"></div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
-          <div class="form-group grow"><label>처방명</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="감비탕, 소청룡탕 등"></div>
+          <div class="form-group" style="flex:1"><label>첩수</label><input type="number" id="rx-packs" value="${rx?.packs||20}" min="1"></div>
+          <div class="form-group" style="flex:1"><label>팩수</label><input type="number" id="rx-total-packs" value="${rx?.totalPacks||45}" min="1"></div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group grow"><label>복용법</label><input type="text" id="rx-dosage" value="${rx?.dosage||''}" placeholder="하루 2회, 식후 30분"></div>
