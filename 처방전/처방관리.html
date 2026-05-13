@@ -424,16 +424,16 @@ function renderRegister(){
               <span style="font-size:13px;color:var(--text-2)">회</span>
             </div>
           </div>
-          <div class="form-group" style="flex:1;min-width:0">
-            <label>복용시기</label>
-            <input type="text" id="rx-timing" value="${rx?.dosageTiming||''}" placeholder="식후 30분">
-          </div>
           <div class="form-group" style="flex:0 0 auto;min-width:0">
             <label>총 일수</label>
             <div style="display:flex;align-items:center;gap:4px">
               <span id="rx-days-display" style="display:inline-block;width:40px;border:1px solid var(--border-2);border-radius:8px;padding:7px 8px;font-size:13px;font-family:var(--font-sans);background:var(--surface-2);color:var(--text-2);text-align:center;font-variant-numeric:tabular-nums;">-</span>
               <span style="font-size:13px;color:var(--text-2)">일</span>
             </div>
+          </div>
+          <div class="form-group" style="flex:1;min-width:0">
+            <label>복용시기</label>
+            <input type="text" id="rx-timing" value="${rx?.dosageTiming||''}" placeholder="식후 30분">
           </div>
         </div>
         <div class="form-row">
