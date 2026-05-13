@@ -85,6 +85,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 /* 환자관리 표 열 구분선 */
 #view-patients table td{border-right:1px solid var(--border-2);}
 #view-patients table td:last-child{border-right:none;}
+/* 복약 뱃지 */
+.med-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.med-done{background:#EDE9FE;color:#5b21b6;}
+.med-prog{background:#FEE2E2;color:#EF4444;}
 /* 처방이력 표 열 구분선 + 가운데 정렬 */
 #hist-table th,#hist-table td{border-right:1px solid var(--border-2);text-align:center;}
 #hist-table th:last-child,#hist-table td:last-child{border-right:none;}
@@ -872,7 +876,7 @@ function renderHistory(){
       </div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
         <span id="hist-year-wrap" style="display:flex;gap:4px;flex-wrap:wrap"></span>
-        <span id="hist-yr-sep" style="display:none;width:1px;height:18px;background:var(--border);flex-shrink:0;align-self:center"></span>
+        <span id="hist-yr-sep" style="display:none;width:2px;height:20px;background:var(--text-3);border-radius:1px;flex-shrink:0;align-self:center;margin:0 4px"></span>
         <span id="hist-month-btns" style="display:flex;gap:4px;flex-wrap:wrap"></span>
       </div>
     </div>
@@ -1048,6 +1052,7 @@ function renderPatients(){
           <th style="text-align:center;border-right:1px solid var(--border-2);width:44px">나이</th>
           <th style="text-align:center;border-right:1px solid var(--border-2)">메모</th>
           <th style="text-align:center;border-right:1px solid var(--border-2);width:60px">처방이력</th>
+          <th style="text-align:center;border-right:1px solid var(--border-2);width:52px">복약</th>
           <th style="width:32px"></th>
         </tr></thead>
         <tbody id="pat-tbody"></tbody>
@@ -1076,9 +1081,12 @@ function updatePatList(){
   const fmtBirth=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');return c.length===8&&/^\d{8}$/.test(c)?`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`:b||'';};
   const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?String(a):'-';};
   const SEP='border-right:1px solid var(--border-2)';
-  tbody.innerHTML=!list.length?`<tr><td colspan="7" class="empty">환자가 없습니다</td></tr>`:
+  tbody.innerHTML=!list.length?`<tr><td colspan="8" class="empty">환자가 없습니다</td></tr>`:
     list.map(p=>{
       const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
+      const latestRx=prescriptionsData.filter(r=>(r.patientId===p.id||r.patientName===p.name)&&r.sessionCur&&r.sessionTotal).sort((a,b)=>b.date.localeCompare(a.date))[0];
+      const medBadge=latestRx?(latestRx.sessionCur===latestRx.sessionTotal?'<span class="med-badge med-done">완료</span>':latestRx.sessionCur<latestRx.sessionTotal?'<span class="med-badge med-prog">진행</span>':''):'';
+
       return`<tr data-pid="${p.id}">
         <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="name" data-orig="${p.name}" value="${p.name}" style="font-weight:600;color:var(--violet-d);text-align:center"></td>
         <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="gender" value="${p.gender||''}" style="width:36px;text-align:center"></td>
@@ -1086,6 +1094,7 @@ function updatePatList(){
         <td class="pat-age-cell" data-pid="${p.id}" style="${SEP};text-align:center">${ageOf(p.birth)}</td>
         <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="memo" value="${(p.memo||'').replace(/"/g,'&quot;')}" style="color:var(--text-3)"></td>
         <td class="num" style="${SEP}">${cnt}건</td>
+        <td style="${SEP};text-align:center;width:52px">${medBadge}</td>
         <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
       </tr>`;
     }).join('');
