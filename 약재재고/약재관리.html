@@ -35,7 +35,9 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .view{display:none;}.view.active{display:block;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.75rem;margin-bottom:1rem;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.875rem 1rem;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.875rem 1rem;box-shadow:0 1px 3px rgba(0,0,0,0.04);transition:border-color .15s,box-shadow .15s;}
+.stat-card:hover{border-color:var(--violet);box-shadow:0 0 0 2px rgba(124,58,237,0.08);}
+.stat-card.active{border-color:var(--violet);box-shadow:0 0 0 2px rgba(124,58,237,0.15);background:rgba(124,58,237,0.04);}
 .stat-num{font-size:26px;font-weight:700;color:var(--violet-d);line-height:1.2;}
 .stat-num.warn{color:var(--coral);}
 .stat-num.muted{color:var(--text-3);}
@@ -486,9 +488,9 @@ function renderStock(){
   if(showZeroOnly)herbs=herbs.filter(h=>stock[h]<=0);
   el.innerHTML=`
   <div class="stats">
-    <div class="stat-card"><div class="stat-num">${herbsData.length}</div><div class="stat-label">전체 약재</div></div>
-    <div class="stat-card"><div class="stat-num warn">${lowCount}</div><div class="stat-label">부족 약재</div></div>
-    <div class="stat-card"><div class="stat-num muted">${zeroCount}</div><div class="stat-label">재고 없음</div></div>
+    <div class="stat-card${!showLowOnly&&!showZeroOnly?' active':''}" data-st-filter="all" style="cursor:pointer"><div class="stat-num">${herbsData.length}</div><div class="stat-label">전체 약재</div></div>
+    <div class="stat-card${showLowOnly?' active':''}" data-st-filter="low" style="cursor:pointer"><div class="stat-num warn">${lowCount}</div><div class="stat-label">부족 약재</div></div>
+    <div class="stat-card${showZeroOnly?' active':''}" data-st-filter="zero" style="cursor:pointer"><div class="stat-num muted">${zeroCount}</div><div class="stat-label">재고 없음</div></div>
   </div>
   <div class="card">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:.875rem;">
@@ -497,8 +499,6 @@ function renderStock(){
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${stockConsonant===c?' active':''}" data-st-cho="${c}">${c}</button>`).join('')}
       </div>
       <input class="search-input" id="stock-search" placeholder="약재명 검색..." value="${stockSearch}" style="width:150px;min-width:0;flex:none;">
-      <button class="toggle-btn${showLowOnly?' on':''}" id="low-only-btn">부족</button>
-      <button class="toggle-btn${showZeroOnly?' on':''}" id="zero-only-btn">없음</button>
     </div>
   ${(()=>{
     const stHead=`<thead><tr><th style="border-right:2px solid var(--border)">약재명</th><th class="num">현재고 (g)</th><th class="num">최소재고 (g)</th><th class="num">단가 (원/g)</th><th>상태</th></tr></thead>`;
@@ -521,8 +521,15 @@ function renderStock(){
   const ssEl=document.getElementById('stock-search');
   ssEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){stockSearch=ssEl.value;renderStock();focusEnd('stock-search');}});
   ssEl.addEventListener('input',e=>{if(e.target.value===''){stockSearch='';renderStock();focusEnd('stock-search');}});
-  document.getElementById('low-only-btn').addEventListener('click',()=>{showLowOnly=!showLowOnly;if(showLowOnly)showZeroOnly=false;renderStock();});
-  document.getElementById('zero-only-btn').addEventListener('click',()=>{showZeroOnly=!showZeroOnly;if(showZeroOnly)showLowOnly=false;renderStock();});
+  el.querySelectorAll('[data-st-filter]').forEach(card=>{
+    card.addEventListener('click',()=>{
+      const f=card.dataset.stFilter;
+      if(f==='all'){showLowOnly=false;showZeroOnly=false;}
+      else if(f==='low'){showLowOnly=true;showZeroOnly=false;}
+      else if(f==='zero'){showZeroOnly=true;showLowOnly=false;}
+      renderStock();
+    });
+  });
   el.querySelectorAll('[data-st-cho]').forEach(btn=>{
     btn.addEventListener('click',()=>{stockConsonant=btn.dataset.stCho;renderStock();});
   });
