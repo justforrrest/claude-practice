@@ -1201,7 +1201,7 @@ function renderPricelist(){
       <button class="btn btn-primary btn-sm" id="pl-save">저장</button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:.875rem;">
-      ${suppliersData.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--violet-light);border:1px solid rgba(124,58,237,0.25);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--violet-d);font-weight:500;">${
+      ${suppliersData.map(s=>`<span class="pl-sup-chip" draggable="true" data-sup="${s}" style="display:inline-flex;align-items:center;gap:4px;background:var(--violet-light);border:1px solid rgba(124,58,237,0.25);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--violet-d);font-weight:500;cursor:grab;">${
         editingSupplierName===s
           ?`<input class="pl-sup-rename-inp" data-old="${s}" type="text" value="${s}" style="border:1px solid var(--violet);border-radius:4px;padding:1px 4px;font-size:12px;font-family:var(--font-sans);width:${Math.max(s.length*8+16,48)}px;color:var(--violet-d);background:white;outline:none;">`
           :`<span class="pl-sup-name" data-sup="${s}" style="cursor:pointer" title="클릭하여 수정">${s}</span>`
@@ -1273,6 +1273,28 @@ function renderPricelist(){
       const name=btn.dataset.sup;
       if(!confirm(`'${name}' 도매처를 삭제하시겠습니까?\n\n해당 도매처의 단가표 데이터가 함께 삭제됩니다.`))return;
       suppliersData=suppliersData.filter(s=>s!==name);
+      await save(KEYS.suppliers,suppliersData);
+      renderPricelist();
+    });
+  });
+
+  let dragSupSrc=null;
+  el.querySelectorAll('.pl-sup-chip').forEach(chip=>{
+    chip.addEventListener('dragstart',e=>{
+      dragSupSrc=chip.dataset.sup;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(()=>chip.style.opacity='.4',0);
+    });
+    chip.addEventListener('dragend',()=>{chip.style.opacity='';dragSupSrc=null;});
+    chip.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';chip.style.outline='2px solid var(--violet)';});
+    chip.addEventListener('dragleave',()=>{chip.style.outline='';});
+    chip.addEventListener('drop',async e=>{
+      e.preventDefault();chip.style.outline='';
+      const target=chip.dataset.sup;
+      if(!dragSupSrc||dragSupSrc===target)return;
+      const from=suppliersData.indexOf(dragSupSrc),to=suppliersData.indexOf(target);
+      if(from<0||to<0)return;
+      suppliersData.splice(from,1);suppliersData.splice(to,0,dragSupSrc);
       await save(KEYS.suppliers,suppliersData);
       renderPricelist();
     });
