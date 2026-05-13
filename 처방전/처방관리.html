@@ -497,7 +497,7 @@ function renderHistory(){
           <td>${r.date}</td><td><b>${r.patientName}</b></td>
           <td>${r.diagnosis||'-'}</td>
           <td class="num">${r.packs}첩</td>
-          <td class="num">${fmtW(r.totalPrice)}원</td>
+          <td class="num">${fmtW(r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
           <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-secondary btn-sm ob-btn" data-rxid="${r.id}">출고 반영</button>`}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-secondary btn-sm edit-btn" data-rxid="${r.id}">수정</button>
@@ -525,6 +525,7 @@ function showDetail(id){
   if(!rx)return;
   const packs=rx.packs;
   const totalG=rx.herbs.reduce((s,h)=>s+h.qtyPerPack*packs,0);
+  const herbTotal=rx.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*packs;
   document.getElementById('detail-modal-content').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
       <div>
@@ -553,7 +554,7 @@ function showDetail(id){
     <div class="summary-row" style="margin-top:.875rem">
       <div class="summary-item"><span class="summary-label">약재 수</span><span class="summary-value">${rx.herbs.length}종</span></div>
       <div class="summary-item"><span class="summary-label">총 처방량</span><span class="summary-value">${fmt(totalG)}g</span></div>
-      <div class="summary-item"><span class="summary-label">총 금액</span><span class="summary-value big">${fmtW(rx.totalPrice)}원</span></div>
+      <div class="summary-item"><span class="summary-label">총 금액</span><span class="summary-value big">${fmtW(herbTotal)}원</span></div>
     </div>`;
   document.getElementById('detail-modal-overlay').classList.add('open');
   document.getElementById('close-detail').addEventListener('click',()=>document.getElementById('detail-modal-overlay').classList.remove('open'));
