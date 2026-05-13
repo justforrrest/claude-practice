@@ -1304,6 +1304,14 @@ function renderPricelist(){
   const qtyEl=document.getElementById('pl-calc-qty');
   const amtEl=document.getElementById('pl-calc-amt');
   const resEl=document.getElementById('pl-calc-result');
+  const LS_KEY='herb_pl_calc_hist';
+
+  function loadHist(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'{}');}catch{return {};}}
+  function saveHist(herb,sup,qty,amount){
+    const h=loadHist();
+    h[herb+'::'+sup]={qty,amount,ts:Date.now()};
+    localStorage.setItem(LS_KEY,JSON.stringify(h));
+  }
 
   function show(inp){
     const r=inp.getBoundingClientRect();
@@ -1312,9 +1320,16 @@ function renderPricelist(){
     pop.style.display='block';
     _inp=inp;qtyEl.value='';amtEl.value='';resEl.textContent='';
     const herb=inp.dataset.herb,sup=inp.dataset.sup;
-    const last=[...inboundData].filter(r=>r.herb===herb&&r.supplier===sup&&r.qty>0&&r.amount>0)
+
+    const ibLast=[...inboundData].filter(r=>r.herb===herb&&r.supplier===sup&&r.qty>0&&r.amount>0)
       .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id))[0];
-    if(last){qtyEl.value=last.qty;amtEl.value=last.amount;calc();}
+    const ibTs=ibLast?new Date(ibLast.date).getTime():0;
+
+    const hist=loadHist()[herb+'::'+sup];
+    const histTs=hist?hist.ts:0;
+
+    const src=histTs>ibTs?hist:ibLast;
+    if(src){qtyEl.value=src.qty;amtEl.value=src.amount;calc();}
     setTimeout(()=>qtyEl.select(),0);
   }
   function hide(){pop.style.display='none';_inp=null;}
@@ -1325,7 +1340,11 @@ function renderPricelist(){
   }
   function apply(){
     const p=calc();
-    if(p!==null&&_inp){_inp.value=p;_inp.dispatchEvent(new Event('input',{bubbles:true}));const t=_inp;hide();t.focus();}
+    if(p!==null&&_inp){
+      const q=parseFloat(qtyEl.value),a=parseFloat(amtEl.value);
+      saveHist(_inp.dataset.herb,_inp.dataset.sup,q,a);
+      _inp.value=p;_inp.dispatchEvent(new Event('input',{bubbles:true}));const t=_inp;hide();t.focus();
+    }
   }
   qtyEl.addEventListener('input',calc);
   amtEl.addEventListener('input',calc);
