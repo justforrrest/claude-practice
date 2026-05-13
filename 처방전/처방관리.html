@@ -42,8 +42,8 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .btn-sm{padding:4px 10px;font-size:12px;}
 .btn-del{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:3px 6px;border-radius:4px;transition:all .15s;}
 .btn-del:hover{background:var(--coral-light);color:var(--coral);}
-.del-btn{color:var(--text-1);border:1px solid var(--coral)!important;border-radius:4px;}
-.del-btn:hover{background:var(--coral-light);color:var(--coral);}
+.del-btn{border:1px solid var(--coral)!important;color:var(--text-1);}
+.del-btn:hover{background:var(--coral-light)!important;color:var(--coral);}
 .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
 .form-group{display:flex;flex-direction:column;gap:4px;min-width:110px;}
 .form-group.grow{flex:1;}
@@ -484,7 +484,7 @@ function renderRegister(){
         <div class="form-row" style="margin-bottom:.75rem;align-items:flex-end;flex-wrap:nowrap;gap:8px">
           <div class="form-group" style="flex:1;min-width:0">
             <label>생년월일</label>
-            <input type="text" id="rx-patient-birth" value="${rxPatBirth}" placeholder="19901231" maxlength="10" style="width:100%">
+            <input type="text" id="rx-patient-birth" value="${rxPatBirth}" placeholder="1990-12-31" maxlength="10" style="width:100%">
           </div>
           <div class="form-group" style="flex-shrink:0">
             <label>나이</label>
@@ -860,51 +860,60 @@ let histDxSearch='';
 
 function renderHistory(){
   const el=document.getElementById('view-history');
+  if(!document.getElementById('hist-q-pat')){
+    el.innerHTML=`
+    <div class="toolbar">
+      <input type="text" id="hist-q-pat" placeholder="환자명 검색" style="flex:1;min-width:100px">
+      <input type="text" id="hist-q-dx" placeholder="처방명 검색" style="flex:1;min-width:100px">
+      <span id="hist-batch-wrap"></span>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="tbl-wrap"><table id="hist-table">
+        <thead><tr><th>날짜</th><th>환자</th><th>구분</th><th>회차</th><th>처방명</th><th>첩수</th><th>총 금액</th><th>출고</th><th>수정/삭제</th></tr></thead>
+        <tbody id="hist-tbody"></tbody>
+      </table></div>
+    </div>`;
+    const patEl=document.getElementById('hist-q-pat');
+    const dxEl=document.getElementById('hist-q-dx');
+    patEl.addEventListener('input',e=>{if(e.isComposing)return;histPatSearch=patEl.value;updateHistList();});
+    patEl.addEventListener('compositionend',()=>{histPatSearch=patEl.value;updateHistList();});
+    dxEl.addEventListener('input',e=>{if(e.isComposing)return;histDxSearch=dxEl.value;updateHistList();});
+    dxEl.addEventListener('compositionend',()=>{histDxSearch=dxEl.value;updateHistList();});
+  }
+  const bw=document.getElementById('hist-batch-wrap');
+  if(bw){
+    bw.innerHTML=prescriptionsData.some(r=>!r.fees)?`<button class="btn btn-secondary btn-sm" id="batch-fees-btn">비용 일괄 적용</button>`:'';
+    document.getElementById('batch-fees-btn')?.addEventListener('click',batchAddFees);
+  }
+  updateHistList();
+}
+
+function updateHistList(){
+  const tbody=document.getElementById('hist-tbody');
+  if(!tbody)return;
   const list=[...prescriptionsData]
     .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch)))
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
-
-  el.innerHTML=`
-  <div class="toolbar">
-    <input type="text" id="hist-q-pat" value="${histPatSearch}" placeholder="환자명 검색" style="flex:1;min-width:100px">
-    <input type="text" id="hist-q-dx" value="${histDxSearch}" placeholder="처방명 검색" style="flex:1;min-width:100px">
-    ${prescriptionsData.some(r=>!r.fees)?`<button class="btn btn-secondary btn-sm" id="batch-fees-btn">비용 일괄 적용</button>`:''}
-  </div>
-  <div class="card" style="padding:0">
-    <div class="tbl-wrap"><table id="hist-table">
-      <thead><tr><th>날짜</th><th>환자</th><th>구분</th><th>회차</th><th>처방명</th><th>첩수</th><th>총 금액</th><th>출고</th><th>수정/삭제</th></tr></thead>
-      <tbody>${!list.length?`<tr><td colspan="9" class="empty">처방 이력이 없습니다</td></tr>`:
-        list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
-          <td>${r.date}</td><td><b>${r.patientName}</b></td>
-          <td>${r.category?`<span class="cat-badge cat-${r.category}">${r.category}</span>`:'-'}</td>
-          <td style="white-space:nowrap;color:var(--text-2);font-size:12px">${(r.sessionCur&&r.sessionTotal)?`${r.sessionCur}차 / ${r.sessionTotal}차`:(r.sessionCur?`${r.sessionCur}차`:(r.sessionTotal?`/ ${r.sessionTotal}차`:'-'))}</td>
-          <td>${r.diagnosis||'-'}</td>
-          <td class="num">${r.packs}첩</td>
-          <td class="num">${fmtW(r.fees?r.totalPrice:r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
-          <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-secondary btn-sm ob-btn" data-rxid="${r.id}">출고 반영</button>`}</td>
-          <td style="white-space:nowrap">
-            <button class="btn btn-secondary btn-sm edit-btn" data-rxid="${r.id}">수정</button>
-            <button class="btn-del del-btn" data-rxid="${r.id}" style="margin-left:4px">삭제</button>
-          </td>
-        </tr>`).join('')
-      }</tbody>
-    </table></div>
-  </div>`;
-
-  const histPatEl=document.getElementById('hist-q-pat');
-  histPatEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){histPatSearch=histPatEl.value;renderHistory();focusEnd('hist-q-pat');}});
-  histPatEl.addEventListener('input',e=>{if(e.target.value===''){histPatSearch='';renderHistory();focusEnd('hist-q-pat');}});
-  const histDxEl=document.getElementById('hist-q-dx');
-  histDxEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){histDxSearch=histDxEl.value;renderHistory();focusEnd('hist-q-dx');}});
-  histDxEl.addEventListener('input',e=>{if(e.target.value===''){histDxSearch='';renderHistory();focusEnd('hist-q-dx');}});
-  document.getElementById('batch-fees-btn')?.addEventListener('click',batchAddFees);
-
-  el.querySelectorAll('.hist-row').forEach(tr=>{
+  tbody.innerHTML=!list.length?`<tr><td colspan="9" class="empty">처방 이력이 없습니다</td></tr>`:
+    list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
+      <td>${r.date}</td><td><b>${r.patientName}</b></td>
+      <td>${r.category?`<span class="cat-badge cat-${r.category}">${r.category}</span>`:'-'}</td>
+      <td style="white-space:nowrap;color:var(--text-2);font-size:12px">${(r.sessionCur&&r.sessionTotal)?`${r.sessionCur}차 / ${r.sessionTotal}차`:(r.sessionCur?`${r.sessionCur}차`:(r.sessionTotal?`/ ${r.sessionTotal}차`:'-'))}</td>
+      <td>${r.diagnosis||'-'}</td>
+      <td class="num">${r.packs}첩</td>
+      <td class="num">${fmtW(r.fees?r.totalPrice:r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
+      <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-secondary btn-sm ob-btn" data-rxid="${r.id}">출고 반영</button>`}</td>
+      <td style="white-space:nowrap;display:flex;gap:4px">
+        <button class="btn btn-secondary btn-sm edit-btn" data-rxid="${r.id}">수정</button>
+        <button class="btn btn-sm del-btn" data-rxid="${r.id}">삭제</button>
+      </td>
+    </tr>`).join('');
+  tbody.querySelectorAll('.hist-row').forEach(tr=>{
     tr.addEventListener('click',e=>{if(!e.target.closest('button'))showDetail(tr.dataset.rxid);});
   });
-  el.querySelectorAll('.ob-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();reflectOutbound(b.dataset.rxid);}));
-  el.querySelectorAll('.edit-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();editingRxId=b.dataset.rxid;rxHerbs=[];switchTab('register');}));
-  el.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();deleteRx(b.dataset.rxid);}));
+  tbody.querySelectorAll('.ob-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();reflectOutbound(b.dataset.rxid);}));
+  tbody.querySelectorAll('.edit-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();editingRxId=b.dataset.rxid;rxHerbs=[];switchTab('register');}));
+  tbody.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();deleteRx(b.dataset.rxid);}));
 }
 
 function showDetail(id){
@@ -993,80 +1002,80 @@ const PAT_CHO=['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ'
 
 function renderPatients(){
   const el=document.getElementById('view-patients');
+  if(!document.getElementById('pat-search')){
+    el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:.875rem">
+      <input type="text" id="pat-search" placeholder="환자명 검색" style="width:140px;flex-shrink:0">
+      <button class="btn btn-sm btn-primary" data-cho="">전체</button>
+      ${PAT_CHO.map(c=>`<button class="btn btn-sm btn-secondary" data-cho="${c}">${c}</button>`).join('')}
+    </div>
+    <div class="card" style="padding:0">
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th style="text-align:center;border-right:1px solid var(--border-2);width:72px">환자명</th>
+          <th style="text-align:center;border-right:1px solid var(--border-2);width:44px">성별</th>
+          <th style="text-align:center;border-right:1px solid var(--border-2);width:100px">생년월일</th>
+          <th style="text-align:center;border-right:1px solid var(--border-2);width:44px">나이</th>
+          <th style="text-align:center;border-right:1px solid var(--border-2)">메모</th>
+          <th style="text-align:center;border-right:1px solid var(--border-2);width:60px">처방이력</th>
+          <th style="width:32px"></th>
+        </tr></thead>
+        <tbody id="pat-tbody"></tbody>
+      </table></div>
+    </div>`;
+    const srEl=document.getElementById('pat-search');
+    srEl.addEventListener('input',e=>{if(e.isComposing)return;patSearch=srEl.value;updatePatList();});
+    srEl.addEventListener('compositionend',()=>{patSearch=srEl.value;updatePatList();});
+    el.querySelectorAll('[data-cho]').forEach(b=>b.addEventListener('click',()=>{
+      patIndex=b.dataset.cho;
+      el.querySelectorAll('[data-cho]').forEach(x=>{x.classList.toggle('btn-primary',x.dataset.cho===patIndex);x.classList.toggle('btn-secondary',x.dataset.cho!==patIndex);});
+      updatePatList();
+    }));
+  }
+  updatePatList();
+}
+
+function updatePatList(){
+  const el=document.getElementById('view-patients');
+  const tbody=document.getElementById('pat-tbody');
+  if(!tbody)return;
   const list=[...patientsData].filter(p=>{
     if(patSearch&&!p.name.includes(patSearch))return false;
     if(patIndex&&getInitCho(p.name)!==patIndex)return false;
     return true;
   }).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-
-  el.innerHTML=`
-  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:.875rem">
-    <input type="text" id="pat-search" value="${patSearch}" placeholder="환자명 검색" style="width:140px;flex-shrink:0">
-    <button class="btn btn-sm ${!patIndex?'btn-primary':'btn-secondary'}" data-cho="">전체</button>
-    ${PAT_CHO.map(c=>`<button class="btn btn-sm ${patIndex===c?'btn-primary':'btn-secondary'}" data-cho="${c}">${c}</button>`).join('')}
-  </div>
-  <div class="card" style="padding:0">
-    <div class="tbl-wrap"><table>
-      <thead><tr>
-        <th style="text-align:center;border-right:1px solid var(--border-2);width:72px">환자명</th>
-        <th style="text-align:center;border-right:1px solid var(--border-2);width:44px">성별</th>
-        <th style="text-align:center;border-right:1px solid var(--border-2);width:100px">생년월일</th>
-        <th style="text-align:center;border-right:1px solid var(--border-2);width:44px">나이</th>
-        <th style="text-align:center;border-right:1px solid var(--border-2)">메모</th>
-        <th style="text-align:center;border-right:1px solid var(--border-2);width:60px">처방이력</th>
-        <th style="width:32px"></th>
-      </tr></thead>
-      <tbody>${!list.length?`<tr><td colspan="7" class="empty">환자가 없습니다</td></tr>`:
-        list.map(p=>{
-          const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
-          const fmtBirth=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');return c.length===8&&/^\d{8}$/.test(c)?`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`:b||'';};
-          const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?String(a):'-';};
-          const SEP='border-right:1px solid var(--border-2)';
-          return`<tr data-pid="${p.id}">
-            <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="name" data-orig="${p.name}" value="${p.name}" style="font-weight:600;color:var(--violet-d);text-align:center"></td>
-            <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="gender" value="${p.gender||''}" style="width:36px;text-align:center"></td>
-            <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="birth" value="${fmtBirth(p.birth)}" style="min-width:90px;text-align:center"></td>
-            <td class="pat-age-cell" data-pid="${p.id}" style="${SEP};text-align:center">${ageOf(p.birth)}</td>
-            <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="memo" value="${(p.memo||'').replace(/"/g,'&quot;')}" style="color:var(--text-3)"></td>
-            <td class="num" style="${SEP}">${cnt}건</td>
-            <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
-          </tr>`;
-        }).join('')
-      }</tbody>
-    </table></div>
-  </div>`;
-
-  const patSrEl=document.getElementById('pat-search');
-  patSrEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){patSearch=patSrEl.value;renderPatients();focusEnd('pat-search');}});
-  patSrEl.addEventListener('input',e=>{if(e.target.value===''){patSearch='';renderPatients();focusEnd('pat-search');}});
-  el.querySelectorAll('[data-cho]').forEach(b=>b.addEventListener('click',()=>{patIndex=b.dataset.cho;renderPatients();}));
-
+  const fmtBirth=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');return c.length===8&&/^\d{8}$/.test(c)?`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`:b||'';};
   const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?String(a):'-';};
-
+  const SEP='border-right:1px solid var(--border-2)';
+  tbody.innerHTML=!list.length?`<tr><td colspan="7" class="empty">환자가 없습니다</td></tr>`:
+    list.map(p=>{
+      const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
+      return`<tr data-pid="${p.id}">
+        <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="name" data-orig="${p.name}" value="${p.name}" style="font-weight:600;color:var(--violet-d);text-align:center"></td>
+        <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="gender" value="${p.gender||''}" style="width:36px;text-align:center"></td>
+        <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="birth" value="${fmtBirth(p.birth)}" style="min-width:90px;text-align:center"></td>
+        <td class="pat-age-cell" data-pid="${p.id}" style="${SEP};text-align:center">${ageOf(p.birth)}</td>
+        <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="memo" value="${(p.memo||'').replace(/"/g,'&quot;')}" style="color:var(--text-3)"></td>
+        <td class="num" style="${SEP}">${cnt}건</td>
+        <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
+      </tr>`;
+    }).join('');
   let patCellTimer=null;
-  el.querySelectorAll('.pat-cell-inp').forEach(inp=>{
+  tbody.querySelectorAll('.pat-cell-inp').forEach(inp=>{
     inp.addEventListener('focus',()=>inp.select?.());
     inp.addEventListener('input',()=>{
       const pid=inp.dataset.pid,field=inp.dataset.field;
       const p=patientsData.find(x=>x.id===pid);if(!p)return;
-      if(field==='birth'){
-        const ageCell=el.querySelector(`.pat-age-cell[data-pid="${pid}"]`);
-        if(ageCell)ageCell.textContent=ageOf(inp.value);
-      }
+      if(field==='birth'){const ageCell=el.querySelector(`.pat-age-cell[data-pid="${pid}"]`);if(ageCell)ageCell.textContent=ageOf(inp.value);}
       clearTimeout(patCellTimer);
-      patCellTimer=setTimeout(async()=>{
-        if(field!=='name')p[field]=inp.value.trim();
-        await save(RX_KEYS.patients,patientsData);
-      },800);
+      patCellTimer=setTimeout(async()=>{if(field!=='name')p[field]=inp.value.trim();await save(RX_KEYS.patients,patientsData);},800);
     });
     inp.addEventListener('blur',async()=>{
       const pid=inp.dataset.pid,field=inp.dataset.field;
       const p=patientsData.find(x=>x.id===pid);if(!p)return;
       if(field==='birth'){
-        const norm=normBirth(inp.value.trim());
-        inp.value=norm;p.birth=norm;
-        const ageCell=el.querySelector(`.pat-age-cell[data-pid="${pid}"]`);
-        if(ageCell)ageCell.textContent=ageOf(norm);
+        const norm=normBirth(inp.value.trim());inp.value=norm;p.birth=norm;
+        const ageCell=el.querySelector(`.pat-age-cell[data-pid="${pid}"]`);if(ageCell)ageCell.textContent=ageOf(norm);
         await save(RX_KEYS.patients,patientsData);
       } else if(field==='name'){
         const origName=inp.dataset.orig,newName=inp.value.trim();
@@ -1076,29 +1085,22 @@ function renderPatients(){
           prescriptionsData=prescriptionsData.map(r=>(r.patientId===pid||r.patientName===origName)?{...r,patientName:newName}:r);
           await Promise.all([save(RX_KEYS.patients,patientsData),save(RX_KEYS.prescriptions,prescriptionsData)]);
         }
-      } else {
-        p[field]=inp.value.trim();
-        await save(RX_KEYS.patients,patientsData);
-      }
+      } else {p[field]=inp.value.trim();await save(RX_KEYS.patients,patientsData);}
     });
     inp.addEventListener('keydown',e=>{
-      if(e.key!=='Enter'||e.isComposing)return;
-      e.preventDefault();
-      const tr=inp.closest('tr');
-      const cells=[...tr.querySelectorAll('.pat-cell-inp')];
-      const idx=cells.indexOf(inp);
-      if(idx<cells.length-1){cells[idx+1].focus();}
+      if(e.key!=='Enter'||e.isComposing)return;e.preventDefault();
+      const tr=inp.closest('tr');const cells=[...tr.querySelectorAll('.pat-cell-inp')];const idx=cells.indexOf(inp);
+      if(idx<cells.length-1)cells[idx+1].focus();
       else{const nextTr=tr.nextElementSibling;if(nextTr){const f=nextTr.querySelector('.pat-cell-inp');if(f)f.focus();}}
     });
   });
-
-  el.querySelectorAll('.pat-del').forEach(b=>b.addEventListener('click',async()=>{
+  tbody.querySelectorAll('.pat-del').forEach(b=>b.addEventListener('click',async()=>{
     const p=patientsData.find(x=>x.id===b.dataset.pid);
     const cnt=prescriptionsData.filter(r=>r.patientId===b.dataset.pid||r.patientName===p?.name).length;
-    if(!confirm(`${p?.name||''} 환자를 삭제하시겠습니까?${cnt?` (처방 이력 ${cnt}건)`:''}` ))return;
+    if(!confirm(`${p?.name||''} 환자를 삭제하시겠습니까?${cnt?` (처방 이력 ${cnt}건)`:''}`))return;
     patientsData=patientsData.filter(x=>x.id!==b.dataset.pid);
     await save(RX_KEYS.patients,patientsData);
-    renderPatients();
+    updatePatList();
   }));
 }
 
@@ -1140,7 +1142,7 @@ function showPatientDetail(pid){
       <div class="form-row" style="align-items:flex-end;flex-wrap:nowrap;gap:8px">
         <div class="form-group" style="flex:1;min-width:0">
           <label>생년월일</label>
-          <input type="text" id="pat-edit-birth" value="${p.birth||''}" placeholder="19901231" maxlength="10" style="width:100%">
+          <input type="text" id="pat-edit-birth" value="${p.birth||''}" placeholder="1990-12-31" maxlength="10" style="width:100%">
         </div>
         <div class="form-group" style="flex-shrink:0">
           <label>나이</label>
