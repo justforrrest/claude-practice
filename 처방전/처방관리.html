@@ -416,11 +416,11 @@ function renderHistory(){
   el.innerHTML=`
   <div class="toolbar">
     <select id="hist-pat" style="min-width:120px">${patOpts}</select>
-    <input type="text" id="hist-q" value="${histSearch}" placeholder="환자명·진단 검색" style="flex:1;min-width:140px">
+    <input type="text" id="hist-q" value="${histSearch}" placeholder="환자명·처방명 검색" style="flex:1;min-width:140px">
   </div>
   <div class="card" style="padding:0">
     <div class="tbl-wrap"><table>
-      <thead><tr><th>날짜</th><th>환자</th><th>처방명 / 진단</th><th class="num">첩수</th><th class="num">총 금액</th><th>출고</th><th></th></tr></thead>
+      <thead><tr><th>날짜</th><th>환자</th><th>처방명</th><th class="num">첩수</th><th class="num">총 금액</th><th>출고</th><th></th></tr></thead>
       <tbody>${!list.length?`<tr><td colspan="7" class="empty">처방 이력이 없습니다</td></tr>`:
         list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
           <td>${r.date}</td><td><b>${r.patientName}</b></td>
