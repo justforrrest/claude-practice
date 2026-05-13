@@ -939,7 +939,7 @@ function updateHistList(){
       <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-secondary btn-sm ob-btn" data-rxid="${r.id}">출고 반영</button>`}</td>
       <td style="white-space:nowrap;display:flex;gap:4px">
         <button class="btn btn-secondary btn-sm edit-btn" data-rxid="${r.id}">수정</button>
-        <button class="btn-del del-btn" data-rxid="${r.id}">삭제</button>
+        <button class="btn btn-sm btn-ghost del-btn" data-rxid="${r.id}">삭제</button>
       </td>
     </tr>`).join('');
   tbody.querySelectorAll('.hist-row').forEach(tr=>{
