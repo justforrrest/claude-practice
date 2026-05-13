@@ -941,7 +941,7 @@ function renderPricelist(){
     const entries=suppliersData.map(s=>ep(h,s));
     const nums=entries.map(e=>e.val).filter(v=>v!=='');
     const minVal=nums.length>=2?Math.min(...nums):null;
-    return`<tr><td style="text-align:center;border-right:2px solid var(--border)">${h}</td>${suppliersData.map((s,i)=>{
+    return`<tr><td style="text-align:center;border-right:2px solid var(--border);font-weight:600;color:var(--text-1)">${h}</td>${suppliersData.map((s,i)=>{
       const e=entries[i];
       const isMin=minVal!==null&&e.val!==''&&e.val===minVal;
       const tdStyle=isMin?'background:var(--green-light)':'';
