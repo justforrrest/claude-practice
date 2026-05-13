@@ -1183,11 +1183,12 @@ function renderDailyBody(){
   tbody.querySelectorAll('.add-checkout-btn').forEach(btn=>{btn.addEventListener('click',()=>{const bi=btn.dataset.bi;entry.blocks[bi].checkouts.push({text:'',done:false});renderDaily();focusLastInput(bi,'.checkout-text');});});
   tbody.querySelectorAll('.check-del-btn').forEach(btn=>{btn.addEventListener('click',()=>{entry.blocks[btn.dataset.bi].checks.splice(Number(btn.dataset.ci),1);renderDaily();});});
   tbody.querySelectorAll('.checkout-del-btn').forEach(btn=>{btn.addEventListener('click',()=>{entry.blocks[btn.dataset.bi].checkouts.splice(Number(btn.dataset.ci),1);renderDaily();});});
-  document.getElementById('e-bad').value=entry.bad||'';
-  document.getElementById('e-good').value=entry.good||'';
-  document.getElementById('e-next').value=entry.next||'';
+  const bulletize=t=>{if(!t||!t.trim())return'• ';return t.split('\n').map(l=>l&&!l.startsWith('• ')?'• '+l:l).join('\n');};
+  document.getElementById('e-bad').value=bulletize(entry.bad||'');
+  document.getElementById('e-good').value=bulletize(entry.good||'');
+  document.getElementById('e-next').value=bulletize(entry.next||'');
   const autoResize=el=>{el.style.height='auto';el.style.height=el.scrollHeight+'px';};
-  ['bad','good','next'].forEach(k=>{const el=document.getElementById('e-'+k);el.oninput=()=>{entry[k]=el.value;autoResize(el);};el.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();save(KEYS.daily,dailyData);}else if(e.key==='Enter'&&e.shiftKey){setTimeout(()=>autoResize(el),0);}});autoResize(el);});
+  ['bad','good','next'].forEach(k=>{const el=document.getElementById('e-'+k);el.oninput=()=>{entry[k]=el.value;autoResize(el);};el.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();save(KEYS.daily,dailyData);}else if(e.key==='Enter'&&e.shiftKey){e.preventDefault();const s=el.selectionStart,v=el.value;el.value=v.slice(0,s)+'\n• '+v.slice(el.selectionEnd);el.selectionStart=el.selectionEnd=s+3;entry[k]=el.value;autoResize(el);}});autoResize(el);});
 }
 function renderDaily(){
   calendarViewDate=new Date(currentDailyDate);
