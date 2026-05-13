@@ -80,6 +80,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;width:100%;max-width:620px;box-shadow:0 8px 32px rgba(0,0,0,0.14);}
+/* 환자 인라인 편집 */
+.pat-cell-inp{border:none;background:transparent;font-family:var(--font-sans);font-size:13px;color:inherit;outline:none;width:100%;padding:2px 4px;border-radius:4px;min-width:36px;}
+.pat-cell-inp:focus{background:var(--violet-light);}
 /* 동기화 모달 */
 .sync-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:999;align-items:center;justify-content:center;}
 .sync-modal-overlay.open{display:flex;}
@@ -848,12 +851,9 @@ function renderHistory(){
     </table></div>
   </div>`;
 
-  document.getElementById('hist-q').addEventListener('input',e=>{
-    histSearch=e.target.value;
-    renderHistory();
-    const q=document.getElementById('hist-q');
-    if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}
-  });
+  const histQEl=document.getElementById('hist-q');
+  histQEl.addEventListener('compositionend',()=>{histSearch=histQEl.value;renderHistory();const q=document.getElementById('hist-q');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}});
+  histQEl.addEventListener('input',e=>{if(e.isComposing)return;histSearch=histQEl.value;renderHistory();const q=document.getElementById('hist-q');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}});
   document.getElementById('batch-fees-btn')?.addEventListener('click',batchAddFees);
 
   el.querySelectorAll('.hist-row').forEach(tr=>{
@@ -968,20 +968,14 @@ function renderPatients(){
       <tbody>${!list.length?`<tr><td colspan="7" class="empty">환자가 없습니다</td></tr>`:
         list.map(p=>{
           const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
-          const clean=(p.birth||'').replace(/[.\-\/\s]/g,'');
-          let age='-';
-          if(clean.length===8&&/^\d{8}$/.test(clean)){
-            const by=parseInt(clean.slice(0,4)),bm=parseInt(clean.slice(4,6))-1,bd=parseInt(clean.slice(6,8));
-            const t=new Date();let a=t.getFullYear()-by;
-            if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;
-            if(a>=0&&a<150)age=a+'세';
-          }
-          return`<tr>
-            <td><b class="pat-name-link" data-pid="${p.id}" style="cursor:pointer;color:var(--violet-d)">${p.name}</b></td>
-            <td>${p.gender||'-'}</td>
-            <td>${p.birth||'-'}</td>
-            <td>${age}</td>
-            <td style="color:var(--text-3);font-size:12px">${p.memo||'-'}</td>
+          const fmtBirth=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');return c.length===8&&/^\d{8}$/.test(c)?`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`:b||'';};
+          const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?a+'세':'-';};
+          return`<tr data-pid="${p.id}">
+            <td><input class="pat-cell-inp" data-pid="${p.id}" data-field="name" data-orig="${p.name}" value="${p.name}" style="font-weight:600;color:var(--violet-d)"></td>
+            <td><input class="pat-cell-inp" data-pid="${p.id}" data-field="gender" value="${p.gender||''}" style="width:36px"></td>
+            <td><input class="pat-cell-inp" data-pid="${p.id}" data-field="birth" value="${fmtBirth(p.birth)}" placeholder="19901231" style="min-width:90px"></td>
+            <td class="pat-age-cell" data-pid="${p.id}">${ageOf(p.birth)}</td>
+            <td><input class="pat-cell-inp" data-pid="${p.id}" data-field="memo" value="${(p.memo||'').replace(/"/g,'&quot;')}" style="color:var(--text-3)"></td>
             <td class="num">${cnt}건</td>
             <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
           </tr>`;
@@ -990,14 +984,63 @@ function renderPatients(){
     </table></div>
   </div>`;
 
-  document.getElementById('pat-search').addEventListener('input',e=>{
-    patSearch=e.target.value;
-    renderPatients();
-    const q=document.getElementById('pat-search');
-    if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}
-  });
+  const patSrEl=document.getElementById('pat-search');
+  patSrEl.addEventListener('compositionend',()=>{patSearch=patSrEl.value;renderPatients();const q=document.getElementById('pat-search');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}});
+  patSrEl.addEventListener('input',e=>{if(e.isComposing)return;patSearch=patSrEl.value;renderPatients();const q=document.getElementById('pat-search');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}});
   el.querySelectorAll('[data-cho]').forEach(b=>b.addEventListener('click',()=>{patIndex=b.dataset.cho;renderPatients();}));
-  el.querySelectorAll('.pat-name-link').forEach(b=>b.addEventListener('click',()=>showPatientDetail(b.dataset.pid)));
+
+  const normBirth=v=>{const c=v.replace(/[.\-\/\s]/g,'');if(c.length===8&&/^\d{8}$/.test(c))return`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`;if(c.length===6&&/^\d{6}$/.test(c)){const yy=parseInt(c.slice(0,2));const yr=yy<=30?2000+yy:1900+yy;return`${yr}-${c.slice(2,4)}-${c.slice(4,6)}`;}return v;};
+  const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?a+'세':'-';};
+
+  let patCellTimer=null;
+  el.querySelectorAll('.pat-cell-inp').forEach(inp=>{
+    inp.addEventListener('focus',()=>inp.select?.());
+    inp.addEventListener('input',()=>{
+      const pid=inp.dataset.pid,field=inp.dataset.field;
+      const p=patientsData.find(x=>x.id===pid);if(!p)return;
+      if(field==='birth'){
+        const ageCell=el.querySelector(`.pat-age-cell[data-pid="${pid}"]`);
+        if(ageCell)ageCell.textContent=ageOf(inp.value);
+      }
+      clearTimeout(patCellTimer);
+      patCellTimer=setTimeout(async()=>{
+        if(field!=='name')p[field]=inp.value.trim();
+        await save(RX_KEYS.patients,patientsData);
+      },800);
+    });
+    inp.addEventListener('blur',async()=>{
+      const pid=inp.dataset.pid,field=inp.dataset.field;
+      const p=patientsData.find(x=>x.id===pid);if(!p)return;
+      if(field==='birth'){
+        const norm=normBirth(inp.value.trim());
+        inp.value=norm;p.birth=norm;
+        const ageCell=el.querySelector(`.pat-age-cell[data-pid="${pid}"]`);
+        if(ageCell)ageCell.textContent=ageOf(norm);
+        await save(RX_KEYS.patients,patientsData);
+      } else if(field==='name'){
+        const origName=inp.dataset.orig,newName=inp.value.trim();
+        if(!newName){inp.value=origName;return;}
+        if(newName!==origName){
+          p.name=newName;inp.dataset.orig=newName;
+          prescriptionsData=prescriptionsData.map(r=>(r.patientId===pid||r.patientName===origName)?{...r,patientName:newName}:r);
+          await Promise.all([save(RX_KEYS.patients,patientsData),save(RX_KEYS.prescriptions,prescriptionsData)]);
+        }
+      } else {
+        p[field]=inp.value.trim();
+        await save(RX_KEYS.patients,patientsData);
+      }
+    });
+    inp.addEventListener('keydown',e=>{
+      if(e.key!=='Enter'||e.isComposing)return;
+      e.preventDefault();
+      const tr=inp.closest('tr');
+      const cells=[...tr.querySelectorAll('.pat-cell-inp')];
+      const idx=cells.indexOf(inp);
+      if(idx<cells.length-1){cells[idx+1].focus();}
+      else{const nextTr=tr.nextElementSibling;if(nextTr){const f=nextTr.querySelector('.pat-cell-inp');if(f)f.focus();}}
+    });
+  });
+
   el.querySelectorAll('.pat-del').forEach(b=>b.addEventListener('click',async()=>{
     const p=patientsData.find(x=>x.id===b.dataset.pid);
     const cnt=prescriptionsData.filter(r=>r.patientId===b.dataset.pid||r.patientName===p?.name).length;
