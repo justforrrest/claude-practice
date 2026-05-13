@@ -40,6 +40,8 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .btn-secondary{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
 .btn-secondary:hover{background:var(--violet-light);color:var(--text-1);}
 .btn-sm{padding:4px 10px;font-size:12px;}
+.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--violet-light);color:var(--text-1);}
 .btn-del{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:3px 6px;border-radius:4px;transition:all .15s;}
 .btn-del:hover{background:var(--coral-light);color:var(--coral);}
 .del-btn{border:1px solid var(--coral)!important;color:var(--text-1);}
@@ -480,8 +482,8 @@ function renderRegister(){
           <div class="form-group" style="flex-shrink:0">
             <label>성별</label>
             <div style="display:flex;gap:3px">
-              <button type="button" id="rx-gender-m" class="btn ${rxGender==='남'?'btn-primary':'btn-secondary'}" style="padding:7px 12px;font-size:13px">남</button>
-              <button type="button" id="rx-gender-f" class="btn ${rxGender==='여'?'btn-primary':'btn-secondary'}" style="padding:7px 12px;font-size:13px">여</button>
+              <button type="button" id="rx-gender-m" class="btn ${rxGender==='남'?'btn-primary':'btn-ghost'}" style="padding:7px 12px;font-size:13px">남</button>
+              <button type="button" id="rx-gender-f" class="btn ${rxGender==='여'?'btn-primary':'btn-ghost'}" style="padding:7px 12px;font-size:13px">여</button>
             </div>
           </div>
         </div>
@@ -688,9 +690,9 @@ function renderRegister(){
 
   const setGenderBtns=()=>{
     document.getElementById('rx-gender-m')?.classList.toggle('btn-primary',rxGender==='남');
-    document.getElementById('rx-gender-m')?.classList.toggle('btn-secondary',rxGender!=='남');
+    document.getElementById('rx-gender-m')?.classList.toggle('btn-ghost',rxGender!=='남');
     document.getElementById('rx-gender-f')?.classList.toggle('btn-primary',rxGender==='여');
-    document.getElementById('rx-gender-f')?.classList.toggle('btn-secondary',rxGender!=='여');
+    document.getElementById('rx-gender-f')?.classList.toggle('btn-ghost',rxGender!=='여');
   };
   document.getElementById('rx-gender-m')?.addEventListener('click',()=>{rxGender=rxGender==='남'?'':'남';setGenderBtns();});
   document.getElementById('rx-gender-f')?.addEventListener('click',()=>{rxGender=rxGender==='여'?'':'여';setGenderBtns();});
@@ -1051,8 +1053,8 @@ function renderPatients(){
           <th style="text-align:center;border-right:1px solid var(--border-2);width:100px">생년월일</th>
           <th style="text-align:center;border-right:1px solid var(--border-2);width:44px">나이</th>
           <th style="text-align:center;border-right:1px solid var(--border-2)">메모</th>
-          <th style="text-align:center;border-right:1px solid var(--border-2);width:60px">처방이력</th>
           <th style="text-align:center;border-right:1px solid var(--border-2);width:52px">복약</th>
+          <th style="text-align:center;border-right:1px solid var(--border-2);width:60px">처방이력</th>
           <th style="width:32px"></th>
         </tr></thead>
         <tbody id="pat-tbody"></tbody>
@@ -1093,8 +1095,8 @@ function updatePatList(){
         <td style="${SEP};text-align:center"><input class="pat-cell-inp" data-pid="${p.id}" data-field="birth" value="${fmtBirth(p.birth)}" style="min-width:90px;text-align:center"></td>
         <td class="pat-age-cell" data-pid="${p.id}" style="${SEP};text-align:center">${ageOf(p.birth)}</td>
         <td style="${SEP}"><input class="pat-cell-inp" data-pid="${p.id}" data-field="memo" value="${(p.memo||'').replace(/"/g,'&quot;')}" style="color:var(--text-3)"></td>
-        <td class="num" style="${SEP}">${cnt}건</td>
         <td style="${SEP};text-align:center;width:52px">${medBadge}</td>
+        <td class="num" style="${SEP}">${cnt}건</td>
         <td style="width:32px;text-align:center"><button class="btn-del pat-del" data-pid="${p.id}">×</button></td>
       </tr>`;
     }).join('');
