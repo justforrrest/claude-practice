@@ -769,28 +769,33 @@ function renderSettings(){
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${settingsConsonant===c?' active':''}" data-st-cho="${c}">${c}</button>`).join('')}
       </div>
     </div>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>약재명</th><th class="num">단가 (원/g)</th><th class="num">최소재고 (g)</th></tr></thead>
-      <tbody>${herbs.map(h=>{
-        if(editingHerbName===h)return`<tr style="background:var(--violet-light)">
-          <td style="white-space:nowrap">
-            <input class="herb-rename-inp" type="text" value="${h}" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;font-family:var(--font-sans);background:var(--surface);width:110px;">
-            <button class="btn btn-primary btn-sm herb-rename-save" data-old="${h}" style="margin-left:4px">✓</button>
-            <button class="btn btn-secondary btn-sm herb-rename-cancel" style="margin-left:2px">✕</button>
-          </td>
-          <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
-          <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
-        </tr>`;
-        return`<tr>
-          <td style="white-space:nowrap">
-            <span class="herb-name-click" data-herb="${h}" style="cursor:pointer">${h}</span>
-            <button class="btn-del herb-del" data-herb="${h}" style="margin-left:6px;opacity:.45;font-size:13px">×</button>
-          </td>
-          <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
-          <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table></div>
+  ${(()=>{
+    const stHead=`<thead><tr><th style="text-align:center;border-right:2px solid var(--border)">약재명</th><th class="num">단가 (원/g)</th><th class="num">최소재고 (g)</th></tr></thead>`;
+    const stRows=list=>list.map(h=>{
+      if(editingHerbName===h)return`<tr style="background:var(--violet-light)">
+        <td style="text-align:center;border-right:2px solid var(--border);white-space:nowrap">
+          <input class="herb-rename-inp" type="text" value="${h}" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;font-family:var(--font-sans);background:var(--surface);width:90px;">
+          <button class="btn btn-primary btn-sm herb-rename-save" data-old="${h}" style="margin-left:2px">✓</button>
+          <button class="btn btn-secondary btn-sm herb-rename-cancel" style="margin-left:2px">✕</button>
+        </td>
+        <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
+        <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
+      </tr>`;
+      return`<tr>
+        <td style="text-align:center;border-right:2px solid var(--border);font-weight:600;color:var(--text-1);white-space:nowrap">
+          <span class="herb-name-click" data-herb="${h}" style="cursor:pointer">${h}</span>
+          <button class="btn-del herb-del" data-herb="${h}" style="margin-left:6px;opacity:.45;font-size:13px">×</button>
+        </td>
+        <td class="num"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}"></td>
+        <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}"></td>
+      </tr>`;
+    }).join('');
+    const half=Math.ceil(herbs.length/2);
+    return`<div style="display:flex;gap:2.5rem;align-items:flex-start;">
+      <div class="tbl-wrap" style="flex:1;min-width:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table>${stHead}<tbody>${stRows(herbs.slice(0,half))}</tbody></table></div>
+      <div class="tbl-wrap" style="flex:1;min-width:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table>${stHead}<tbody>${stRows(herbs.slice(half))}</tbody></table></div>
+    </div>`;
+  })()}
   </div>`;
 
   el.querySelectorAll('[data-st-cho]').forEach(btn=>{
