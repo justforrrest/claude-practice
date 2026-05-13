@@ -457,7 +457,8 @@ const DEFAULT_PRICELIST={
 let pricelistData={...DEFAULT_PRICELIST};
 let herbsData=[...HERBS];
 let adjustData=[];
-let editingInboundId=null,editingOutboundId=null,editingHerbName=null;
+let editingInboundId=null,editingOutboundId=null,editingHerbName=null,editingSupplierName=null;
+let inboundMonth='',outboundMonth='';
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function focusEnd(id){const el=document.getElementById(id);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}}
@@ -538,7 +539,11 @@ function renderStock(){
 /* ── 입고 ── */
 function renderInbound(){
   const el=document.getElementById('view-inbound');
-  const recent=[...inboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).slice(0,50);
+  const allSorted=[...inboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  const ibMonths=[...new Set(allSorted.map(r=>r.date.slice(0,7)))];
+  if(inboundMonth&&!ibMonths.includes(inboundMonth))inboundMonth='';
+  const filtered=inboundMonth?allSorted.filter(r=>r.date.startsWith(inboundMonth)):allSorted.slice(0,50);
+  const monthOpts=`<option value="">전체 (최근 50건)</option>${ibMonths.map(m=>`<option value="${m}"${inboundMonth===m?' selected':''}>${m}</option>`).join('')}`;
   const herbOpts=`<option value="">약재 선택</option>${herbsData.map(h=>`<option>${h}</option>`).join('')}`;
   const supOpts=suppliersData.map(s=>`<option>${s}</option>`).join('');
   el.innerHTML=`
@@ -556,10 +561,13 @@ function renderInbound(){
     </div>
   </div>
   <div class="card">
-    <div class="section-title">입고 이력 (최근 50건)</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+      <div class="section-title" style="margin:0">입고 이력</div>
+      <select id="ib-month-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">${monthOpts}</select>
+    </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th class="num">단가 (원/g)</th><th class="num">금액 (원)</th><th>공급업체</th><th>메모</th><th></th></tr></thead>
-      <tbody>${recent.length===0?'<tr><td colspan="8" class="empty">입고 이력이 없습니다</td></tr>':recent.map(r=>{
+      <tbody>${filtered.length===0?'<tr><td colspan="8" class="empty">입고 이력이 없습니다</td></tr>':filtered.map(r=>{
         if(editingInboundId===r.id){
           const hOpts=herbsData.map(h=>`<option${h===r.herb?' selected':''}>${h}</option>`).join('');
           const sOpts=suppliersData.map(s=>`<option${s===r.supplier?' selected':''}>${s}</option>`).join('');
@@ -590,6 +598,8 @@ function renderInbound(){
       }).join('')}</tbody>
     </table></div>
   </div>`;
+
+  document.getElementById('ib-month-sel').addEventListener('change',e=>{inboundMonth=e.target.value;renderInbound();});
 
   const qtyEl=document.getElementById('in-qty');
   const priceEl=document.getElementById('in-price');
@@ -695,7 +705,11 @@ function renderInbound(){
 /* ── 출고 ── */
 function renderOutbound(){
   const el=document.getElementById('view-outbound');
-  const recent=[...outboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).slice(0,50);
+  const allSorted=[...outboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  const obMonths=[...new Set(allSorted.map(r=>r.date.slice(0,7)))];
+  if(outboundMonth&&!obMonths.includes(outboundMonth))outboundMonth='';
+  const filtered=outboundMonth?allSorted.filter(r=>r.date.startsWith(outboundMonth)):allSorted.slice(0,50);
+  const monthOpts=`<option value="">전체 (최근 50건)</option>${obMonths.map(m=>`<option value="${m}"${outboundMonth===m?' selected':''}>${m}</option>`).join('')}`;
   const herbOpts=`<option value="">약재 선택</option>${herbsData.map(h=>`<option>${h}</option>`).join('')}`;
   el.innerHTML=`
   <div class="card">
@@ -710,10 +724,13 @@ function renderOutbound(){
     </div>
   </div>
   <div class="card">
-    <div class="section-title">출고 이력 (최근 50건)</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+      <div class="section-title" style="margin:0">출고 이력</div>
+      <select id="ob-month-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">${monthOpts}</select>
+    </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th>용도</th><th>메모</th><th></th></tr></thead>
-      <tbody>${recent.length===0?'<tr><td colspan="6" class="empty">출고 이력이 없습니다</td></tr>':recent.map(r=>{
+      <tbody>${filtered.length===0?'<tr><td colspan="6" class="empty">출고 이력이 없습니다</td></tr>':filtered.map(r=>{
         if(editingOutboundId===r.id){
           const hOpts=herbsData.map(h=>`<option${h===r.herb?' selected':''}>${h}</option>`).join('');
           return`<tr style="background:var(--violet-light)">
@@ -739,6 +756,8 @@ function renderOutbound(){
       }).join('')}</tbody>
     </table></div>
   </div>`;
+
+  document.getElementById('ob-month-sel').addEventListener('change',e=>{outboundMonth=e.target.value;renderOutbound();});
 
   document.getElementById('out-submit').addEventListener('click',async()=>{
     const herb=document.getElementById('out-herb').value;
@@ -1086,6 +1105,21 @@ async function renameHerb(oldName,newName){
   renderSettings();renderStock();
 }
 
+/* ── 도매처명 변경 (카스케이드) ── */
+async function renameSup(oldName,newName){
+  if(suppliersData.includes(newName)){alert('이미 존재하는 도매처명입니다.');editingSupplierName=null;renderPricelist();return;}
+  suppliersData=suppliersData.map(s=>s===oldName?newName:s);
+  inboundData=inboundData.map(r=>r.supplier===oldName?{...r,supplier:newName}:r);
+  herbsData.forEach(h=>{
+    if(pricelistData[h]&&pricelistData[h][oldName]!==undefined){
+      pricelistData[h][newName]=pricelistData[h][oldName];
+      delete pricelistData[h][oldName];
+    }
+  });
+  await Promise.all([save(KEYS.suppliers,suppliersData),save(KEYS.inbound,inboundData),save(KEYS.pricelist,pricelistData)]);
+  renderPricelist();
+}
+
 /* ── 단가표 ── */
 let pricelistSearch='';
 let pricelistConsonant='';
@@ -1151,7 +1185,11 @@ function renderPricelist(){
       <button class="btn btn-primary btn-sm" id="pl-save">저장</button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:.875rem;">
-      ${suppliersData.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--violet-light);border:1px solid rgba(124,58,237,0.25);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--violet-d);font-weight:500;">${s}<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--violet-d);opacity:.6;padding:0 0 0 2px;line-height:1;" title="${DEFAULT_SUPPLIERS.includes(s)?'기본 도매처는 삭제 불가':'삭제'}">${DEFAULT_SUPPLIERS.includes(s)?'':'×'}</button></span>`).join('')}
+      ${suppliersData.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--violet-light);border:1px solid rgba(124,58,237,0.25);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--violet-d);font-weight:500;">${
+        editingSupplierName===s
+          ?`<input class="pl-sup-rename-inp" data-old="${s}" type="text" value="${s}" style="border:1px solid var(--violet);border-radius:4px;padding:1px 4px;font-size:12px;font-family:var(--font-sans);width:${Math.max(s.length*8+16,48)}px;color:var(--violet-d);background:white;outline:none;">`
+          :`<span class="pl-sup-name" data-sup="${s}" style="cursor:pointer" title="클릭하여 수정">${s}</span>`
+      }<button class="pl-del-sup" data-sup="${s}" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--violet-d);opacity:.6;padding:0 0 0 2px;line-height:1;" title="${DEFAULT_SUPPLIERS.includes(s)?'기본 도매처는 삭제 불가':'삭제'}">${DEFAULT_SUPPLIERS.includes(s)?'':'×'}</button></span>`).join('')}
       <div style="flex:1;"></div>
       <input type="text" id="pl-new-sup" placeholder="새 도매처명" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;width:120px;">
       <button class="btn btn-secondary btn-sm" id="pl-add-sup">추가</button>
@@ -1222,6 +1260,24 @@ function renderPricelist(){
       await save(KEYS.suppliers,suppliersData);
       renderPricelist();
     });
+  });
+
+  el.querySelectorAll('.pl-sup-name').forEach(span=>{
+    span.addEventListener('click',()=>{editingSupplierName=span.dataset.sup;renderPricelist();setTimeout(()=>el.querySelector('.pl-sup-rename-inp')?.select(),0);});
+  });
+  el.querySelectorAll('.pl-sup-rename-inp').forEach(inp=>{
+    const doRename=async()=>{
+      const oldName=inp.dataset.old;
+      const newName=inp.value.trim();
+      editingSupplierName=null;
+      if(!newName||newName===oldName){renderPricelist();return;}
+      await renameSup(oldName,newName);
+    };
+    inp.addEventListener('keydown',async e=>{
+      if(e.key==='Enter'&&!e.isComposing){e.preventDefault();await doRename();}
+      if(e.key==='Escape'){editingSupplierName=null;renderPricelist();}
+    });
+    inp.addEventListener('blur',doRename);
   });
 }
 
