@@ -133,6 +133,24 @@ input[type=number]{-moz-appearance:textfield;}
 
 </div>
 
+<!-- 단가 계산 팝오버 -->
+<div id="pl-calc-pop" style="display:none;position:fixed;z-index:400;background:var(--surface);border:1px solid var(--border-2);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.14);padding:.625rem .75rem;min-width:168px;">
+  <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">단가 계산</div>
+  <div style="display:flex;flex-direction:column;gap:5px">
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:11px;color:var(--text-3);width:30px;flex-shrink:0">수량</span>
+      <input id="pl-calc-qty" type="number" min="0" step="0.1" placeholder="0.0" style="flex:1;border:1px solid var(--border-2);border-radius:6px;padding:4px 8px;font-size:13px;font-family:var(--font-sans);outline:none;min-width:0">
+      <span style="font-size:11px;color:var(--text-3);flex-shrink:0">g</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:11px;color:var(--text-3);width:30px;flex-shrink:0">금액</span>
+      <input id="pl-calc-amt" type="number" min="0" step="1" placeholder="0" style="flex:1;border:1px solid var(--border-2);border-radius:6px;padding:4px 8px;font-size:13px;font-family:var(--font-sans);outline:none;min-width:0">
+      <span style="font-size:11px;color:var(--text-3);flex-shrink:0">원</span>
+    </div>
+    <div id="pl-calc-result" style="font-size:12px;color:var(--violet-d);text-align:right;font-weight:600;min-height:16px"></div>
+  </div>
+</div>
+
 <div class="sync-modal-overlay" id="sync-modal-overlay">
   <div class="sync-modal">
     <h3>기기 연결</h3>
@@ -900,7 +918,7 @@ function renderSettings(){
       return`<tr>
         <td style="border-right:2px solid var(--border);white-space:nowrap">
           <div style="display:flex;align-items:center">
-            <span class="herb-name-click" data-herb="${h}" style="cursor:pointer;flex:1;text-align:center;font-weight:600;color:var(--text-1)">${h}</span>
+            <span class="herb-name-click" data-herb="${h}" style="cursor:pointer;flex:1;text-align:left;font-weight:600;color:var(--text-1)">${h}</span>
             <button class="btn-del herb-del" data-herb="${h}" style="opacity:.45;font-size:13px;flex-shrink:0">×</button>
           </div>
         </td>
@@ -1139,6 +1157,10 @@ function renderPricelist(){
     renderPricelist();
   });
 
+  el.querySelectorAll('.pl-inp').forEach(inp=>{
+    inp.addEventListener('click',e=>{e.stopPropagation();window._plCalcPop.show(inp);});
+  });
+
   let plAutoTimer=null;
   el.querySelectorAll('.pl-inp').forEach(inp=>{
     inp.addEventListener('input',()=>{
@@ -1177,6 +1199,40 @@ function renderPricelist(){
     });
   });
 }
+
+/* ── 단가 계산 팝오버 ── */
+(function(){
+  let _inp=null;
+  const pop=document.getElementById('pl-calc-pop');
+  const qtyEl=document.getElementById('pl-calc-qty');
+  const amtEl=document.getElementById('pl-calc-amt');
+  const resEl=document.getElementById('pl-calc-result');
+
+  function show(inp){
+    const r=inp.getBoundingClientRect();
+    pop.style.left=Math.min(r.left,window.innerWidth-180)+'px';
+    pop.style.top=(r.bottom+4)+'px';
+    pop.style.display='block';
+    _inp=inp;qtyEl.value='';amtEl.value='';resEl.textContent='';
+    setTimeout(()=>qtyEl.focus(),0);
+  }
+  function hide(){pop.style.display='none';_inp=null;}
+  function calc(){
+    const q=parseFloat(qtyEl.value),a=parseFloat(amtEl.value);
+    if(q>0&&a>0){const p=Math.round(a/q*10)/10;resEl.textContent=`1g당 ${p}원`;return p;}
+    resEl.textContent='';return null;
+  }
+  function apply(){
+    const p=calc();
+    if(p!==null&&_inp){_inp.value=p;_inp.dispatchEvent(new Event('input',{bubbles:true}));const t=_inp;hide();t.focus();}
+  }
+  qtyEl.addEventListener('input',calc);
+  amtEl.addEventListener('input',calc);
+  qtyEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();amtEl.focus();}if(e.key==='Escape')hide();});
+  amtEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apply();}if(e.key==='Escape')hide();});
+  document.addEventListener('click',e=>{if(pop.style.display!=='none'&&!pop.contains(e.target)&&e.target!==_inp)hide();});
+  window._plCalcPop={show};
+})();
 
 /* ── 탭 ── */
 document.querySelectorAll('.tab').forEach(t=>{
