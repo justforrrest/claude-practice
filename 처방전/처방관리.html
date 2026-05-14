@@ -1116,6 +1116,7 @@ function renderPatients(){
         <button class="btn btn-sm btn-secondary" id="pat-status-done">완료</button>
       </div>
     </div>
+    <div id="pat-count" style="text-align:right;font-size:11px;color:var(--text-3);margin-bottom:4px"></div>
     <div class="card" style="padding:0">
       <div class="tbl-wrap"><table>
         <thead><tr>
@@ -1165,6 +1166,8 @@ function updatePatList(){
   }).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   const fmtBirth=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');return c.length===8&&/^\d{8}$/.test(c)?`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`:b||'';};
   const ageOf=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');if(c.length!==8||!/^\d{8}$/.test(c))return'-';const by=parseInt(c.slice(0,4)),bm=parseInt(c.slice(4,6))-1,bd=parseInt(c.slice(6,8));const t=new Date();let a=t.getFullYear()-by;if(t.getMonth()<bm||(t.getMonth()===bm&&t.getDate()<bd))a--;return(a>=0&&a<150)?String(a):'-';};
+  const countEl=document.getElementById('pat-count');
+  if(countEl)countEl.textContent=`총 ${list.length}명`;
   const SEP='border-right:1px solid var(--border-2)';
   tbody.innerHTML=!list.length?`<tr><td colspan="8" class="empty">환자가 없습니다</td></tr>`:
     list.map(p=>{
