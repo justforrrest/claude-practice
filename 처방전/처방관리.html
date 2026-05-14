@@ -924,6 +924,7 @@ function renderHistory(){
       <span id="hist-month-btns" style="display:flex;gap:4px;flex-wrap:wrap"></span>
       <span id="hist-batch-wrap" style="margin-left:auto"></span>
     </div>
+    <div id="hist-count" style="text-align:right;font-size:11px;color:var(--text-3);margin-bottom:4px"></div>
     <div class="card" style="padding:0">
       <div class="tbl-wrap"><table id="hist-table">
         <thead><tr><th>날짜</th><th>환자</th><th>구분</th><th>회차</th><th>처방명</th><th>첩수/팩수</th><th>총 금액</th><th>출고</th><th>수정/삭제</th></tr></thead>
@@ -973,6 +974,8 @@ function updateHistList(){
   const list=[...prescriptionsData]
     .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch))&&(!histYear||r.date?.startsWith(histYear))&&(!histMonth||r.date?.slice(5,7)===histMonth))
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  const countEl=document.getElementById('hist-count');
+  if(countEl)countEl.textContent=`총 ${list.length}건`;
   tbody.innerHTML=!list.length?`<tr><td colspan="9" class="empty">처방 이력이 없습니다</td></tr>`:
     list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
       <td>${r.date}</td><td><b>${r.patientName}</b></td>
