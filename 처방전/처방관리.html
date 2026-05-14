@@ -1335,16 +1335,44 @@ document.getElementById('export-btn').addEventListener('click',async()=>{
   ]);
 });
 
+/* ── 내보내기 폴더 기억 ── */
+(function(){
+  const DB='rx_export_db',STORE='config',KEY='exportDir';
+  function openDb(){return new Promise(res=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=e=>e.target.result.createObjectStore(STORE);r.onsuccess=e=>res(e.target.result);r.onerror=()=>res(null);});}
+  async function getHandle(){const db=await openDb();if(!db)return null;return new Promise(res=>{const r=db.transaction(STORE).objectStore(STORE).get(KEY);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null);});}
+  async function setHandle(h){const db=await openDb();if(!db)return;return new Promise(res=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(h,KEY);tx.oncomplete=res;tx.onerror=res;});}
+  window._rxExportToFolder=async function(json,fileName,btnEl,forcePickDir){
+    if(!window.showDirectoryPicker){
+      const blob=new Blob([json],{type:'application/json'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileName;a.click();
+      return;
+    }
+    try{
+      let dir=forcePickDir?null:await getHandle();
+      if(dir){const perm=await dir.queryPermission({mode:'readwrite'});if(perm!=='granted'){const r=await dir.requestPermission({mode:'readwrite'});if(r!=='granted')dir=null;}}
+      if(!dir){dir=await window.showDirectoryPicker({mode:'readwrite',startIn:'documents'});await setHandle(dir);}
+      const fh=await dir.getFileHandle(fileName,{create:true});
+      const ws=await fh.createWritable();await ws.write(json);await ws.close();
+      const orig=btnEl.innerHTML;btnEl.innerHTML='저장 완료 ✓';btnEl.disabled=true;
+      setTimeout(()=>{btnEl.innerHTML=orig;btnEl.disabled=false;},1500);
+    }catch(e){
+      if(e.name==='AbortError')return;
+      try{
+        const dir2=await window.showDirectoryPicker({mode:'readwrite',startIn:'documents'});
+        await setHandle(dir2);
+        const fh=await dir2.getFileHandle(fileName,{create:true});
+        const ws=await fh.createWritable();await ws.write(json);await ws.close();
+      }catch(e2){if(e2.name!=='AbortError'){const blob=new Blob([json],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileName;a.click();}}
+    }
+  };
+})();
+
 /* ── JSON 내보내기 ── */
-document.getElementById('json-export-btn').addEventListener('click',()=>{
+document.getElementById('json-export-btn').addEventListener('click',function(e){
   const data={patients:patientsData,prescriptions:prescriptionsData};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=`처방관리_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const json=JSON.stringify(data,null,2);
+  const fileName=`처방관리_${new Date().toISOString().slice(0,10)}.json`;
+  window._rxExportToFolder(json,fileName,this,e.shiftKey);
 });
 
 /* ── JSON 가져오기 ── */
