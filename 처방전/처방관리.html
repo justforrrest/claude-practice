@@ -1043,13 +1043,13 @@ function showDetail(id){
       ${rx.note?`<span>메모: ${rx.note}</span>`:''}
     </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>#</th><th>약재명</th><th>수치</th><th class="num">첩당g</th><th class="num">총량g</th><th class="num">1첩 금액</th><th class="num">총 금액</th></tr></thead>
+      <thead><tr><th>#</th><th>약재명</th><th style="border-right:1px solid var(--border-2)">수치</th><th class="num">첩당g</th><th class="num" style="border-right:1px solid var(--border-2)">총량g</th><th class="num">1첩 금액</th><th class="num">총 금액</th></tr></thead>
       <tbody>${rx.herbs.map((h,i)=>`<tr>
         <td style="color:var(--text-3);font-size:12px">${i+1}</td>
         <td>${h.herb}</td>
-        <td>${h.suchi||''}</td>
+        <td style="border-right:1px solid var(--border-2)">${h.suchi||''}</td>
         <td class="num">${h.qtyPerPack}</td>
-        <td class="num">${fmt(h.qtyPerPack*packs)}</td>
+        <td class="num" style="border-right:1px solid var(--border-2)">${fmt(h.qtyPerPack*packs)}</td>
         <td class="num">${fmtW(getPrice(h.herb)*h.qtyPerPack)}</td>
         <td class="num">${fmtW(getPrice(h.herb)*h.qtyPerPack*packs)}</td>
       </tr>`).join('')}</tbody>
