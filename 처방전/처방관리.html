@@ -1033,7 +1033,10 @@ function showDetail(id){
         <div style="font-size:16px;font-weight:700">${rx.patientName}</div>
         <div style="font-size:12px;color:var(--text-3);margin-top:2px">${rx.date}${rx.diagnosis?' · '+rx.diagnosis:''}</div>
       </div>
-      <button class="btn btn-secondary btn-sm" id="close-detail">닫기</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" id="detail-edit-btn">수정</button>
+        <button class="btn btn-secondary btn-sm" id="close-detail">닫기</button>
+      </div>
     </div>
     <div style="font-size:13px;color:var(--text-2);margin-bottom:.875rem;display:flex;flex-wrap:wrap;gap:12px">
       ${(rx.dosageFreq||rx.dosageTiming)?`<span>복용법: <b>하루 ${rx.dosageFreq||3}회${rx.dosageTiming?' · '+rx.dosageTiming:''}</b></span>`:''}
@@ -1078,6 +1081,10 @@ function showDetail(id){
     </div>`}`;
   document.getElementById('detail-modal-overlay').classList.add('open');
   document.getElementById('close-detail').addEventListener('click',()=>document.getElementById('detail-modal-overlay').classList.remove('open'));
+  document.getElementById('detail-edit-btn').addEventListener('click',()=>{
+    document.getElementById('detail-modal-overlay').classList.remove('open');
+    editingRxId=id;rxHerbs=[];switchTab('register');
+  });
 }
 
 async function reflectOutbound(id){
