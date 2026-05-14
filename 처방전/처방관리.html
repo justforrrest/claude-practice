@@ -126,10 +126,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
       <span class="sync-code-box" id="sync-code-display">-</span>
       <button class="btn btn-secondary btn-sm" id="change-sync-btn">코드 변경</button>
       <span id="sync-status"></span>
-      <button class="btn btn-secondary btn-sm" id="import-btn">📥 가져오기</button>
-      <input type="file" id="import-file" accept=".json" style="display:none">
-      <button class="btn btn-secondary btn-sm" id="export-btn">☁ 저장</button>
-      <button class="btn btn-ghost btn-sm" id="json-export-btn">📤 JSON 내보내기</button>
+      <button class="btn btn-secondary btn-sm" id="json-export-btn" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>내보내기</button>
+      <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 16 12 21 17 16"/><line x1="12" y1="21" x2="12" y2="9"/></svg>가져오기<input type="file" id="import-file" accept=".json" style="display:none"></label>
+      <button class="btn btn-primary btn-sm" id="export-btn">저장</button>
       <span id="status-bar">불러오는 중...</span>
     </div>
   </div>
@@ -1349,7 +1348,6 @@ document.getElementById('json-export-btn').addEventListener('click',()=>{
 });
 
 /* ── JSON 가져오기 ── */
-document.getElementById('import-btn').addEventListener('click',()=>document.getElementById('import-file').click());
 document.getElementById('import-file').addEventListener('change',async e=>{
   const file=e.target.files[0];
   if(!file)return;
