@@ -487,9 +487,9 @@ function renderRegister(){
     <!-- 우측: 처방 등록 + 처방 비용 + 저장 -->
     <div style="width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:1rem">
 
-      <!-- 처방 등록 -->
+      <!-- 환자 정보 -->
       <div class="card" style="margin-bottom:0">
-        <div class="section-title" style="margin-bottom:.875rem">${isEdit?'처방 수정':'새 처방 등록'}</div>
+        <div class="section-title" style="margin-bottom:.875rem">환자 정보</div>
         <div class="form-row" style="margin-bottom:.75rem;align-items:flex-end;flex-wrap:nowrap;gap:8px">
           <div class="form-group" style="flex:2;min-width:0">
             <label>이름</label>
@@ -506,7 +506,7 @@ function renderRegister(){
             </div>
           </div>
         </div>
-        <div class="form-row" style="margin-bottom:.75rem;align-items:flex-end;flex-wrap:nowrap;gap:8px">
+        <div class="form-row" style="align-items:flex-end;flex-wrap:nowrap;gap:8px">
           <div class="form-group" style="flex:2;min-width:0">
             <label>생년월일</label>
             <input type="text" id="rx-patient-birth" value="${rxPatBirth}" placeholder="1990-12-31" maxlength="10" style="width:100%">
@@ -519,7 +519,11 @@ function renderRegister(){
             </div>
           </div>
         </div>
-        <div style="height:1px;background:var(--border);margin-bottom:.75rem"></div>
+      </div>
+
+      <!-- 처방 등록 -->
+      <div class="card" style="margin-bottom:0">
+        <div class="section-title" style="margin-bottom:.875rem">${isEdit?'처방 수정':'처방 등록'}</div>
         <div class="form-row" style="margin-bottom:.75rem;flex-wrap:nowrap;align-items:flex-end;gap:6px">
           <div class="form-group" style="flex:1;min-width:0"><label>처방일</label><input type="text" id="rx-date" value="${rx?.date||todayStr()}" placeholder="yyyy-mm-dd" maxlength="10" style="width:110px"></div>
           <div class="form-group" style="flex:0 0 auto;min-width:0"><label>구분</label><select id="rx-category" style="width:58px;-webkit-appearance:none;-moz-appearance:none;appearance:none"><option value="">-</option><option value="치료"${(rx?.category||'')==='치료'?' selected':''}>치료</option><option value="녹용"${(rx?.category||'')==='녹용'?' selected':''}>녹용</option><option value="건보"${(rx?.category||'')==='건보'?' selected':''}>건보</option></select></div>
