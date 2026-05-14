@@ -394,6 +394,7 @@ function attachRowListeners(tr){
     updateCells();
     autoCategory();
   });
+  qtyInput.addEventListener('focus',e=>e.target.select());
   qtyInput.addEventListener('input',()=>{
     const row=rxHerbs.find(r=>r.id===rid);
     if(row)row.qty=qtyInput.value;
@@ -814,6 +815,9 @@ function renderRegister(){
       document.getElementById(formNav[i+1])?.focus();
     });
   });
+
+  ['rx-packs','rx-total-packs','rx-freq','rx-days-display','rx-session-cur','rx-session-total']
+    .forEach(id=>{document.getElementById(id)?.addEventListener('focus',e=>e.target.select());});
 
   document.getElementById('rx-save').addEventListener('click',saveRx);
   if(isEdit) document.getElementById('rx-cancel').addEventListener('click',()=>{editingRxId=null;rxHerbs=[];renderRegister();});
