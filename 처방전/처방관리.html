@@ -457,7 +457,7 @@ function renderRegister(){
   const el=document.getElementById('view-register');
   const isEdit=!!editingRxId;
   const rx=isEdit?prescriptionsData.find(r=>r.id===editingRxId):null;
-  const rxPat=patientsData.find(p=>p.name===rx?.patientName||p.id===rx?.patientId)||null;
+  const rxPat=patientsData.find(p=>p.id===rx?.patientId)||(patientsData.filter(p=>p.name===rx?.patientName).length===1?patientsData.find(p=>p.name===rx?.patientName):null)||null;
   if(!isEdit){rxGender='';}else{rxGender=rxPat?.gender||'';}
   const rxPatBirth=rxPat?.birth||'';
 
@@ -837,7 +837,7 @@ async function saveRx(){
   const patientName=document.getElementById('rx-patient').value.trim();
   if(!patientName){alert('환자명을 입력해주세요.');return;}
   const patientBirth=normBirth(document.getElementById('rx-patient-birth')?.value||'');
-  let patient=patientsData.find(p=>p.name===patientName);
+  let patient=patientsData.find(p=>p.name===patientName&&!(patientBirth&&p.birth&&patientBirth!==p.birth));
   if(!patient){
     patient={id:uid(),name:patientName,memo:'',birth:patientBirth,gender:rxGender};
     patientsData.push(patient);
@@ -1137,7 +1137,7 @@ function updatePatList(){
   const el=document.getElementById('view-patients');
   const tbody=document.getElementById('pat-tbody');
   if(!tbody)return;
-  const getPatStatus=p=>{const lr=prescriptionsData.filter(r=>(r.patientId===p.id||r.patientName===p.name)&&r.sessionCur&&r.sessionTotal).sort((a,b)=>b.date.localeCompare(a.date))[0];if(!lr)return '';return lr.sessionCur===lr.sessionTotal?'done':lr.sessionCur<lr.sessionTotal?'prog':'';};
+  const getPatStatus=p=>{const lr=prescriptionsData.filter(r=>(r.patientId===p.id||(r.patientName===p.name&&patientsData.filter(x=>x.name===p.name).length===1))&&r.sessionCur&&r.sessionTotal).sort((a,b)=>b.date.localeCompare(a.date))[0];if(!lr)return '';return lr.sessionCur===lr.sessionTotal?'done':lr.sessionCur<lr.sessionTotal?'prog':'';};
   const list=[...patientsData].filter(p=>{
     if(patSearch&&!p.name.includes(patSearch))return false;
     if(patIndex&&getInitCho(p.name)!==patIndex)return false;
@@ -1149,8 +1149,8 @@ function updatePatList(){
   const SEP='border-right:1px solid var(--border-2)';
   tbody.innerHTML=!list.length?`<tr><td colspan="8" class="empty">환자가 없습니다</td></tr>`:
     list.map(p=>{
-      const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
-      const latestRx=prescriptionsData.filter(r=>(r.patientId===p.id||r.patientName===p.name)&&r.sessionCur&&r.sessionTotal).sort((a,b)=>b.date.localeCompare(a.date))[0];
+      const cnt=prescriptionsData.filter(r=>r.patientId===p.id||(r.patientName===p.name&&patientsData.filter(x=>x.name===p.name).length===1)).length;
+      const latestRx=prescriptionsData.filter(r=>(r.patientId===p.id||(r.patientName===p.name&&patientsData.filter(x=>x.name===p.name).length===1))&&r.sessionCur&&r.sessionTotal).sort((a,b)=>b.date.localeCompare(a.date))[0];
       const medBadge=latestRx?(latestRx.sessionCur===latestRx.sessionTotal?'<span class="med-badge med-done">완료</span>':latestRx.sessionCur<latestRx.sessionTotal?'<span class="med-badge med-prog">진행</span>':''):'';
 
       return`<tr data-pid="${p.id}">
@@ -1186,7 +1186,7 @@ function updatePatList(){
         if(!newName){inp.value=origName;return;}
         if(newName!==origName){
           p.name=newName;inp.dataset.orig=newName;
-          prescriptionsData=prescriptionsData.map(r=>(r.patientId===pid||r.patientName===origName)?{...r,patientName:newName}:r);
+          prescriptionsData=prescriptionsData.map(r=>(r.patientId===pid||(r.patientName===origName&&patientsData.filter(x=>x.name===origName).length===1))?{...r,patientName:newName}:r);
           await Promise.all([save(RX_KEYS.patients,patientsData),save(RX_KEYS.prescriptions,prescriptionsData)]);
         }
       } else {p[field]=inp.value.trim();await save(RX_KEYS.patients,patientsData);}
@@ -1201,7 +1201,7 @@ function updatePatList(){
   tbody.querySelectorAll('.rx-hist-btn').forEach(b=>b.addEventListener('click',()=>showRxHistory(b.dataset.pid)));
   tbody.querySelectorAll('.pat-del').forEach(b=>b.addEventListener('click',async()=>{
     const p=patientsData.find(x=>x.id===b.dataset.pid);
-    const cnt=prescriptionsData.filter(r=>r.patientId===b.dataset.pid||r.patientName===p?.name).length;
+    const cnt=prescriptionsData.filter(r=>r.patientId===b.dataset.pid||(r.patientName===p?.name&&patientsData.filter(x=>x.name===p?.name).length===1)).length;
     if(!confirm(`${p?.name||''} 환자를 삭제하시겠습니까?${cnt?` (처방 이력 ${cnt}건)`:''}`))return;
     patientsData=patientsData.filter(x=>x.id!==b.dataset.pid);
     await save(RX_KEYS.patients,patientsData);
@@ -1214,7 +1214,7 @@ function showRxHistory(pid){
   const p=patientsData.find(x=>x.id===pid);
   if(!p)return;
   const list=prescriptionsData
-    .filter(r=>r.patientId===pid||r.patientName===p.name)
+    .filter(r=>r.patientId===pid||(r.patientName===p.name&&patientsData.filter(x=>x.name===p.name).length===1))
     .sort((a,b)=>b.date.localeCompare(a.date));
   const rows=list.length
     ?list.map(r=>{
@@ -1259,7 +1259,7 @@ function showPatientDetail(pid){
     return(age>=0&&age<150)?String(age):'-';
   };
   let gender=p.gender||'';
-  const cnt=prescriptionsData.filter(r=>r.patientId===p.id||r.patientName===p.name).length;
+  const cnt=prescriptionsData.filter(r=>r.patientId===p.id||(r.patientName===p.name&&patientsData.filter(x=>x.name===p.name).length===1)).length;
   document.getElementById('patient-modal-content').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
       <div style="font-size:15px;font-weight:700">환자 정보</div>
