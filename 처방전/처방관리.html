@@ -80,6 +80,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 .rx-table input[type=text],.rx-table input[type=number]{padding:5px 8px;font-size:13px;height:auto;}
 .rx-table input[type=number]::-webkit-inner-spin-button,.rx-table input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 .rx-table input[type=number]{-moz-appearance:textfield;}
+.rx-table .rx-qty{border:1px solid var(--border-2);border-radius:6px;background:var(--surface);}
+.rx-table .rx-qty:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);outline:none;}
 /* 모달 */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;}
 .modal-overlay.open{display:flex;}
@@ -435,7 +437,7 @@ function addHerbRow(herb='',suchi='',qty='',focus=false){
     <td style="width:28px;color:var(--text-3);font-size:12px;text-align:center">${rxHerbs.length}</td>
     <td style="min-width:70px"><div class="herb-ac-wrap"><input class="rx-name" type="text" value="${herb}" placeholder="약재명" autocomplete="off"><ul class="herb-dropdown"></ul></div></td>
     <td style="width:60px"><input class="rx-suchi" type="text" value="${suchi}" placeholder="" style="border:none;background:transparent;outline:none;padding:4px 0;width:100%;font-size:13px;"></td>
-    <td style="width:65px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right;border:none;background:transparent;outline:none;padding:4px 0;width:100%;"></td>
+    <td style="width:65px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right;width:100%;"></td>
     <td class="num rx-total-g" style="width:65px">${qn?fmt(qn*packs)+'g':'-'}</td>
     <td class="num rx-price" style="width:72px">${herb&&qn?fmtW(getPrice(herb)*qn):'-'}</td>
     <td class="num rx-total-price" style="width:72px">${herb&&qn?fmtW(getPrice(herb)*qn*packs):'-'}</td>
