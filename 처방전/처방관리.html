@@ -1384,16 +1384,28 @@ document.getElementById('import-file').addEventListener('change',async e=>{
   try{data=JSON.parse(await file.text());}catch{alert('JSON 파일을 읽을 수 없습니다.');return;}
   if(!data.patients||!data.prescriptions){alert('올바른 형식의 파일이 아닙니다.');return;}
 
-  const existPids=new Set(patientsData.map(p=>p.id));
-  const existRids=new Set(prescriptionsData.map(r=>r.id));
-  let newPat=0,newRx=0;
+  const replace=confirm(
+    '가져오기 모드를 선택하세요.\n\n'+
+    '[확인] 전체 교체 — 기존 데이터를 모두 지우고 새 데이터로 덮어씁니다.\n'+
+    '[취소] 병합 — 기존 데이터에 새 항목만 추가합니다.'
+  );
 
-  data.patients.forEach(p=>{if(!existPids.has(p.id)){patientsData.push(p);newPat++;}});
-  data.prescriptions.forEach(r=>{if(!existRids.has(r.id)){prescriptionsData.push(r);newRx++;}});
+  let newPat=0,newRx=0;
+  if(replace){
+    patientsData=data.patients;
+    prescriptionsData=data.prescriptions;
+    newPat=data.patients.length;
+    newRx=data.prescriptions.length;
+  }else{
+    const existPids=new Set(patientsData.map(p=>p.id));
+    const existRids=new Set(prescriptionsData.map(r=>r.id));
+    data.patients.forEach(p=>{if(!existPids.has(p.id)){patientsData.push(p);newPat++;}});
+    data.prescriptions.forEach(r=>{if(!existRids.has(r.id)){prescriptionsData.push(r);newRx++;}});
+  }
 
   setStatus('저장 중...');
   await Promise.all([save(RX_KEYS.patients,patientsData),save(RX_KEYS.prescriptions,prescriptionsData)]);
-  alert(`가져오기 완료\n환자 ${newPat}명, 처방 ${newRx}건 추가됨`);
+  alert(`가져오기 완료 (${replace?'전체 교체':'병합'})\n환자 ${newPat}명, 처방 ${newRx}건`);
   switchTab('history');
 });
 
