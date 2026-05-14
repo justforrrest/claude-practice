@@ -128,7 +128,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
       <span id="sync-status"></span>
       <button class="btn btn-secondary btn-sm" id="import-btn">📥 가져오기</button>
       <input type="file" id="import-file" accept=".json" style="display:none">
-      <button class="btn btn-secondary btn-sm" id="export-btn">💾 저장</button>
+      <button class="btn btn-secondary btn-sm" id="export-btn">☁ 저장</button>
+      <button class="btn btn-ghost btn-sm" id="json-export-btn">📤 JSON 내보내기</button>
       <span id="status-bar">불러오는 중...</span>
     </div>
   </div>
@@ -1333,6 +1334,18 @@ document.getElementById('export-btn').addEventListener('click',async()=>{
     save(RX_KEYS.prescriptions,prescriptionsData),
     save(RX_KEYS.config,rxConfig),
   ]);
+});
+
+/* ── JSON 내보내기 ── */
+document.getElementById('json-export-btn').addEventListener('click',()=>{
+  const data={patients:patientsData,prescriptions:prescriptionsData};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`처방관리_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
 });
 
 /* ── JSON 가져오기 ── */
