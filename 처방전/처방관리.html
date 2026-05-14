@@ -651,11 +651,7 @@ function renderRegister(){
           <tr>
             <td style="padding:5px 0;font-weight:600;color:var(--text-2);width:68px">배송비</td>
             <td style="padding:5px 8px 5px 3px;white-space:nowrap">
-              <div style="display:flex;align-items:center;gap:5px">
-                <input id="rx-fee-delivery" type="text" inputmode="numeric" value="${fmtW(rx?.fees?.delivery??rxConfig.delivery_price??5000)}"
-                  style="width:64px;font-size:13px;border:none;background:transparent;text-align:right;outline:none;color:var(--text-2);font-family:var(--font-sans);padding:0;cursor:text">
-                <span style="font-size:12px;color:var(--text-3)">원</span>
-              </div>
+              ${(()=>{const _v=rx?.fees?.delivery??rxConfig.delivery_price??5000;const _dv=[0,5000,6000].includes(_v)?_v:5000;return`<div style="display:flex;align-items:center;gap:4px"><input type="hidden" id="rx-fee-delivery" value="${_dv}"><button type="button" id="rx-fee-delivery-down" style="width:18px;height:18px;border:1px solid var(--border-2);border-radius:4px;background:var(--surface-2);cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0;color:var(--text-2);flex-shrink:0">▼</button><span id="rx-fee-delivery-display" style="font-size:13px;color:var(--text-2);min-width:46px;text-align:right">${fmtW(_dv)}</span><button type="button" id="rx-fee-delivery-up" style="width:18px;height:18px;border:1px solid var(--border-2);border-radius:4px;background:var(--surface-2);cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0;color:var(--text-2);flex-shrink:0">▲</button><span style="font-size:12px;color:var(--text-3)">원</span></div>`;})()}
             </td>
             <td style="padding:5px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-2)" id="rx-cost-del-amount">-</td>
           </tr>
@@ -790,13 +786,24 @@ function renderRegister(){
     packMlEl.addEventListener('blur',e=>{const v=parseNum(e.target.value);e.target.value=v?fmtW(v):'';calcSummary();});
   }
 
-  ['rx-fee-dispensing','rx-fee-decoction','rx-fee-packaging','rx-fee-delivery'].forEach(id=>{
+  ['rx-fee-dispensing','rx-fee-decoction','rx-fee-packaging'].forEach(id=>{
     const el=document.getElementById(id);
     if(!el)return;
     el.addEventListener('input',calcSummary);
     el.addEventListener('focus',e=>{e.target.value=String(parseNum(e.target.value)||'');e.target.select();});
     el.addEventListener('blur',e=>{const v=parseNum(e.target.value);e.target.value=v?fmtW(v):'';calcSummary();});
   });
+  const DELIVERY_VALS=[0,5000,6000];
+  function cycleDelivery(dir){
+    const cur=Number(document.getElementById('rx-fee-delivery')?.value)||0;
+    let idx=DELIVERY_VALS.indexOf(cur);if(idx<0)idx=1;
+    idx=(idx+dir+DELIVERY_VALS.length)%DELIVERY_VALS.length;
+    document.getElementById('rx-fee-delivery').value=DELIVERY_VALS[idx];
+    document.getElementById('rx-fee-delivery-display').textContent=fmtW(DELIVERY_VALS[idx]);
+    calcSummary();
+  }
+  document.getElementById('rx-fee-delivery-up')?.addEventListener('click',()=>cycleDelivery(1));
+  document.getElementById('rx-fee-delivery-down')?.addEventListener('click',()=>cycleDelivery(-1));
 
   const noteEl=document.getElementById('rx-note');
   const autoResize=()=>{noteEl.style.height='auto';noteEl.style.height=noteEl.scrollHeight+'px';};
@@ -867,6 +874,7 @@ async function saveRx(){
     packMl:parseNum(document.getElementById('rx-water-pack-ml')?.value)||rxConfig.decoction_ml||110,
     note:document.getElementById('rx-note').value.trim(),
     outboundAt:editingRxId?(prescriptionsData.find(r=>r.id===editingRxId)?.outboundAt||null):null,
+    enableOutbound:editingRxId?(prescriptionsData.find(r=>r.id===editingRxId)?.enableOutbound??false):true,
   };
   if(editingRxId) prescriptionsData=prescriptionsData.map(r=>r.id===editingRxId?entry:r);
   else prescriptionsData.push(entry);
@@ -970,7 +978,7 @@ function updateHistList(){
       <td>${r.diagnosis||'-'}</td>
       <td class="num">${r.packs}첩 / ${r.totalPacks||'-'}팩</td>
       <td class="num">${fmtW(r.fees?r.totalPrice:r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
-      <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-primary btn-sm ob-btn" data-rxid="${r.id}">출고</button>`}</td>
+      <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:r.enableOutbound?`<button class="btn btn-primary btn-sm ob-btn" data-rxid="${r.id}">출고</button>`:''}</td>
       <td style="white-space:nowrap;text-align:center">
         <button class="btn btn-secondary btn-sm edit-btn" data-rxid="${r.id}" title="수정" style="padding:4px 7px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="btn btn-sm btn-ghost del-btn" data-rxid="${r.id}" title="삭제" style="padding:4px 7px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
@@ -1067,7 +1075,7 @@ async function deleteRx(id){
 }
 
 /* ── 환자 관리 탭 ── */
-let patSearch='',patIndex='';
+let patSearch='',patIndex='',patStatusFilter='';
 const PAT_CHO=['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
 
 function renderPatients(){
@@ -1078,6 +1086,10 @@ function renderPatients(){
       <input type="text" id="pat-search" placeholder="환자명 검색" style="width:140px;flex-shrink:0">
       <button class="btn btn-sm btn-primary" data-cho="">전체</button>
       ${PAT_CHO.map(c=>`<button class="btn btn-sm btn-secondary" data-cho="${c}">${c}</button>`).join('')}
+      <div style="margin-left:auto;display:flex;gap:4px">
+        <button class="btn btn-sm btn-secondary" id="pat-status-prog">진행</button>
+        <button class="btn btn-sm btn-secondary" id="pat-status-done">완료</button>
+      </div>
     </div>
     <div class="card" style="padding:0">
       <div class="tbl-wrap"><table>
@@ -1101,6 +1113,16 @@ function renderPatients(){
       el.querySelectorAll('[data-cho]').forEach(x=>{x.classList.toggle('btn-primary',x.dataset.cho===patIndex);x.classList.toggle('btn-secondary',x.dataset.cho!==patIndex);});
       updatePatList();
     }));
+    ['prog','done'].forEach(s=>{
+      document.getElementById(`pat-status-${s}`)?.addEventListener('click',()=>{
+        patStatusFilter=patStatusFilter===s?'':s;
+        document.getElementById('pat-status-prog').classList.toggle('btn-primary',patStatusFilter==='prog');
+        document.getElementById('pat-status-prog').classList.toggle('btn-secondary',patStatusFilter!=='prog');
+        document.getElementById('pat-status-done').classList.toggle('btn-primary',patStatusFilter==='done');
+        document.getElementById('pat-status-done').classList.toggle('btn-secondary',patStatusFilter!=='done');
+        updatePatList();
+      });
+    });
   }
   updatePatList();
 }
@@ -1109,9 +1131,11 @@ function updatePatList(){
   const el=document.getElementById('view-patients');
   const tbody=document.getElementById('pat-tbody');
   if(!tbody)return;
+  const getPatStatus=p=>{const lr=prescriptionsData.filter(r=>(r.patientId===p.id||r.patientName===p.name)&&r.sessionCur&&r.sessionTotal).sort((a,b)=>b.date.localeCompare(a.date))[0];if(!lr)return '';return lr.sessionCur===lr.sessionTotal?'done':lr.sessionCur<lr.sessionTotal?'prog':'';};
   const list=[...patientsData].filter(p=>{
     if(patSearch&&!p.name.includes(patSearch))return false;
     if(patIndex&&getInitCho(p.name)!==patIndex)return false;
+    if(patStatusFilter&&getPatStatus(p)!==patStatusFilter)return false;
     return true;
   }).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   const fmtBirth=b=>{const c=(b||'').replace(/[.\-\/\s]/g,'');return c.length===8&&/^\d{8}$/.test(c)?`${c.slice(0,4)}-${c.slice(4,6)}-${c.slice(6,8)}`:b||'';};
