@@ -813,6 +813,16 @@ function renderRegister(){
   noteEl.addEventListener('input',autoResize);
   autoResize();
 
+  document.getElementById('rx-category')?.addEventListener('change',e=>{
+    if(e.target.value==='건보'){
+      const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+      set('rx-packs',10);set('rx-total-packs',20);set('rx-freq',2);
+      document.getElementById('rx-fee-delivery').value=0;
+      document.getElementById('rx-fee-delivery-display').textContent=fmtW(0);
+      calcSummary();
+    }
+  });
+
   // 등록 폼 Enter 키 이동
   const formNav=['rx-patient','rx-patient-birth','rx-date','rx-category','rx-session-total','rx-session-cur','rx-diagnosis','rx-note','rx-packs','rx-total-packs','rx-freq','rx-days-display','rx-timing'];
   formNav.forEach((id,i)=>{
