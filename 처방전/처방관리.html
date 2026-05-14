@@ -915,7 +915,7 @@ function renderHistory(){
     </div>
     <div class="card" style="padding:0">
       <div class="tbl-wrap"><table id="hist-table">
-        <thead><tr><th>날짜</th><th>환자</th><th>구분</th><th>회차</th><th>처방명</th><th>첩수</th><th>총 금액</th><th>출고</th><th>수정/삭제</th></tr></thead>
+        <thead><tr><th>날짜</th><th>환자</th><th>구분</th><th>회차</th><th>처방명</th><th>첩수/팩수</th><th>총 금액</th><th>출고</th><th>수정/삭제</th></tr></thead>
         <tbody id="hist-tbody"></tbody>
       </table></div>
     </div>`;
@@ -968,7 +968,7 @@ function updateHistList(){
       <td>${r.category?`<span class="cat-badge cat-${r.category}">${r.category}</span>`:'-'}</td>
       <td style="white-space:nowrap;color:var(--text-2);font-size:12px">${(r.sessionCur&&r.sessionTotal)?`${r.sessionCur}차 / ${r.sessionTotal}차`:(r.sessionCur?`${r.sessionCur}차`:(r.sessionTotal?`/ ${r.sessionTotal}차`:'-'))}</td>
       <td>${r.diagnosis||'-'}</td>
-      <td class="num">${r.packs}첩</td>
+      <td class="num">${r.packs}첩 / ${r.totalPacks||'-'}팩</td>
       <td class="num">${fmtW(r.fees?r.totalPrice:r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
       <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-secondary btn-sm ob-btn" data-rxid="${r.id}">출고 반영</button>`}</td>
       <td style="white-space:nowrap;text-align:center">
