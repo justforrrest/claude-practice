@@ -970,7 +970,7 @@ function updateHistList(){
       <td>${r.diagnosis||'-'}</td>
       <td class="num">${r.packs}첩 / ${r.totalPacks||'-'}팩</td>
       <td class="num">${fmtW(r.fees?r.totalPrice:r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
-      <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-secondary btn-sm ob-btn" data-rxid="${r.id}">출고</button>`}</td>
+      <td>${r.outboundAt?`<span class="badge badge-done">반영됨</span>`:`<button class="btn btn-primary btn-sm ob-btn" data-rxid="${r.id}">출고</button>`}</td>
       <td style="white-space:nowrap;text-align:center">
         <button class="btn btn-secondary btn-sm edit-btn" data-rxid="${r.id}">수정</button>
         <button class="btn btn-sm btn-ghost del-btn" data-rxid="${r.id}">삭제</button>
