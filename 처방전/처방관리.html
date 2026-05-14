@@ -98,6 +98,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 .med-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
 .med-done{background:#EDE9FE;color:#5b21b6;}
 .med-prog{background:#FEE2E2;color:#EF4444;}
+/* 토스트 */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(12px);background:#1a1a2e;color:#fff;padding:9px 20px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:9999;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 /* 처방이력 표 열 구분선 + 가운데 정렬 */
 #hist-table th,#hist-table td{border-right:1px solid var(--border-2);text-align:center;}
 #hist-table th:last-child,#hist-table td:last-child{border-right:none;}
@@ -122,6 +125,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 </style>
 </head>
 <body>
+<div id="toast"></div>
 <div class="container">
 
   <div class="app-header">
@@ -203,6 +207,8 @@ async function save(key,val){
 
 /* ── 유틸 ── */
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+let _toastTimer=null;
+function showToast(msg,ms=1800){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),ms);}
 function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
 function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
 function fmtW(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:0});}
@@ -893,8 +899,8 @@ async function saveRx(){
   else prescriptionsData.push(entry);
   await save(RX_KEYS.prescriptions,prescriptionsData);
   editingRxId=null;rxHerbs=[];
-  alert('처방이 저장되었습니다.');
   switchTab('history');
+  showToast('처방이 저장되었습니다.');
 }
 
 /* ── 처방 이력 탭 ── */
