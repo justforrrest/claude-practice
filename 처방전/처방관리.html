@@ -302,7 +302,7 @@ function navigateToNextHerbRow(rid,sel){
   if(idx>=0&&idx<allTrs.length-1){
     allTrs[idx+1].querySelector(sel)?.focus();
   } else {
-    addHerbRow('','',false);
+    addHerbRow('','','',undefined,false);
     setTimeout(()=>{
       const rows=document.querySelectorAll('#rx-herb-tbody tr[data-rid]');
       if(rows.length)rows[rows.length-1].querySelector(sel)?.focus();
@@ -314,7 +314,7 @@ function navigateToNextHerbRow(rid,sel){
 function calcSummary(){
   const packs     =Number(document.getElementById('rx-packs')?.value||20);
   const totalPacks=Number(document.getElementById('rx-total-packs')?.value||45);
-  const perPack   =rxHerbs.reduce((s,r)=>s+getPrice(r.herb)*Number(r.qty||0),0);
+  const perPack   =rxHerbs.reduce((s,r)=>s+(r.unitPrice??getPrice(r.herb))*Number(r.qty||0),0);
   const herbPrice =perPack*packs;
   const totalG    =rxHerbs.reduce((s,r)=>s+Number(r.qty||0),0)*packs;
   const dPrice=parseNum(document.getElementById('rx-fee-dispensing')?.value);
@@ -364,8 +364,8 @@ function attachRowListeners(tr){
     const packs=Number(document.getElementById('rx-packs')?.value||20);
     const qty=Number(row.qty||0);
     if(totalGCell)totalGCell.textContent=qty?fmt(qty*packs)+'g':'-';
-    if(priceCell)priceCell.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty):'-';
-    if(totalPriceCell)totalPriceCell.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty*packs):'-';
+    if(priceCell)priceCell.textContent=(row.herb&&qty)?fmtW((row.unitPrice??getPrice(row.herb))*qty):'-';
+    if(totalPriceCell)totalPriceCell.textContent=(row.herb&&qty)?fmtW((row.unitPrice??getPrice(row.herb))*qty*packs):'-';
     calcSummary();
   };
   suchiInput?.addEventListener('input',()=>{const row=rxHerbs.find(r=>r.id===rid);if(row)row.suchi=suchiInput.value;});
@@ -426,9 +426,9 @@ function attachRowListeners(tr){
   });
 }
 
-function addHerbRow(herb='',suchi='',qty='',focus=false){
+function addHerbRow(herb='',suchi='',qty='',unitPrice=undefined,focus=false){
   const id=uid();
-  rxHerbs.push({id,herb,suchi,qty});
+  rxHerbs.push({id,herb,suchi,qty,unitPrice});
   const tbody=document.getElementById('rx-herb-tbody');
   if(!tbody)return;
   const packs=Number(document.getElementById('rx-packs')?.value||20);
@@ -441,8 +441,8 @@ function addHerbRow(herb='',suchi='',qty='',focus=false){
     <td style="width:60px"><input class="rx-suchi" type="text" value="${suchi}" placeholder="" style="border:none;background:transparent;outline:none;padding:4px 0;width:100%;font-size:13px;"></td>
     <td style="width:65px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right;width:100%;"></td>
     <td class="num rx-total-g" style="width:65px">${qn?fmt(qn*packs)+'g':'-'}</td>
-    <td class="num rx-price" style="width:72px">${herb&&qn?fmtW(getPrice(herb)*qn):'-'}</td>
-    <td class="num rx-total-price" style="width:72px">${herb&&qn?fmtW(getPrice(herb)*qn*packs):'-'}</td>
+    <td class="num rx-price" style="width:72px">${herb&&qn?fmtW((unitPrice??getPrice(herb))*qn):'-'}</td>
+    <td class="num rx-total-price" style="width:72px">${herb&&qn?fmtW((unitPrice??getPrice(herb))*qn*packs):'-'}</td>
     <td style="width:32px"><button class="btn-del rx-del">×</button></td>`;
   tbody.appendChild(tr);
   attachRowListeners(tr);
@@ -751,11 +751,11 @@ function renderRegister(){
   });
 
   // 약재 행 초기화 — addHerbRow가 rxHerbs에 push하므로, 먼저 기존 목록 저장 후 clear
-  if(rx && rxHerbs.length===0) rxHerbs=rx.herbs.map(h=>({id:uid(),herb:h.herb,qty:h.qtyPerPack}));
+  if(rx && rxHerbs.length===0) rxHerbs=rx.herbs.map(h=>({id:uid(),herb:h.herb,suchi:h.suchi||'',qty:h.qtyPerPack,unitPrice:h.unitPrice}));
   const initHerbs=[...rxHerbs];
   rxHerbs=[];
-  if(initHerbs.length===0) addHerbRow('','',false);
-  else initHerbs.forEach(r=>addHerbRow(r.herb,r.suchi||'',r.qty,false));
+  if(initHerbs.length===0) addHerbRow('','','',undefined,false);
+  else initHerbs.forEach(r=>addHerbRow(r.herb,r.suchi||'',r.qty,r.unitPrice,false));
   calcSummary();
 
   // 첩수·팩수 변경 시 총량·합계 업데이트
@@ -768,7 +768,7 @@ function renderRegister(){
       const cell=tr.querySelector('.rx-total-g');
       if(cell)cell.textContent=qty?fmt(qty*packs)+'g':'-';
       const tpc=tr.querySelector('.rx-total-price');
-      if(tpc)tpc.textContent=(row.herb&&qty)?fmtW(getPrice(row.herb)*qty*packs):'-';
+      if(tpc)tpc.textContent=(row.herb&&qty)?fmtW((row.unitPrice??getPrice(row.herb))*qty*packs):'-';
     });
     calcSummary();
   });
@@ -858,7 +858,7 @@ async function saveRx(){
     days:Number(document.getElementById('rx-days-display')?.value)||0,
     packs,
     totalPacks,
-    herbs:herbs.map(r=>({herb:r.herb,suchi:r.suchi||'',qtyPerPack:Number(r.qty)})),
+    herbs:herbs.map(r=>({herb:r.herb,suchi:r.suchi||'',qtyPerPack:Number(r.qty),unitPrice:r.unitPrice??getPrice(r.herb)})),
     fees,totalPrice,
     packMl:parseNum(document.getElementById('rx-water-pack-ml')?.value)||rxConfig.decoction_ml||110,
     note:document.getElementById('rx-note').value.trim(),
