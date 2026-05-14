@@ -373,7 +373,7 @@ function attachRowListeners(tr){
     if(!row)return;
     const packs=Number(document.getElementById('rx-packs')?.value||20);
     const qty=Number(row.qty||0);
-    if(totalGCell)totalGCell.textContent=qty?fmt(qty*packs)+'g':'-';
+    if(totalGCell)totalGCell.textContent=qty?fmt(qty*packs):'-';
     if(priceCell)priceCell.textContent=(row.herb&&qty)?fmtW((row.unitPrice??getPrice(row.herb))*qty):'-';
     if(totalPriceCell)totalPriceCell.textContent=(row.herb&&qty)?fmtW((row.unitPrice??getPrice(row.herb))*qty*packs):'-';
     calcSummary();
@@ -451,7 +451,7 @@ function addHerbRow(herb='',suchi='',qty='',unitPrice=undefined,focus=false){
     <td style="min-width:70px"><div class="herb-ac-wrap"><input class="rx-name" type="text" value="${herb}" placeholder="약재명" autocomplete="off"><ul class="herb-dropdown"></ul></div></td>
     <td style="width:60px;border-right:1px solid var(--border-2)"><input class="rx-suchi" type="text" value="${suchi}" placeholder="" style="border:none;background:transparent;outline:none;padding:4px 0;width:100%;font-size:13px;"></td>
     <td style="width:65px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right;width:100%;"></td>
-    <td class="num rx-total-g" style="width:65px;border-right:1px solid var(--border-2)">${qn?fmt(qn*packs)+'g':'-'}</td>
+    <td class="num rx-total-g" style="width:65px;border-right:1px solid var(--border-2)">${qn?fmt(qn*packs):'-'}</td>
     <td class="num rx-price" style="width:72px">${herb&&qn?fmtW((unitPrice??getPrice(herb))*qn):'-'}</td>
     <td class="num rx-total-price" style="width:72px">${herb&&qn?fmtW((unitPrice??getPrice(herb))*qn*packs):'-'}</td>
     <td style="width:32px"><button class="btn-del rx-del">×</button></td>`;
@@ -773,7 +773,7 @@ function renderRegister(){
       if(!row)return;
       const qty=Number(row.qty||0);
       const cell=tr.querySelector('.rx-total-g');
-      if(cell)cell.textContent=qty?fmt(qty*packs)+'g':'-';
+      if(cell)cell.textContent=qty?fmt(qty*packs):'-';
       const tpc=tr.querySelector('.rx-total-price');
       if(tpc)tpc.textContent=(row.herb&&qty)?fmtW((row.unitPrice??getPrice(row.herb))*qty*packs):'-';
     });
