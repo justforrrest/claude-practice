@@ -840,7 +840,7 @@ function renderRegister(){
     .forEach(id=>{document.getElementById(id)?.addEventListener('focus',e=>e.target.select());});
 
   document.getElementById('rx-save').addEventListener('click',saveRx);
-  if(isEdit) document.getElementById('rx-cancel').addEventListener('click',()=>{editingRxId=null;rxHerbs=[];renderRegister();});
+  if(isEdit) document.getElementById('rx-cancel').addEventListener('click',()=>{editingRxId=null;rxHerbs=[];switchTab('history');});
 }
 
 async function saveRx(){
