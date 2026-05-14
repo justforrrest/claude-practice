@@ -1048,8 +1048,8 @@ function showDetail(id){
         <td style="color:var(--text-3);font-size:12px">${i+1}</td>
         <td>${h.herb}</td>
         <td>${h.suchi||''}</td>
-        <td class="num">${h.qtyPerPack}g</td>
-        <td class="num">${fmt(h.qtyPerPack*packs)}g</td>
+        <td class="num">${h.qtyPerPack}</td>
+        <td class="num">${fmt(h.qtyPerPack*packs)}</td>
         <td class="num">${fmtW(getPrice(h.herb)*h.qtyPerPack)}</td>
         <td class="num">${fmtW(getPrice(h.herb)*h.qtyPerPack*packs)}</td>
       </tr>`).join('')}</tbody>
