@@ -533,6 +533,10 @@ function renderRegister(){
         <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group grow"><label>처방명</label><input type="text" id="rx-diagnosis" value="${rx?.diagnosis||''}" placeholder="감비탕, 소청룡탕 등"></div>
         </div>
+        <div class="form-row" style="margin-bottom:.75rem">
+          <div class="form-group grow"><label>메모</label><textarea id="rx-note" placeholder="메모 (선택)" rows="2"
+            style="border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;resize:none;overflow:hidden;">${rx?.note||''}</textarea></div>
+        </div>
         <div class="form-row" style="margin-bottom:.75rem;flex-wrap:nowrap;align-items:flex-end">
           <div class="form-group" style="flex:1;min-width:0"><label>첩수</label><input type="number" id="rx-packs" value="${rx?.packs||20}" min="1"></div>
           <div class="form-group" style="flex:1;min-width:0"><label>팩수</label><input type="number" id="rx-total-packs" value="${rx?.totalPacks||45}" min="1"></div>
@@ -556,10 +560,6 @@ function renderRegister(){
             <label>복용시기</label>
             <input type="text" id="rx-timing" value="${rx?.dosageTiming||'식사 무관'}" placeholder="식사 무관">
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group grow"><label>메모</label><textarea id="rx-note" placeholder="메모 (선택)" rows="2"
-            style="border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;resize:none;overflow:hidden;">${rx?.note||''}</textarea></div>
         </div>
       </div>
 
@@ -811,9 +811,9 @@ function renderRegister(){
   autoResize();
 
   // 등록 폼 Enter 키 이동
-  const formNav=['rx-patient','rx-patient-birth','rx-date','rx-category','rx-session-total','rx-session-cur','rx-diagnosis','rx-packs','rx-total-packs','rx-freq','rx-days-display','rx-timing','rx-note'];
+  const formNav=['rx-patient','rx-patient-birth','rx-date','rx-category','rx-session-total','rx-session-cur','rx-diagnosis','rx-note','rx-packs','rx-total-packs','rx-freq','rx-days-display','rx-timing'];
   formNav.forEach((id,i)=>{
-    if(i===formNav.length-1)return; // 마지막(메모)은 Enter=줄바꿈 유지
+    if(id==='rx-note')return; // 메모는 Enter=줄바꿈 유지
     const el=document.getElementById(id);
     if(!el)return;
     el.addEventListener('keydown',e=>{
