@@ -1392,10 +1392,10 @@ document.getElementById('import-file').addEventListener('change',async e=>{
 
   let newPat=0,newRx=0;
   if(replace){
-    patientsData=data.patients;
     prescriptionsData=data.prescriptions;
-    newPat=data.patients.length;
     newRx=data.prescriptions.length;
+    const existPids=new Set(patientsData.map(p=>p.id));
+    data.patients.forEach(p=>{if(!existPids.has(p.id)){patientsData.push(p);newPat++;}});
   }else{
     const existPids=new Set(patientsData.map(p=>p.id));
     const existRids=new Set(prescriptionsData.map(r=>r.id));
