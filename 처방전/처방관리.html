@@ -974,7 +974,7 @@ function updateHistList(){
     list.map(r=>`<tr class="hist-row" data-rxid="${r.id}" style="cursor:pointer">
       <td>${r.date}</td><td><b>${r.patientName}</b></td>
       <td>${r.category?`<span class="cat-badge cat-${r.category}">${r.category}</span>`:'-'}</td>
-      <td style="white-space:nowrap;color:var(--text-2);font-size:12px">${(r.sessionCur&&r.sessionTotal)?`${r.sessionCur}차 / ${r.sessionTotal}차`:(r.sessionCur?`${r.sessionCur}차`:(r.sessionTotal?`/ ${r.sessionTotal}차`:'-'))}</td>
+      <td style="white-space:nowrap;color:var(--text-2);font-size:12px">${(r.sessionCur&&r.sessionTotal)?`${r.sessionCur}/${r.sessionTotal}차`:(r.sessionCur?`${r.sessionCur}차`:(r.sessionTotal?`/${r.sessionTotal}차`:'-'))}</td>
       <td>${r.diagnosis||'-'}</td>
       <td class="num">${r.packs}첩 / ${r.totalPacks||'-'}팩</td>
       <td class="num">${fmtW(r.fees?r.totalPrice:r.herbs?r.herbs.reduce((s,h)=>s+getPrice(h.herb)*h.qtyPerPack,0)*r.packs:r.totalPrice)}원</td>
