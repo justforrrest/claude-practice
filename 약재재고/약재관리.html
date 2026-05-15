@@ -510,7 +510,7 @@ function renderStock(){
       if(s<=0){badge='없음';bs='badge-zero';}
       else if(m>0&&s<m){badge='부족';bs='badge-low';}
       else{badge='정상';bs='badge-ok';}
-      return`<tr><td style="border-right:2px solid var(--border);font-weight:600;color:var(--text-1);white-space:nowrap">${h}</td><td class="num"${s<0?' style="color:var(--coral)"':''}>${fmt(s)}</td><td class="num">${m>0?fmt(m):'-'}</td><td class="num">${p>0?fmt(p):'-'}</td><td><span class="badge ${bs}">${badge}</span></td></tr>`;
+      return`<tr><td style="border-right:2px solid var(--border);font-weight:600;color:var(--text-1);white-space:nowrap">${h}</td><td class="num"${s<0?' style="color:var(--coral)"':''}>${fmt(s)}</td><td class="num"><input class="st-min-inp" data-herb="${h}" type="number" min="0" step="1" value="${m>0?m:''}" placeholder="-" style="text-align:right;width:60px;border:none;background:transparent;font-size:13px;font-family:inherit;color:inherit;outline:none;padding:0;-moz-appearance:textfield;"></td><td class="num">${p>0?fmt(p):'-'}</td><td><span class="badge ${bs}">${badge}</span></td></tr>`;
     }).join('');
     const half=Math.ceil(herbs.length/2);
     return`<div style="display:flex;gap:2.5rem;align-items:flex-start;">
@@ -533,6 +533,36 @@ function renderStock(){
   });
   el.querySelectorAll('[data-st-cho]').forEach(btn=>{
     btn.addEventListener('click',()=>{stockConsonant=btn.dataset.stCho;renderStock();});
+  });
+
+  let stMinSaveTimer=null;
+  const allStMinInps=[...el.querySelectorAll('.st-min-inp')];
+  allStMinInps.forEach((inp,idx)=>{
+    inp.addEventListener('focus',()=>inp.select());
+    inp.addEventListener('input',()=>{
+      const h=inp.dataset.herb,v=parseFloat(inp.value)||0;
+      if(!settingsData.minStock)settingsData.minStock={};
+      settingsData.minStock[h]=v;
+      // badge 즉시 갱신
+      const badgeEl=inp.closest('tr')?.querySelector('.badge');
+      if(badgeEl){
+        const s=stock[h]||0;
+        if(s<=0){badgeEl.className='badge badge-zero';badgeEl.textContent='없음';}
+        else if(v>0&&s<v){badgeEl.className='badge badge-low';badgeEl.textContent='부족';}
+        else{badgeEl.className='badge badge-ok';badgeEl.textContent='정상';}
+      }
+      clearTimeout(stMinSaveTimer);
+      stMinSaveTimer=setTimeout(()=>save(KEYS.settings,settingsData),800);
+    });
+    inp.addEventListener('keydown',async e=>{
+      if(e.key==='Enter'&&!e.isComposing){
+        e.preventDefault();
+        clearTimeout(stMinSaveTimer);
+        await save(KEYS.settings,settingsData);
+        const next=allStMinInps[idx+1];
+        if(next){next.focus();next.select();}
+      }
+    });
   });
 }
 
