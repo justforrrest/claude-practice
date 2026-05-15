@@ -388,12 +388,12 @@ function attachRowListeners(tr){
 
   setupHerbAC(nameInput,dropdown,(herb)=>{
     const row=rxHerbs.find(r=>r.id===rid);
-    if(row){row.herb=herb;nameInput.value=herb;}
+    if(row){row.herb=herb;row.unitPrice=undefined;nameInput.value=herb;}
     updateCells();
     autoCategory();
   },()=>{
     const row=rxHerbs.find(r=>r.id===rid);
-    if(row)row.herb=nameInput.value;
+    if(row){row.herb=nameInput.value;row.unitPrice=undefined;}
     updateCells();
     autoCategory();
     navigateToNextHerbRow(rid,'.rx-name');
@@ -406,7 +406,7 @@ function attachRowListeners(tr){
       return;
     }
     const row=rxHerbs.find(r=>r.id===rid);
-    if(row)row.herb=nameInput.value;
+    if(row){row.herb=nameInput.value;row.unitPrice=undefined;}
     updateCells();
     autoCategory();
   });
