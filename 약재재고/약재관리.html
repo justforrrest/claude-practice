@@ -480,12 +480,12 @@ let stockSearch='',showLowOnly=false,showZeroOnly=false,stockConsonant='';
 function renderStock(){
   const el=document.getElementById('view-stock');
   const stock=calcStock();
-  const lowCount=herbsData.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]<m;}).length;
   const zeroCount=herbsData.filter(h=>stock[h]<=0).length;
+  const lowCount=herbsData.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]>0&&stock[h]<m;}).length;
   let herbs=herbsData;
   if(stockConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===stockConsonant);
   if(stockSearch)herbs=herbs.filter(h=>h.includes(stockSearch));
-  if(showLowOnly)herbs=herbs.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]<m;});
+  if(showLowOnly)herbs=herbs.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]>0&&stock[h]<m;});
   if(showZeroOnly)herbs=herbs.filter(h=>stock[h]<=0);
   el.innerHTML=`
   <div class="stats">
@@ -502,7 +502,7 @@ function renderStock(){
       <input class="search-input" id="stock-search" placeholder="약재명 검색..." value="${stockSearch}" style="width:150px;min-width:0;flex:none;">
     </div>
   ${(()=>{
-    const stHead=`<thead><tr><th style="border-right:2px solid var(--border)">약재명</th><th class="num">현재고 (g)</th><th class="num">최소재고 (g)</th><th class="num">단가 (원/g)</th><th>상태</th></tr></thead>`;
+    const stHead=`<thead><tr><th style="border-right:2px solid var(--border)">약재명</th><th class="num">현 재고 (g)</th><th class="num">최소재고 (g)</th><th class="num">단가 (원/g)</th><th>상태</th></tr></thead>`;
     if(herbs.length===0)return`<div class="tbl-wrap" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table>${stHead}<tbody><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-3)">검색 결과 없음</td></tr></tbody></table></div>`;
     const stRows=list=>list.map(h=>{
       const s=stock[h],m=getMinStock(h),p=getPrice(h);
