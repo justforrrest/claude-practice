@@ -425,6 +425,7 @@ function attachRowListeners(tr){
       rxHerbs=rxHerbs.filter(r=>r.id!==rid);
       tr.remove();
       calcSummary();
+      if(rxHerbs.length===0)addHerbRow('','','',undefined,true);
       return;
     }
     const row=rxHerbs.find(r=>r.id===rid);
