@@ -1009,8 +1009,8 @@ function renderHistory(){
         <input type="text" id="hist-q-dx" placeholder="처방명" style="width:100px;flex-shrink:0">
         <span id="hist-batch-wrap" style="margin-left:auto"></span>
       </div>
-      <div id="hist-year-wrap" style="display:none;gap:4px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px;margin-bottom:4px;scrollbar-width:thin"></div>
-      <div id="hist-month-btns" style="display:none;gap:4px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px;scrollbar-width:thin"></div>
+      <div id="hist-year-wrap" style="display:none;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 6px;margin-bottom:4px;scroll-snap-type:x mandatory;scrollbar-width:none"></div>
+      <div id="hist-month-btns" style="display:none;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 6px;scroll-snap-type:x mandatory;scrollbar-width:none"></div>
     </div>
     <div id="hist-count" style="text-align:right;font-size:11px;color:var(--text-3);margin-bottom:4px"></div>
     <div class="card" style="padding:0">
@@ -1023,15 +1023,22 @@ function renderHistory(){
     const dxEl=document.getElementById('hist-q-dx');
     patEl.addEventListener('input',()=>{histPatSearch=patEl.value;updateHistList();});
     dxEl.addEventListener('input',()=>{histDxSearch=dxEl.value;updateHistList();});
-    document.getElementById('hist-year-wrap').addEventListener('click',e=>{
-      const b=e.target.closest('[data-hy]');if(!b)return;
-      histYear=histYear===b.dataset.hy?'':b.dataset.hy;
-      renderHistFilters();updateHistList();
+    let _hyT,_hmT;
+    document.getElementById('hist-year-wrap').addEventListener('scroll',function(){
+      clearTimeout(_hyT);
+      _hyT=setTimeout(()=>{
+        const items=[...this.querySelectorAll('[data-hy]')];if(!items.length)return;
+        const sel=items.reduce((a,b)=>Math.abs(b.offsetLeft-this.scrollLeft)<Math.abs(a.offsetLeft-this.scrollLeft)?b:a);
+        if(histYear!==sel.dataset.hy){histYear=sel.dataset.hy;items.forEach(i=>setPickActive(i,i===sel));updateHistList();}
+      },130);
     });
-    document.getElementById('hist-month-btns').addEventListener('click',e=>{
-      const b=e.target.closest('[data-hm]');if(!b)return;
-      histMonth=histMonth===b.dataset.hm?'':b.dataset.hm;
-      renderHistFilters();updateHistList();
+    document.getElementById('hist-month-btns').addEventListener('scroll',function(){
+      clearTimeout(_hmT);
+      _hmT=setTimeout(()=>{
+        const items=[...this.querySelectorAll('[data-hm]')];if(!items.length)return;
+        const sel=items.reduce((a,b)=>Math.abs(b.offsetLeft-this.scrollLeft)<Math.abs(a.offsetLeft-this.scrollLeft)?b:a);
+        if(histMonth!==sel.dataset.hm){histMonth=sel.dataset.hm;items.forEach(i=>setPickActive(i,i===sel));updateHistList();}
+      },130);
     });
   }
   const bw=document.getElementById('hist-batch-wrap');
@@ -1043,16 +1050,27 @@ function renderHistory(){
   updateHistList();
 }
 
+function setPickActive(el,active){
+  el.style.background=active?'var(--violet-d)':'var(--surface-2)';
+  el.style.color=active?'#fff':'var(--text-2)';
+  el.style.fontWeight=active?'600':'400';
+  el.style.borderColor=active?'var(--violet-d)':'var(--border-2)';
+}
 function renderHistFilters(){
   const yw=document.getElementById('hist-year-wrap');
   const mw=document.getElementById('hist-month-btns');
   if(!yw||!mw)return;
   const years=[...new Set(prescriptionsData.map(r=>r.date?.slice(0,4)).filter(Boolean))].sort().reverse();
-  yw.innerHTML=years.map(y=>`<button class="btn btn-sm ${histYear===y?'btn-primary':'btn-filter'}" data-hy="${y}">${y}</button>`).join('');
+  if(!years.length){yw.style.display='none';mw.style.display='none';return;}
+  const chip=(dataAttr,val,label,active)=>`<span ${dataAttr}="${val}" style="scroll-snap-align:start;flex-shrink:0;display:inline-flex;align-items:center;padding:5px 13px;border-radius:20px;font-size:13px;border:1px solid;cursor:default;background:${active?'var(--violet-d)':'var(--surface-2)'};color:${active?'#fff':'var(--text-2)'};font-weight:${active?600:400};border-color:${active?'var(--violet-d)':'var(--border-2)'}">${label}</span>`;
+  yw.innerHTML=[{v:'',l:'전체'},...years.map(y=>({v:y,l:y}))].map(({v,l})=>chip('data-hy',v,l,histYear===v)).join('');
   const MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
-  mw.innerHTML=MONTHS.map(m=>`<button class="btn btn-sm ${histMonth===m?'btn-primary':'btn-filter'}" data-hm="${m}">${parseInt(m)}월</button>`).join('');
-  yw.style.display=years.length?'flex':'none';
-  mw.style.display=years.length?'flex':'none';
+  mw.innerHTML=[{v:'',l:'전체'},...MONTHS.map(m=>({v:m,l:parseInt(m)+'월'}))].map(({v,l})=>chip('data-hm',v,l,histMonth===v)).join('');
+  yw.style.display='flex';mw.style.display='flex';
+  setTimeout(()=>{
+    const ys=yw.querySelector(`[data-hy="${histYear}"]`);if(ys)yw.scrollLeft=ys.offsetLeft;
+    const ms=mw.querySelector(`[data-hm="${histMonth}"]`);if(ms)mw.scrollLeft=ms.offsetLeft;
+  },0);
 }
 
 function updateHistList(){
