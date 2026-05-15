@@ -895,6 +895,8 @@ function renderRegister(){
 }
 
 async function saveRx(){
+  const wasEditingId=editingRxId;
+  const wasOutboundAt=wasEditingId?(prescriptionsData.find(r=>r.id===wasEditingId)?.outboundAt||null):null;
   const patientName=document.getElementById('rx-patient').value.trim();
   if(!patientName){alert('환자명을 입력해주세요.');return;}
   const patientBirth=normBirth(document.getElementById('rx-patient-birth')?.value||'');
@@ -944,6 +946,23 @@ async function saveRx(){
   else prescriptionsData.push(entry);
   await save(RX_KEYS.prescriptions,prescriptionsData);
   editingRxId=null;rxHerbs=[];
+
+  if(wasEditingId&&wasOutboundAt){
+    if(confirm('출고가 이미 반영된 처방입니다.\n변경된 내용으로 출고를 재반영하시겠습니까?')){
+      let outbound=await load(HERB_KEYS.outbound)||[];
+      outbound=outbound.filter(r=>r.rxId!==wasEditingId);
+      entry.herbs.forEach(h=>{
+        outbound.push({id:uid(),rxId:wasEditingId,herb:h.herb,
+          qty:h.qtyPerPack*entry.packs,date:entry.date,purpose:'처방',
+          note:`${entry.patientName}${entry.diagnosis?' - '+entry.diagnosis:''}`});
+      });
+      await save(HERB_KEYS.outbound,outbound);
+      prescriptionsData=prescriptionsData.map(r=>r.id===wasEditingId?{...r,outboundAt:Date.now()}:r);
+      await save(RX_KEYS.prescriptions,prescriptionsData);
+      showToast('출고가 재반영되었습니다.');
+    }
+  }
+
   switchTab('history');
   showToast('처방이 저장되었습니다.');
 }
@@ -1150,7 +1169,7 @@ async function reflectOutbound(id){
   if(!confirm(`${rx.patientName}의 처방을 약재관리 출고에 반영하시겠습니까?\n약재 ${rx.herbs.length}종 (${rx.packs}첩 기준 총량)`))return;
   let outbound=await load(HERB_KEYS.outbound)||[];
   rx.herbs.forEach(h=>{
-    outbound.push({id:uid(),herb:h.herb,qty:h.qtyPerPack*rx.packs,date:rx.date,purpose:'처방',note:`${rx.patientName}${rx.diagnosis?' - '+rx.diagnosis:''}`});
+    outbound.push({id:uid(),rxId:id,herb:h.herb,qty:h.qtyPerPack*rx.packs,date:rx.date,purpose:'처방',note:`${rx.patientName}${rx.diagnosis?' - '+rx.diagnosis:''}`});
   });
   await save(HERB_KEYS.outbound,outbound);
   prescriptionsData=prescriptionsData.map(r=>r.id===id?{...r,outboundAt:Date.now()}:r);
