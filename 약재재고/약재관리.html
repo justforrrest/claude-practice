@@ -828,6 +828,51 @@ function renderOutbound(){
 
 /* ── 설정 ── */
 /* ── 재고 조정 ── */
+let adjFilter={ym:'',memo:'',herb:''};
+
+function renderAdjYmBtns(){
+  const wrap=document.getElementById('adj-ym-btns');
+  if(!wrap)return;
+  const yms=[...new Set(adjustData.map(r=>r.date?r.date.slice(0,7):null).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
+  wrap.innerHTML=`<button class="btn btn-sm ${!adjFilter.ym?'btn-filter':'btn-ghost'}" data-ym="">전체</button>`+
+    yms.map(ym=>`<button class="btn btn-sm ${adjFilter.ym===ym?'btn-filter':'btn-ghost'}" data-ym="${ym}">${ym}</button>`).join('');
+  wrap.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
+    adjFilter.ym=btn.dataset.ym;renderAdjYmBtns();renderAdjustTable();
+  }));
+}
+
+function renderAdjustTable(){
+  const tbody=document.getElementById('adj-tbody');
+  if(!tbody)return;
+  const ym=adjFilter.ym;
+  const memo=adjFilter.memo.trim().toLowerCase();
+  const herb=adjFilter.herb.trim().toLowerCase();
+  let list=[...adjustData].reverse();
+  if(ym) list=list.filter(r=>r.date&&r.date.startsWith(ym));
+  if(memo) list=list.filter(r=>(r.note||'').toLowerCase().includes(memo));
+  if(herb) list=list.filter(r=>(r.herb||'').toLowerCase().includes(herb));
+  tbody.innerHTML=list.length?list.map(r=>{
+    const sign=Number(r.qty)>=0;
+    const display=(sign?'+':'')+Number(r.qty)+'g';
+    return`<tr>
+      <td>${r.date}</td><td>${r.herb}</td>
+      <td class="num" style="color:${sign?'var(--green)':'var(--coral)'};font-weight:600">${display}</td>
+      <td><input type="text" class="adj-note-inp" data-id="${r.id}" value="${(r.note||'').replace(/"/g,'&quot;')}" style="border:none;background:transparent;font-size:13px;font-family:inherit;color:inherit;width:100%;outline:none;padding:0;border-radius:0;" placeholder="초기재고, 폐기, 조정 등"></td>
+      <td><button class="btn-del" data-type="adj" data-id="${r.id}">×</button></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="5" class="empty">해당 데이터가 없습니다</td></tr>`;
+  tbody.querySelectorAll('.btn-del[data-type="adj"]').forEach(btn=>btn.addEventListener('click',async()=>{
+    if(!confirm('삭제하시겠습니까?'))return;
+    adjustData=adjustData.filter(r=>r.id!==btn.dataset.id);
+    await save(KEYS.adjust,adjustData);
+    renderAdjYmBtns();renderAdjustTable();renderStock();
+  }));
+  tbody.querySelectorAll('.adj-note-inp').forEach(inp=>inp.addEventListener('blur',async()=>{
+    const rec=adjustData.find(r=>r.id===inp.dataset.id);
+    if(rec&&rec.note!==(inp.value.trim())){rec.note=inp.value.trim();await save(KEYS.adjust,adjustData);}
+  }));
+}
+
 function renderAdjust(){
   const el=document.getElementById('view-adjust');
   el.innerHTML=`
@@ -844,22 +889,18 @@ function renderAdjust(){
       </div>
       <div class="form-group" style="min-width:0"><label>조정량 (g)</label><input type="number" id="adj-qty" style="width:90px" placeholder="+100 / -50"></div>
       <div class="form-group" style="min-width:0"><label>날짜</label><input type="date" id="adj-date" value="${todayStr()}" style="width:128px"></div>
-      <div class="form-group" style="flex:1;min-width:0"><label>메모</label><input type="text" id="adj-note" style="width:100%"></div>
+      <div class="form-group" style="flex:1;min-width:0"><label>메모</label><input type="text" id="adj-note" placeholder="초기재고, 폐기, 조정 등" style="width:100%"></div>
       <div class="form-group" style="align-self:flex-end"><button class="btn btn-primary" id="adj-submit" style="white-space:nowrap;margin-top:auto">등록</button></div>
     </div>
     <p style="font-size:12px;color:var(--muted);margin:.25rem 0 .75rem">양수(+) 입력 시 재고 증가, 음수(-) 입력 시 재고 감소</p>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.75rem">
+      <div id="adj-ym-btns" style="display:flex;gap:4px;flex-wrap:wrap;flex:1"></div>
+      <input type="text" id="adj-herb-search" placeholder="약재명 검색" value="${adjFilter.herb}" style="width:120px;height:30px;padding:4px 10px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;outline:none;">
+      <input type="text" id="adj-memo-search" placeholder="메모 검색" value="${adjFilter.memo}" style="width:120px;height:30px;padding:4px 10px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;outline:none;">
+    </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">조정량</th><th>메모</th><th></th></tr></thead>
-      <tbody>${[...adjustData].reverse().slice(0,50).map(r=>{
-        const sign=Number(r.qty)>=0;
-        const display=(sign?'+':'')+Number(r.qty)+'g';
-        return`<tr>
-          <td>${r.date}</td><td>${r.herb}</td>
-          <td class="num" style="color:${sign?'var(--green)':'var(--coral)'};font-weight:600">${display}</td>
-          <td><input type="text" class="adj-note-inp" data-id="${r.id}" value="${(r.note||'').replace(/"/g,'&quot;')}" style="border:none;background:transparent;font-size:13px;font-family:inherit;color:inherit;width:100%;outline:none;padding:0;border-radius:0;" placeholder="메모"></td>
-          <td><button class="btn-del" data-type="adj" data-id="${r.id}">×</button></td>
-        </tr>`;
-      }).join('')}</tbody>
+      <tbody id="adj-tbody"></tbody>
     </table></div>
   </div>`;
 
@@ -875,23 +916,19 @@ function renderAdjust(){
     document.getElementById('adj-herb').value='';
     document.getElementById('adj-qty').value='';
     document.getElementById('adj-note').value='';
-    renderAdjust();renderStock();
+    renderAdjYmBtns();renderAdjustTable();renderStock();
   });
 
-  el.querySelectorAll('.btn-del[data-type="adj"]').forEach(btn=>{
-    btn.addEventListener('click',async()=>{
-      if(!confirm('삭제하시겠습니까?'))return;
-      adjustData=adjustData.filter(r=>r.id!==btn.dataset.id);
-      await save(KEYS.adjust,adjustData);
-      renderAdjust();renderStock();
-    });
+  document.getElementById('adj-herb-search').addEventListener('input',e=>{
+    adjFilter.herb=e.target.value;renderAdjustTable();
   });
-  el.querySelectorAll('.adj-note-inp').forEach(inp=>{
-    inp.addEventListener('blur',async()=>{
-      const rec=adjustData.find(r=>r.id===inp.dataset.id);
-      if(rec&&rec.note!==(inp.value.trim())){rec.note=inp.value.trim();await save(KEYS.adjust,adjustData);}
-    });
+
+  document.getElementById('adj-memo-search').addEventListener('input',e=>{
+    adjFilter.memo=e.target.value;renderAdjustTable();
   });
+
+  renderAdjYmBtns();
+  renderAdjustTable();
 
   (function(){
     const inp=document.getElementById('adj-herb');
