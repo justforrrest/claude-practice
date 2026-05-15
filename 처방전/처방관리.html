@@ -1074,7 +1074,7 @@ function showDetail(id){
       if(rx.fees){
         const f=rx.fees,tp=rx.totalPacks||45;
         const rows=[
-          {label:'약재비',desc:`${packs}첩`,amount:herbTotal},
+          {label:'약재비',desc:`${fmtW(Math.round(herbTotal/packs))}원 × ${packs}첩`,amount:herbTotal},
           ...(f.dispensing>0?[{label:'조제비',desc:`${fmtW(f.dispensing)}원 × ${tp}팩`,amount:f.dispensing*tp}]:[]),
           ...(f.decoction>0?[{label:'탕전비',desc:'',amount:f.decoction}]:[]),
           ...(f.packaging>0?[{label:'포장비',desc:'',amount:f.packaging}]:[]),
