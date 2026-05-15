@@ -856,7 +856,7 @@ function renderAdjust(){
         return`<tr>
           <td>${r.date}</td><td>${r.herb}</td>
           <td class="num" style="color:${sign?'var(--green)':'var(--coral)'};font-weight:600">${display}</td>
-          <td><input type="text" class="adj-note-inp" data-id="${r.id}" value="${(r.note||'').replace(/"/g,'&quot;')}" style="border:none;background:transparent;font-size:13px;font-family:inherit;color:inherit;width:100%;outline:none;padding:0;" placeholder="메모"></td>
+          <td><input type="text" class="adj-note-inp" data-id="${r.id}" value="${(r.note||'').replace(/"/g,'&quot;')}" style="border:none;background:transparent;font-size:13px;font-family:inherit;color:inherit;width:100%;outline:none;padding:0;border-radius:0;" placeholder="메모"></td>
           <td><button class="btn-del" data-type="adj" data-id="${r.id}">×</button></td>
         </tr>`;
       }).join('')}</tbody>
