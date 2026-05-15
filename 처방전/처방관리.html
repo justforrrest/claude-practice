@@ -1003,14 +1003,14 @@ function renderHistory(){
   const el=document.getElementById('view-history');
   if(!document.getElementById('hist-q-pat')){
     el.innerHTML=`
-    <div class="toolbar" style="flex-wrap:wrap;margin-bottom:.875rem">
-      <input type="text" id="hist-q-pat" placeholder="환자명" style="width:100px;flex-shrink:0">
-      <input type="text" id="hist-q-dx" placeholder="처방명" style="width:100px;flex-shrink:0">
-      <span id="hist-yr-sep" style="display:none;width:2px;height:20px;background:var(--text-3);border-radius:1px;flex-shrink:0;align-self:center"></span>
-      <span id="hist-year-wrap" style="display:flex;gap:4px;flex-wrap:wrap"></span>
-      <span id="hist-yr-sep2" style="display:none;width:2px;height:20px;background:var(--text-3);border-radius:1px;flex-shrink:0;align-self:center"></span>
-      <span id="hist-month-btns" style="display:flex;gap:4px;flex-wrap:wrap"></span>
-      <span id="hist-batch-wrap" style="margin-left:auto"></span>
+    <div style="margin-bottom:.875rem">
+      <div class="toolbar" style="flex-wrap:wrap;margin-bottom:6px">
+        <input type="text" id="hist-q-pat" placeholder="환자명" style="width:100px;flex-shrink:0">
+        <input type="text" id="hist-q-dx" placeholder="처방명" style="width:100px;flex-shrink:0">
+        <span id="hist-batch-wrap" style="margin-left:auto"></span>
+      </div>
+      <div id="hist-year-wrap" style="display:none;gap:4px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px;margin-bottom:4px;scrollbar-width:thin"></div>
+      <div id="hist-month-btns" style="display:none;gap:4px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px;scrollbar-width:thin"></div>
     </div>
     <div id="hist-count" style="text-align:right;font-size:11px;color:var(--text-3);margin-bottom:4px"></div>
     <div class="card" style="padding:0">
@@ -1051,9 +1051,8 @@ function renderHistFilters(){
   yw.innerHTML=years.map(y=>`<button class="btn btn-sm ${histYear===y?'btn-primary':'btn-filter'}" data-hy="${y}">${y}</button>`).join('');
   const MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
   mw.innerHTML=MONTHS.map(m=>`<button class="btn btn-sm ${histMonth===m?'btn-primary':'btn-filter'}" data-hm="${m}">${parseInt(m)}월</button>`).join('');
-  const show=years.length?'block':'none';
-  const s1=document.getElementById('hist-yr-sep');const s2=document.getElementById('hist-yr-sep2');
-  if(s1)s1.style.display=show;if(s2)s2.style.display=show;
+  yw.style.display=years.length?'flex':'none';
+  mw.style.display=years.length?'flex':'none';
 }
 
 function updateHistList(){
