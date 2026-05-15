@@ -1141,10 +1141,10 @@ function showDetail(id){
         const f=rx.fees,tp=rx.totalPacks||45;
         const rows=[
           {label:'약재비',desc:`${fmtW(Math.round(herbTotal/packs))}원 × ${packs}첩`,amount:herbTotal},
-          ...(f.dispensing>0?[{label:'조제비',desc:`${fmtW(f.dispensing)}원 × ${tp}팩`,amount:f.dispensing*tp}]:[]),
-          ...(f.decoction>0?[{label:'탕전비',desc:'',amount:f.decoction}]:[]),
-          ...(f.packaging>0?[{label:'포장비',desc:'',amount:f.packaging}]:[]),
-          ...(f.delivery>0?[{label:'배송비',desc:'',amount:f.delivery}]:[]),
+          ...(f.dispensing!=null?[{label:'조제비',desc:`${fmtW(f.dispensing)}원 × ${tp}팩`,amount:f.dispensing*tp}]:[]),
+          ...(f.decoction!=null?[{label:'탕전비',desc:'',amount:f.decoction}]:[]),
+          ...(f.packaging!=null?[{label:'포장비',desc:'',amount:f.packaging}]:[]),
+          ...(f.delivery!=null?[{label:'배송비',desc:'',amount:f.delivery}]:[]),
         ];
         const costCard=`<div style="background:var(--surface-2);border-radius:8px;padding:.875rem 1rem">
           <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">처방 비용</div>
