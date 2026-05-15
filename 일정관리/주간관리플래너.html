@@ -1187,7 +1187,9 @@ function renderDailyBody(){
   tbody.querySelectorAll('.checkout-del-btn').forEach(btn=>{btn.addEventListener('click',()=>{entry.blocks[btn.dataset.bi].checkouts.splice(Number(btn.dataset.ci),1);renderDaily();});});
   const toBulletHtml=t=>{if(!t||!t.trim())return'<span class="em-bullet">•</span>&nbsp;';return t.split('\n').map(l=>l?'<span class="em-bullet">•</span>&nbsp;'+l.replace(/^[••][\s ]*/,''):'').join('<br>');};
   ['bad','good','next'].forEach(k=>{
-    const el=document.getElementById('e-'+k);
+    const oldEl=document.getElementById('e-'+k);
+    const el=oldEl.cloneNode(false);
+    oldEl.parentNode.replaceChild(el,oldEl);
     el.innerHTML=toBulletHtml(entry[k]||'');
     el.addEventListener('input',()=>{entry[k]=el.innerText.replace(/\n$/,'');});
     el.addEventListener('keydown',ev=>{
