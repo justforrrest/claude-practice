@@ -334,6 +334,7 @@ function calcSummary(){
   const dTotal=dPrice*totalPacks;
   const grandTotal=herbPrice+dTotal+tPrice+pPrice+lPrice;
   const upd=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  upd('rx-cost-herb-price',fmtW(Math.round(perPack)));
   upd('rx-cost-herb-desc',String(packs));
   upd('rx-cost-herb-amount',fmtW(herbPrice)+'원');
   upd('rx-cost-disp-packs',String(totalPacks));
@@ -616,7 +617,10 @@ function renderRegister(){
             <td style="padding:5px 0;font-weight:600;color:var(--text-2);width:68px">약재비</td>
             <td style="padding:5px 8px 5px 3px;white-space:nowrap">
               <div style="display:flex;align-items:center;gap:5px">
-                <span id="rx-cost-herb-desc" style="width:64px;text-align:right;display:inline-block;font-size:13px;color:var(--text-2)">-</span>
+                <span id="rx-cost-herb-price" style="font-size:13px;color:var(--text-2)">-</span>
+                <span style="font-size:12px;color:var(--text-3)">원</span>
+                <span style="font-size:12px;color:var(--text-3)">×</span>
+                <span id="rx-cost-herb-desc" style="width:22px;text-align:right;display:inline-block;font-size:13px;color:var(--text-2)">-</span>
                 <span style="font-size:12px;color:var(--text-3)">첩</span>
               </div>
             </td>
