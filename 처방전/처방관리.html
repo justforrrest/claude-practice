@@ -1277,7 +1277,7 @@ function showRxHistory(pid){
           <td style="text-align:center;white-space:nowrap">${r.date||'-'}</td>
           <td style="text-align:center">${r.category||'-'}</td>
           <td style="text-align:center">${session}</td>
-          <td style="text-align:center">${r.diagnosis||'-'}</td>
+          <td style="text-align:center;cursor:pointer;color:var(--violet-d);font-weight:500" data-rxid="${r.id}" class="rx-hist-diag">${r.diagnosis||'-'}</td>
         </tr>`;
       }).join('')
     :`<tr><td colspan="4" class="empty">처방 이력이 없습니다</td></tr>`;
@@ -1297,6 +1297,10 @@ function showRxHistory(pid){
     </table></div>`;
   document.getElementById('rx-history-modal-overlay').classList.add('open');
   document.getElementById('close-rx-hist').addEventListener('click',()=>document.getElementById('rx-history-modal-overlay').classList.remove('open'));
+  document.querySelectorAll('.rx-hist-diag').forEach(td=>td.addEventListener('click',()=>{
+    document.getElementById('rx-history-modal-overlay').classList.remove('open');
+    showDetail(td.dataset.rxid);
+  }));
 }
 
 function showPatientDetail(pid){
