@@ -1,0 +1,2572 @@
+{
+  "b6ix_dot_v1": {
+    "2026-05": {
+      "goals": [
+        {
+          "color": "#EC4899",
+          "id": "mp0r1ibsyv7afbvh5eg",
+          "name": "병원 운영",
+          "entries": [
+            {
+              "day": "2026-05-11",
+              "text": "클로드코드를 활용법 익히면서 약재재고시스템 만들기",
+              "id": "mp0vcxidkk9vvo4ztn"
+            },
+            {
+              "text": "호스 교체, 냉난방기 공사 260만원 및 일정 조율, 보호캡 붙이기",
+              "id": "mp2ezkuhe0y7x694sqn",
+              "day": "2026-05-12"
+            }
+          ]
+        },
+        {
+          "color": "#7C3AED",
+          "name": "기상 루틴",
+          "id": "mp0q98pjbbiyynw0bs",
+          "entries": [
+            {
+              "day": "2026-05-11",
+              "id": "mp0vddmz2d7auj2fobb",
+              "text": "0030 취침 -> 0830에 눈뜸 ->  0900 기상"
+            },
+            {
+              "day": "2026-05-12",
+              "id": "mp1y2wf5iybxjdmrypp",
+              "text": "2345 취침 -> 0845에 눈뜸 -> 0900 기상"
+            }
+          ]
+        },
+        {
+          "color": "#10B981",
+          "id": "mp0q6w840g3xmsbba9bi",
+          "name": "유산소 루틴",
+          "entries": [
+            {
+              "text": "저녁 식후 10분 산책",
+              "id": "mp1xws09a26z55r37dl",
+              "day": "2026-05-11"
+            }
+          ]
+        },
+        {
+          "color": "#0EA5E9",
+          "id": "mp1137uefge39zlkctw",
+          "name": "기록 루틴",
+          "entries": [
+            {
+              "id": "mp113iaf3cilwdx86sn",
+              "text": "주간관리플래너 생성 및 첫 기록 (v1)",
+              "day": "2026-05-11"
+            },
+            {
+              "day": "2026-05-12",
+              "text": "주간관리플래너 수정중 (v1.1) - 위클리플랜에서 core block 칸 수정 필요",
+              "id": "mp1zy7cx09mov2m4bhm8"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "b6ix_daily_v1": {
+    "2026-05-24": {
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "계획\n(주간회고)"
+        }
+      ],
+      "good": "",
+      "next": "",
+      "bad": ""
+    },
+    "2026-05-28": {
+      "good": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "공부\n(타한의원견학)"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "휴식"
+        }
+      ],
+      "bad": "",
+      "next": ""
+    },
+    "2026-05-25": {
+      "good": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        }
+      ],
+      "bad": "",
+      "next": ""
+    },
+    "2026-05-16": {
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        }
+      ],
+      "good": "",
+      "bad": "",
+      "next": ""
+    },
+    "2026-05-20": {
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "휴식"
+        }
+      ],
+      "good": "",
+      "next": "",
+      "bad": ""
+    },
+    "2026-05-15": {
+      "good": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "운동"
+        }
+      ],
+      "next": "",
+      "bad": ""
+    },
+    "2026-05-19": {
+      "good": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kw": "",
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "kw": "",
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        }
+      ],
+      "next": "",
+      "bad": ""
+    },
+    "2026-05-22": {
+      "next": "",
+      "bad": "",
+      "good": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kw": "",
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    "2026-05-21": {
+      "good": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kw": "",
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "휴식"
+        }
+      ],
+      "next": "",
+      "bad": ""
+    },
+    "2026-05-11": {
+      "bad": "백국이를 온전히 요모조모 뜯어보지 못하는 것?",
+      "next": "",
+      "good": "같이 고기 구워먹고 잠든 것",
+      "blocks": [
+        {
+          "kw": "해피모닝",
+          "checkouts": [
+            {
+              "done": false,
+              "text": "0830에 눈을 뜸 -> 핸드폰을 만짐"
+            },
+            {
+              "done": false,
+              "text": "0900에 기상해서 옷 갈아 입고 바로 출근"
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "kw": "업무",
+          "checkouts": [
+            {
+              "done": false,
+              "text": "클로드코드 만지고 놀기"
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "kw": "업무",
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "kw": "업무",
+          "checkouts": [],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "kw": "업무",
+          "checkouts": [],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "kw": "데이트",
+          "checkouts": [
+            {
+              "done": false,
+              "text": "백국이랑 고기구워먹고 산책하고 잠"
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    "2026-05-26": {
+      "bad": "",
+      "next": "",
+      "good": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "운동"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "공부\n(클로드코드)"
+        }
+      ]
+    },
+    "2026-05-18": {
+      "good": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        }
+      ],
+      "next": "",
+      "bad": ""
+    },
+    "2026-05-14": {
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "공부\n(타한의원 견학)"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "휴식"
+        }
+      ],
+      "good": "",
+      "next": "",
+      "bad": ""
+    },
+    "2026-05-23": {
+      "bad": "",
+      "next": "",
+      "good": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kw": "",
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "kw": "",
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "kw": "",
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        },
+        {
+          "kw": "",
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    "2026-05-17": {
+      "bad": "",
+      "next": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "데이트"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "계획\n(주간회고)"
+        }
+      ],
+      "good": ""
+    },
+    "2026-05-13": {
+      "next": "",
+      "bad": "",
+      "good": "",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": "주사기 3cc 주문"
+            },
+            {
+              "done": false,
+              "text": "박소연님 한약"
+            },
+            {
+              "done": false,
+              "text": "차현아님 한약"
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": "조쌤 근로계약 연장 검토"
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "휴식"
+        }
+      ]
+    },
+    "2026-05-27": {
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "kw": "휴식"
+        }
+      ],
+      "good": "",
+      "bad": "",
+      "next": ""
+    },
+    "2026-05-12": {
+      "good": "- 백국이 시험 숙소 잡아줬다\n- 환자 그래도 20명 왔다 (잘 봐드렸나 모르겠네)",
+      "blocks": [
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": "0845 눈 떠서 0905 기상"
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": "-"
+            }
+          ],
+          "kw": "해피모닝"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": "클로드코드-주간관리 통합플래너 수정중"
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": "-"
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": "클로드코드-주간관리 통합플래너 수정중"
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": "-"
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": "클로드코드-주간관리 통합플래너 수정중"
+            },
+            {
+              "done": false,
+              "text": "부항컵 3호 주문"
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": "-"
+            }
+          ],
+          "kw": "업무"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": "-"
+            }
+          ],
+          "kw": "운동"
+        },
+        {
+          "kwFromWeekly": true,
+          "checkouts": [
+            {
+              "done": false,
+              "text": ""
+            }
+          ],
+          "checks": [
+            {
+              "done": false,
+              "text": "-"
+            }
+          ],
+          "kw": "공부\n(클로드코드)"
+        }
+      ],
+      "bad": "- 오늘 조금 배가 아프군, 이제 먹는 것을 줄여야겠어...",
+      "next": ""
+    }
+  },
+  "b6ix_weekly_v1": {
+    "2026-05-11": {
+      "goals": [
+        "클로드코드 활용법 익히기"
+      ],
+      "whys": [
+        "업무 효율 증진을 위해"
+      ],
+      "grid": [
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "업무",
+          "데이트"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "운동",
+          "공부\n(클로드코드)"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "업무",
+          "휴식"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "공부\n(타한의원 견학)",
+          "휴식"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "업무",
+          "운동"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "데이트",
+          "데이트",
+          "데이트",
+          "데이트"
+        ],
+        [
+          "데이트",
+          "데이트",
+          "데이트",
+          "데이트",
+          "데이트",
+          "계획\n(주간회고)"
+        ]
+      ],
+      "issue": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "gridColor": [
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#FECACA"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#BFDBFE",
+          "#BBF7D0"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#F9FAFB"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#BBF7D0",
+          "#F9FAFB"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#BFDBFE"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#FECACA",
+          "#FECACA",
+          "#FECACA",
+          "#FECACA"
+        ],
+        [
+          "",
+          "#FECACA",
+          "#FECACA",
+          "#FECACA",
+          "#FECACA",
+          "#FECACA",
+          "#FED7AA"
+        ]
+      ],
+      "coreBlocks": [
+        {
+          "name": "해피모닝 - 생산성과 관계없이 좋아하는 일 하기",
+          "memo": ""
+        },
+        {
+          "name": "공부 - 업무 관련된 변화를 주려면?",
+          "memo": ""
+        },
+        {
+          "name": "",
+          "memo": ""
+        }
+      ],
+      "blockNames": [
+        "업무",
+        "데이트",
+        "해피모닝",
+        "운동",
+        "공부",
+        "휴식",
+        "계획"
+      ]
+    },
+    "2026-05-04": {
+      "goals": [
+        ""
+      ],
+      "whys": [
+        ""
+      ],
+      "grid": [
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "업무",
+          "데이트"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "운동",
+          "공부\n(클로드코드)"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "업무",
+          "휴식"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "공부\n(타한의원견학)",
+          "휴식"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "업무",
+          "운동"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "데이트",
+          "데이트",
+          "데이트",
+          "데이트"
+        ],
+        [
+          "데이트",
+          "데이트",
+          "데이트",
+          "데이트",
+          "데이트",
+          "계획\n(주간회고)"
+        ]
+      ],
+      "issue": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "gridColor": [
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#FECACA"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#BFDBFE",
+          "#BBF7D0"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#F9FAFB"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#BBF7D0",
+          "#F9FAFB"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#BFDBFE"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#FECACA",
+          "#FECACA",
+          "#FECACA",
+          "#FECACA"
+        ],
+        [
+          "",
+          "#FECACA",
+          "#FECACA",
+          "#FECACA",
+          "#FECACA",
+          "#FECACA",
+          "#FED7AA"
+        ]
+      ],
+      "coreBlocks": [
+        {
+          "name": "",
+          "memo": ""
+        },
+        {
+          "name": "",
+          "memo": ""
+        },
+        {
+          "name": "",
+          "memo": ""
+        }
+      ],
+      "blockNames": [
+        "업무",
+        "데이트",
+        "해피모닝",
+        "운동",
+        "공부",
+        "휴식",
+        "계획"
+      ]
+    },
+    "2026-05-18": {
+      "goals": [
+        ""
+      ],
+      "whys": [
+        ""
+      ],
+      "grid": [
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "업무",
+          ""
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "운동",
+          ""
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "업무",
+          ""
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "",
+          ""
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "업무",
+          "업무",
+          "업무",
+          "운동"
+        ],
+        [
+          "해피모닝",
+          "업무",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "주간 회고"
+        ]
+      ],
+      "issue": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "gridColor": [
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          ""
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#BFDBFE",
+          ""
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          ""
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "",
+          ""
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#E5E7EB",
+          "#BFDBFE"
+        ],
+        [
+          "",
+          "#FEF9C3",
+          "#E5E7EB",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      ],
+      "coreBlocks": [
+        {
+          "name": "",
+          "memo": ""
+        },
+        {
+          "name": "",
+          "memo": ""
+        },
+        {
+          "name": "",
+          "memo": ""
+        }
+      ],
+      "blockNames": [
+        "업무",
+        "해피모닝",
+        "운동",
+        "주간 회고",
+        "",
+        "",
+        ""
+      ]
+    }
+  },
+  "b6ix_wreview_v1": {
+    "2026-05-11": {
+      "bad": "",
+      "good": "",
+      "routines": [],
+      "how": "",
+      "goal": ""
+    }
+  },
+  "b6ix_monthly_v1": {
+    "2026-05": {
+      "qnames": [
+        "업무",
+        "사회",
+        "관계",
+        "나"
+      ],
+      "memo": "",
+      "scores": [
+        5,
+        5,
+        5,
+        5
+      ]
+    }
+  },
+  "b6ix_template_v1": {
+    "grid": [
+      [
+        "해피모닝",
+        "업무",
+        "업무",
+        "업무",
+        "업무",
+        "데이트"
+      ],
+      [
+        "해피모닝",
+        "업무",
+        "업무",
+        "업무",
+        "운동",
+        "공부\n(클로드코드)"
+      ],
+      [
+        "해피모닝",
+        "업무",
+        "업무",
+        "업무",
+        "업무",
+        "휴식"
+      ],
+      [
+        "해피모닝",
+        "업무",
+        "업무",
+        "업무",
+        "공부\n(타한의원견학)",
+        "휴식"
+      ],
+      [
+        "해피모닝",
+        "업무",
+        "업무",
+        "업무",
+        "업무",
+        "운동"
+      ],
+      [
+        "해피모닝",
+        "업무",
+        "데이트",
+        "데이트",
+        "데이트",
+        "데이트"
+      ],
+      [
+        "데이트",
+        "데이트",
+        "데이트",
+        "데이트",
+        "데이트",
+        "계획\n(주간회고)"
+      ]
+    ],
+    "gridColor": [
+      [
+        "",
+        "#FEF9C3",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#FECACA"
+      ],
+      [
+        "",
+        "#FEF9C3",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#BFDBFE",
+        "#BBF7D0"
+      ],
+      [
+        "",
+        "#FEF9C3",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#F9FAFB"
+      ],
+      [
+        "",
+        "#FEF9C3",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#BBF7D0",
+        "#F9FAFB"
+      ],
+      [
+        "",
+        "#FEF9C3",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#E5E7EB",
+        "#BFDBFE"
+      ],
+      [
+        "",
+        "#FEF9C3",
+        "#E5E7EB",
+        "#FECACA",
+        "#FECACA",
+        "#FECACA",
+        "#FECACA"
+      ],
+      [
+        "",
+        "#FECACA",
+        "#FECACA",
+        "#FECACA",
+        "#FECACA",
+        "#FECACA",
+        "#FED7AA"
+      ]
+    ]
+  },
+  "b6ix_tab_order_v1": [
+    "weekly",
+    "dot",
+    "daily",
+    "wreview",
+    "monthly"
+  ],
+  "b6ix_col_widths_v1": [
+    91,
+    null
+  ]
+}
