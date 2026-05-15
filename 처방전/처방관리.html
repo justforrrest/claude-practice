@@ -392,6 +392,7 @@ function attachRowListeners(tr){
   const priceCell=tr.querySelector('.rx-price');
   const totalPriceCell=tr.querySelector('.rx-total-price');
 
+  const updateNameColor=()=>{nameInput.style.color=nameInput.value.includes('녹용')?'#dc2626':'';};
   const updateCells=()=>{
     const row=rxHerbs.find(r=>r.id===rid);
     if(!row)return;
@@ -407,12 +408,14 @@ function attachRowListeners(tr){
   setupHerbAC(nameInput,dropdown,(herb)=>{
     const row=rxHerbs.find(r=>r.id===rid);
     if(row){row.herb=herb;row.unitPrice=undefined;nameInput.value=herb;}
+    updateNameColor();
     updateCells();
     autoCategory();
     if(getPrice(herb)===0) showPriceWarn(herb);
   },()=>{
     const row=rxHerbs.find(r=>r.id===rid);
     if(row){row.herb=nameInput.value;row.unitPrice=undefined;}
+    updateNameColor();
     updateCells();
     autoCategory();
     navigateToNextHerbRow(rid,'.rx-name');
@@ -426,6 +429,7 @@ function attachRowListeners(tr){
     }
     const row=rxHerbs.find(r=>r.id===rid);
     if(row){row.herb=nameInput.value;row.unitPrice=undefined;}
+    updateNameColor();
     updateCells();
     autoCategory();
   });
@@ -473,7 +477,7 @@ function addHerbRow(herb='',suchi='',qty='',unitPrice=undefined,focus=false){
   const qn=Number(qty);
   tr.innerHTML=`
     <td style="width:28px;color:var(--text-3);font-size:12px;text-align:center">${rxHerbs.length}</td>
-    <td style="min-width:70px"><div class="herb-ac-wrap"><input class="rx-name" type="text" value="${herb}" placeholder="약재명" autocomplete="off"><ul class="herb-dropdown"></ul></div></td>
+    <td style="min-width:70px"><div class="herb-ac-wrap"><input class="rx-name" type="text" value="${herb}" placeholder="약재명" autocomplete="off" style="${herb.includes('녹용')?'color:#dc2626':''}"><ul class="herb-dropdown"></ul></div></td>
     <td style="width:60px;border-right:1px solid var(--border-2)"><input class="rx-suchi" type="text" value="${suchi}" placeholder="" style="border:none;background:transparent;outline:none;padding:4px 0;width:100%;font-size:13px;"></td>
     <td style="width:65px"><input class="rx-qty" type="number" value="${qty}" placeholder="0.0" min="0" step="0.1" style="text-align:right;width:100%;"></td>
     <td class="num rx-total-g" style="width:65px;border-right:1px solid var(--border-2)">${qn?fmt(qn*packs):'-'}</td>
