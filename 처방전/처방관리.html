@@ -147,11 +147,16 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
     <button class="tab active" data-tab="register">처방 등록</button>
     <button class="tab" data-tab="history">처방 이력</button>
     <button class="tab" data-tab="patients">환자 관리</button>
+    <span style="flex:1"></span>
+    <button class="tab" data-tab="delivery">배송 관리</button>
+    <button class="tab" data-tab="happycall">해피콜 관리</button>
   </div>
 
   <div class="view active" id="view-register"></div>
   <div class="view" id="view-history"></div>
   <div class="view" id="view-patients"></div>
+  <div class="view" id="view-delivery"></div>
+  <div class="view" id="view-happycall"></div>
 
 </div>
 
@@ -1565,12 +1570,22 @@ function showPatientDetail(pid){
 }
 
 /* ── 탭 전환 ── */
+function renderDelivery(){
+  const el=document.getElementById('view-delivery');
+  el.innerHTML=`<div class="card"><div class="section-title">배송 관리</div><p style="color:var(--text-3);font-size:13px">준비 중입니다.</p></div>`;
+}
+function renderHappycall(){
+  const el=document.getElementById('view-happycall');
+  el.innerHTML=`<div class="card"><div class="section-title">해피콜 관리</div><p style="color:var(--text-3);font-size:13px">준비 중입니다.</p></div>`;
+}
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${tab}`));
   if(tab==='register'){rxHerbs=[];renderRegister();}
   if(tab==='history')renderHistory();
   if(tab==='patients')renderPatients();
+  if(tab==='delivery')renderDelivery();
+  if(tab==='happycall')renderHappycall();
 }
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   if(t.dataset.tab==='register'&&!editingRxId)rxHerbs=[];
