@@ -453,6 +453,18 @@ function attachRowListeners(tr){
     }
   });
   qtyInput.addEventListener('keydown',e=>{
+    if(e.key==='Backspace'&&!qtyInput.value){
+      e.preventDefault();
+      const allTrs=[...document.querySelectorAll('#rx-herb-tbody tr[data-rid]')];
+      const idx=allTrs.findIndex(t=>t.dataset.rid===rid);
+      const prevInput=idx>0?allTrs[idx-1].querySelector('.rx-qty'):null;
+      rxHerbs=rxHerbs.filter(r=>r.id!==rid);
+      tr.remove();
+      calcSummary();
+      if(rxHerbs.length===0)addHerbRow('','','',undefined,true);
+      else if(prevInput){prevInput.focus();prevInput.select();}
+      return;
+    }
     if(e.key!=='Enter')return;
     e.preventDefault();
     const row=rxHerbs.find(r=>r.id===rid);
