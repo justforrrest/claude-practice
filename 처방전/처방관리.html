@@ -896,7 +896,8 @@ function renderRegister(){
 
 async function saveRx(){
   const wasEditingId=editingRxId;
-  const wasOutboundAt=wasEditingId?(prescriptionsData.find(r=>r.id===wasEditingId)?.outboundAt||null):null;
+  const prevRx=wasEditingId?prescriptionsData.find(r=>r.id===wasEditingId):null;
+  const wasOutboundAt=prevRx?.outboundAt||null;
   const patientName=document.getElementById('rx-patient').value.trim();
   if(!patientName){alert('환자명을 입력해주세요.');return;}
   const patientBirth=normBirth(document.getElementById('rx-patient-birth')?.value||'');
@@ -948,23 +949,25 @@ async function saveRx(){
   editingRxId=null;rxHerbs=[];
 
   if(wasEditingId&&wasOutboundAt){
-    if(confirm('출고가 이미 반영된 처방입니다.\n변경된 내용으로 출고를 재반영하시겠습니까?')){
-      let outbound=await load(HERB_KEYS.outbound)||[];
-      outbound=outbound.filter(r=>r.rxId!==wasEditingId);
-      entry.herbs.forEach(h=>{
-        outbound.push({id:uid(),rxId:wasEditingId,herb:h.herb,
-          qty:h.qtyPerPack*entry.packs,date:entry.date,purpose:'처방',
-          note:`${entry.patientName}${entry.diagnosis?' - '+entry.diagnosis:''}`});
-      });
-      await save(HERB_KEYS.outbound,outbound);
-      prescriptionsData=prescriptionsData.map(r=>r.id===wasEditingId?{...r,outboundAt:Date.now()}:r);
-      await save(RX_KEYS.prescriptions,prescriptionsData);
-      showToast('출고가 재반영되었습니다.');
-    }
+    const oldNote=`${prevRx.patientName}${prevRx.diagnosis?' - '+prevRx.diagnosis:''}`;
+    let outbound=await load(HERB_KEYS.outbound)||[];
+    outbound=outbound.filter(r=>{
+      if(r.rxId===wasEditingId)return false;
+      if(!r.rxId&&r.purpose==='처방'&&r.date===prevRx.date&&r.note===oldNote)return false;
+      return true;
+    });
+    entry.herbs.forEach(h=>{
+      outbound.push({id:uid(),rxId:wasEditingId,herb:h.herb,
+        qty:h.qtyPerPack*entry.packs,date:entry.date,purpose:'처방',
+        note:`${entry.patientName}${entry.diagnosis?' - '+entry.diagnosis:''}`});
+    });
+    await save(HERB_KEYS.outbound,outbound);
+    prescriptionsData=prescriptionsData.map(r=>r.id===wasEditingId?{...r,outboundAt:Date.now()}:r);
+    await save(RX_KEYS.prescriptions,prescriptionsData);
   }
 
   switchTab('history');
-  showToast('처방이 저장되었습니다.');
+  showToast(wasEditingId&&wasOutboundAt?'처방 및 출고가 업데이트되었습니다.':'처방이 저장되었습니다.');
 }
 
 /* ── 처방 이력 탭 ── */
