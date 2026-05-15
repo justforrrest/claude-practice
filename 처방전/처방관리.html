@@ -1563,6 +1563,11 @@ document.getElementById('sync-apply-btn').addEventListener('click',()=>{
 });
 document.getElementById('sync-code-input').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase();});
 document.getElementById('sync-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  ['detail-modal-overlay','patient-modal-overlay','rx-history-modal-overlay','ref-rx-modal-overlay','price-warn-overlay','sync-modal-overlay']
+    .forEach(id=>{document.getElementById(id)?.classList.remove('open');});
+});
 
 /* ── 수동 저장 ── */
 document.getElementById('export-btn').addEventListener('click',async()=>{
