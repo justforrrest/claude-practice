@@ -999,6 +999,7 @@ let histPatSearch='';
 let histDxSearch='';
 let histYear='';
 let histMonth='';
+let histSangbi=false;
 
 function renderHistory(){
   const el=document.getElementById('view-history');
@@ -1007,6 +1008,7 @@ function renderHistory(){
     <div class="toolbar" style="flex-wrap:wrap;margin-bottom:.875rem">
       <input type="text" id="hist-q-pat" placeholder="환자명" style="width:100px;flex-shrink:0">
       <input type="text" id="hist-q-dx" placeholder="처방명" style="width:100px;flex-shrink:0">
+      <button class="btn btn-sm btn-ghost" id="hist-sangbi-btn" style="flex-shrink:0">상비약</button>
       <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <div id="hist-yr-sel-wrap" style="display:none;gap:6px;align-items:center">
           <select id="hist-year-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:13px;font-family:var(--font-sans);background:var(--surface);color:var(--text-1);outline:none"></select>
@@ -1026,6 +1028,12 @@ function renderHistory(){
     const dxEl=document.getElementById('hist-q-dx');
     patEl.addEventListener('input',()=>{histPatSearch=patEl.value;updateHistList();});
     dxEl.addEventListener('input',()=>{histDxSearch=dxEl.value;updateHistList();});
+    document.getElementById('hist-sangbi-btn').addEventListener('click',()=>{
+      histSangbi=!histSangbi;
+      const btn=document.getElementById('hist-sangbi-btn');
+      btn.className=`btn btn-sm ${histSangbi?'btn-filter':'btn-ghost'}`;
+      updateHistList();
+    });
     document.getElementById('hist-year-sel').addEventListener('change',e=>{histYear=e.target.value;updateHistList();});
     document.getElementById('hist-month-sel').addEventListener('change',e=>{histMonth=e.target.value;updateHistList();});
   }
@@ -1055,7 +1063,7 @@ function updateHistList(){
   const tbody=document.getElementById('hist-tbody');
   if(!tbody)return;
   const list=[...prescriptionsData]
-    .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch))&&(!histYear||r.date?.startsWith(histYear))&&(!histMonth||r.date?.slice(5,7)===histMonth))
+    .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch))&&(!histYear||r.date?.startsWith(histYear))&&(!histMonth||r.date?.slice(5,7)===histMonth)&&(!histSangbi||r.diagnosis?.includes('상비약')))
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
   const countEl=document.getElementById('hist-count');
   if(countEl)countEl.textContent=`총 ${list.length}건`;
