@@ -1149,7 +1149,7 @@ function showDetail(id){
         const costCard=`<div style="background:var(--surface-2);border-radius:8px;padding:.875rem 1rem">
           <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">처방 비용</div>
           <table style="width:100%;border-collapse:collapse;font-size:13px">
-            ${rows.map(r=>`<tr><td style="padding:3px 0;font-weight:600;color:var(--text-2);width:46px">${r.label}</td><td style="padding:3px 2px;color:var(--text-3);white-space:nowrap;font-size:11px">${r.desc}</td><td style="padding:3px 0;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">${fmtW(r.amount)}원</td></tr>`).join('')}
+            ${rows.map(r=>`<tr><td style="padding:3px 0;font-weight:600;color:var(--text-2);width:58px">${r.label}</td><td style="padding:3px 4px;color:var(--text-3);white-space:nowrap;font-size:11px">${r.desc}</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums">${fmtW(r.amount)}원</td></tr>`).join('')}
             <tr style="border-top:2px solid var(--border)"><td colspan="2" style="padding:6px 0 2px;font-weight:700">총 합계</td><td style="padding:6px 0 2px;text-align:right;font-size:16px;font-weight:700;color:var(--violet-d)">${fmtW(rx.totalPrice||0)}원</td></tr>
           </table>
         </div>`;
