@@ -780,6 +780,7 @@ function renderRegister(){
   };
   patInput.addEventListener('input',()=>{filterPat();fillPatientInfo(patInput.value.trim());});
   patInput.addEventListener('blur',()=>fillPatientInfo(patInput.value.trim()),true);
+  fillPatientInfo(patInput.value.trim());
 
   patDrop.addEventListener('mousedown',e=>{
     const li=e.target.closest('li');
