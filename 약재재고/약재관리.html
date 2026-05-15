@@ -1256,6 +1256,18 @@ function getChoseong(ch){
   const map=['ㄱ','ㄱ','ㄴ','ㄷ','ㄷ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅇ','ㅈ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
   return map[Math.floor(c/588)]||ch;
 }
+function syncPricelistToSettings(){
+  const derived=calcPriceList();
+  herbsData.forEach(h=>{
+    const vals=suppliersData.map(s=>{
+      const m=pricelistData[h]?.[s];
+      if(m>0)return m;
+      const d=derived[h]?.[s];
+      return(d&&d.price>0)?d.price:null;
+    }).filter(v=>v!=null);
+    if(vals.length>0)settingsData.prices[h]=Math.min(...vals);
+  });
+}
 function calcPriceList(){
   const result={};
   herbsData.forEach(h=>{result[h]={};suppliersData.forEach(s=>result[h][s]=null);});
@@ -1343,7 +1355,8 @@ function renderPricelist(){
       if(v>0)pricelistData[h][s]=v;
       else delete pricelistData[h][s];
     });
-    await save(KEYS.pricelist,pricelistData);
+    syncPricelistToSettings();
+    await Promise.all([save(KEYS.pricelist,pricelistData),save(KEYS.settings,settingsData)]);
     renderPricelist();
   });
 
@@ -1361,7 +1374,8 @@ function renderPricelist(){
           if(!pricelistData[h])pricelistData[h]={};
           if(v>0)pricelistData[h][s]=v;else delete pricelistData[h][s];
         });
-        await save(KEYS.pricelist,pricelistData);
+        syncPricelistToSettings();
+        await Promise.all([save(KEYS.pricelist,pricelistData),save(KEYS.settings,settingsData)]);
       },1000);
     });
   });
