@@ -1063,7 +1063,7 @@ function updateHistList(){
   const tbody=document.getElementById('hist-tbody');
   if(!tbody)return;
   const list=[...prescriptionsData]
-    .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch))&&(!histYear||r.date?.startsWith(histYear))&&(!histMonth||r.date?.slice(5,7)===histMonth)&&(!histSangbi||r.diagnosis?.includes('상비약')))
+    .filter(r=>(!histPatSearch||r.patientName.includes(histPatSearch))&&(!histDxSearch||r.diagnosis.includes(histDxSearch))&&(!histYear||r.date?.startsWith(histYear))&&(!histMonth||r.date?.slice(5,7)===histMonth)&&(!histSangbi||r.patientName?.includes('상비약')))
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
   const countEl=document.getElementById('hist-count');
   if(countEl)countEl.textContent=`총 ${list.length}건`;
