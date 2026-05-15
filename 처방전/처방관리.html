@@ -1116,7 +1116,7 @@ function showDetail(id){
       <thead><tr><th>#</th><th>약재명</th><th style="border-right:1px solid var(--border-2)">수치</th><th class="num">첩당g</th><th class="num" style="border-right:1px solid var(--border-2)">총량g</th><th class="num">1첩 금액</th><th class="num">총 금액</th></tr></thead>
       <tbody>${rx.herbs.map((h,i)=>`<tr>
         <td style="color:var(--text-3);font-size:12px">${i+1}</td>
-        <td>${h.herb}</td>
+        <td${h.herb.includes('녹용')?' style="color:#dc2626;font-weight:700"':''}>${h.herb}</td>
         <td style="border-right:1px solid var(--border-2)">${h.suchi||''}</td>
         <td class="num">${h.qtyPerPack}</td>
         <td class="num" style="border-right:1px solid var(--border-2)">${fmt(h.qtyPerPack*packs)}</td>
@@ -1150,7 +1150,7 @@ function showDetail(id){
           <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">처방 비용</div>
           <table style="width:100%;border-collapse:collapse;font-size:13px">
             ${rows.map(r=>`<tr><td style="padding:3px 0;font-weight:600;color:var(--text-2);width:58px">${r.label}</td><td style="padding:3px 4px;color:var(--text-3);white-space:nowrap;font-size:11px">${r.desc}</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums">${fmtW(r.amount)}원</td></tr>`).join('')}
-            <tr style="border-top:2px solid var(--border)"><td colspan="2" style="padding:6px 0 2px;font-weight:700">총 합계</td><td style="padding:6px 0 2px;text-align:right;font-size:16px;font-weight:700;color:var(--violet-d)">${fmtW(rx.totalPrice)}원</td></tr>
+            <tr style="border-top:2px solid var(--border)"><td colspan="2" style="padding:6px 0 2px;font-weight:700">총 합계</td><td style="padding:6px 0 2px;text-align:right;font-size:16px;font-weight:700;color:var(--violet-d)">${fmtW(rx.totalPrice||0)}원</td></tr>
           </table>
         </div>`;
         return`<div style="margin-top:.875rem;display:grid;grid-template-columns:1fr 1fr;gap:.625rem;align-items:start">${costCard}${gasumCard}</div>`;
@@ -1159,6 +1159,7 @@ function showDetail(id){
         <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">처방 비용</div>
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <tr><td style="padding:3px 0;color:var(--text-3)">약재비</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums">${fmtW(herbTotal)}원</td></tr>
+          <tr style="border-top:2px solid var(--border)"><td style="padding:6px 0 2px;font-weight:700">총 합계</td><td style="padding:6px 0 2px;text-align:right;font-size:16px;font-weight:700;color:var(--violet-d)">${fmtW(herbTotal)}원</td></tr>
         </table>
       </div>`;
       return`<div style="margin-top:.875rem;display:grid;grid-template-columns:1fr 1fr;gap:.625rem;align-items:start">${costCard}${gasumCard}</div>`;
