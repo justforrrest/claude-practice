@@ -536,6 +536,36 @@ function renderStock(){
   });
 }
 
+/* ── 공통: 약재 자동완성 ── */
+function setupHerbDropdown(inp,dd){
+  let hlIdx=-1;
+  function open(q){
+    const list=q?herbsData.filter(h=>h.includes(q)):herbsData;
+    if(!list.length){dd.classList.remove('open');return;}
+    dd.innerHTML=list.map(h=>`<li data-v="${h}">${h}</li>`).join('');
+    dd.classList.add('open');
+    hlIdx=-1;
+    dd.querySelectorAll('li').forEach(li=>{
+      li.addEventListener('mousedown',e=>{e.preventDefault();inp.value=li.dataset.v;dd.classList.remove('open');});
+    });
+  }
+  inp.addEventListener('input',()=>{const q=inp.value.trim();open(q);});
+  inp.addEventListener('focus',()=>{open(inp.value.trim());});
+  inp.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('open'),150));
+  inp.addEventListener('keydown',e=>{
+    const items=dd.querySelectorAll('li');
+    if(e.key==='ArrowDown'){e.preventDefault();hlIdx=Math.min(hlIdx+1,items.length-1);items.forEach((li,i)=>li.classList.toggle('hl',i===hlIdx));}
+    else if(e.key==='ArrowUp'){e.preventDefault();hlIdx=Math.max(hlIdx-1,0);items.forEach((li,i)=>li.classList.toggle('hl',i===hlIdx));}
+    else if(e.key==='Enter'){
+      if(dd.classList.contains('open')&&items.length){
+        const sel=hlIdx>=0?items[hlIdx]:items[0];
+        inp.value=sel.dataset.v;dd.classList.remove('open');e.preventDefault();
+      }
+    }
+    else if(e.key==='Escape'){dd.classList.remove('open');}
+  });
+}
+
 /* ── 입고 ── */
 function renderInbound(){
   const el=document.getElementById('view-inbound');
@@ -550,7 +580,12 @@ function renderInbound(){
   <div class="card">
     <div class="section-title">입고 등록</div>
     <div class="form-row" style="flex-wrap:nowrap;gap:7px;">
-      <div class="form-group" style="flex:0 0 120px;min-width:0"><label>약재</label><select id="in-herb" style="width:100%">${herbOpts}</select></div>
+      <div class="form-group" style="flex:0 0 140px;min-width:0"><label>약재</label>
+        <div class="herb-ac-wrap">
+          <input type="text" id="in-herb" placeholder="약재 검색" style="width:100%" autocomplete="off">
+          <ul id="in-herb-dd" class="herb-dropdown"></ul>
+        </div>
+      </div>
       <div class="form-group" style="min-width:0"><label>수량 (g)</label><input type="number" id="in-qty" min="0" step="0.1" placeholder="0.0" style="width:72px"></div>
       <div class="form-group" style="min-width:0"><label>금액 (원)</label><input type="number" id="in-amount" min="0" step="1" placeholder="0" style="width:80px"></div>
       <div class="form-group" style="min-width:0"><label>단가 (원/g)</label><input type="number" id="in-price" min="0" step="0.1" placeholder="0.0" style="width:72px"></div>
@@ -600,6 +635,8 @@ function renderInbound(){
   </div>`;
 
   document.getElementById('ib-month-sel').addEventListener('change',e=>{inboundMonth=e.target.value;renderInbound();});
+
+  setupHerbDropdown(document.getElementById('in-herb'),document.getElementById('in-herb-dd'));
 
   const qtyEl=document.getElementById('in-qty');
   const priceEl=document.getElementById('in-price');
@@ -715,7 +752,12 @@ function renderOutbound(){
   <div class="card">
     <div class="section-title">출고 등록</div>
     <div class="form-row">
-      <div class="form-group grow"><label>약재</label><select id="out-herb">${herbOpts}</select></div>
+      <div class="form-group" style="flex:0 0 140px;min-width:0"><label>약재</label>
+        <div class="herb-ac-wrap">
+          <input type="text" id="out-herb" placeholder="약재 검색" style="width:100%" autocomplete="off">
+          <ul id="out-herb-dd" class="herb-dropdown"></ul>
+        </div>
+      </div>
       <div class="form-group"><label>수량 (g)</label><input type="number" id="out-qty" min="0" step="0.1" placeholder="0.0" style="width:90px"></div>
       <div class="form-group"><label>날짜</label><input type="date" id="out-date" value="${todayStr()}"></div>
       <div class="form-group"><label>용도</label><input type="text" id="out-purpose" placeholder="처방, 폐기 등"></div>
@@ -732,10 +774,9 @@ function renderOutbound(){
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th>용도</th><th>메모</th><th></th></tr></thead>
       <tbody>${filtered.length===0?'<tr><td colspan="6" class="empty">출고 이력이 없습니다</td></tr>':filtered.map(r=>{
         if(editingOutboundId===r.id){
-          const hOpts=herbsData.map(h=>`<option${h===r.herb?' selected':''}>${h}</option>`).join('');
           return`<tr style="background:var(--violet-light)">
             <td><input class="settings-inp eo-date" type="date" value="${r.date}" style="width:116px"></td>
-            <td><select class="settings-inp eo-herb" style="width:88px">${hOpts}</select></td>
+            <td><div class="herb-ac-wrap" style="width:120px"><input type="text" class="settings-inp eo-herb" value="${r.herb}" style="width:100%" autocomplete="off" placeholder="약재 검색"><ul class="herb-dropdown eo-herb-dd"></ul></div></td>
             <td><input class="settings-inp eo-qty" type="number" step="0.1" value="${r.qty}" style="width:70px;text-align:right"></td>
             <td><input class="settings-inp eo-purpose" type="text" value="${r.purpose||''}" style="width:90px"></td>
             <td><input class="settings-inp eo-note" type="text" value="${r.note||''}" style="min-width:80px;width:100%"></td>
@@ -758,6 +799,11 @@ function renderOutbound(){
   </div>`;
 
   document.getElementById('ob-month-sel').addEventListener('change',e=>{outboundMonth=e.target.value;renderOutbound();});
+
+  setupHerbDropdown(document.getElementById('out-herb'),document.getElementById('out-herb-dd'));
+
+  const eoHerbInp=el.querySelector('.eo-herb');const eoHerbDd=el.querySelector('.eo-herb-dd');
+  if(eoHerbInp&&eoHerbDd)setupHerbDropdown(eoHerbInp,eoHerbDd);
 
   document.getElementById('out-submit').addEventListener('click',async()=>{
     const herb=document.getElementById('out-herb').value;
@@ -865,7 +911,8 @@ function renderAdjustTable(){
     if(!confirm('삭제하시겠습니까?'))return;
     adjustData=adjustData.filter(r=>r.id!==btn.dataset.id);
     await save(KEYS.adjust,adjustData);
-    renderAdjYmBtns();renderAdjustTable();renderStock();
+    if(adjFilter.ym&&!adjustData.some(r=>r.date&&r.date.startsWith(adjFilter.ym)))adjFilter.ym='';
+    renderAdjust();renderStock();
   }));
   tbody.querySelectorAll('.adj-note-inp').forEach(inp=>inp.addEventListener('blur',async()=>{
     const rec=adjustData.find(r=>r.id===inp.dataset.id);
@@ -875,6 +922,8 @@ function renderAdjustTable(){
 
 function renderAdjust(){
   const el=document.getElementById('view-adjust');
+  const adjYms=[...new Set(adjustData.map(r=>r.date?r.date.slice(0,7):null).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
+  const adjMonthOpts=`<option value="">전체</option>${adjYms.map(ym=>`<option value="${ym}"${adjFilter.ym===ym?' selected':''}>${ym}</option>`).join('')}`;
   el.innerHTML=`
   <div class="card">
     <div style="display:flex;align-items:center;margin-bottom:1rem;">
@@ -894,9 +943,9 @@ function renderAdjust(){
     </div>
     <p style="font-size:12px;color:var(--muted);margin:.25rem 0 .75rem">양수(+) 입력 시 재고 증가, 음수(-) 입력 시 재고 감소</p>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.75rem">
-      <div id="adj-ym-btns" style="display:flex;gap:4px;flex-wrap:wrap;flex:1"></div>
       <input type="text" id="adj-herb-search" placeholder="약재명 검색" value="${adjFilter.herb}" style="width:120px;height:30px;padding:4px 10px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;outline:none;">
       <input type="text" id="adj-memo-search" placeholder="메모 검색" value="${adjFilter.memo}" style="width:120px;height:30px;padding:4px 10px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;outline:none;">
+      <select id="adj-ym-sel" style="margin-left:auto;width:auto;flex-shrink:0;border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">${adjMonthOpts}</select>
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">조정량</th><th>메모</th><th></th></tr></thead>
@@ -913,11 +962,10 @@ function renderAdjust(){
     if(!herbsData.includes(herb)){alert('목록에 없는 약재명입니다.');return;}
     adjustData.push({id:uid(),herb,qty,date,note});
     await save(KEYS.adjust,adjustData);
-    document.getElementById('adj-herb').value='';
-    document.getElementById('adj-qty').value='';
-    document.getElementById('adj-note').value='';
-    renderAdjYmBtns();renderAdjustTable();renderStock();
+    renderAdjust();renderStock();
   });
+
+  document.getElementById('adj-ym-sel').addEventListener('change',e=>{adjFilter.ym=e.target.value;renderAdjustTable();});
 
   document.getElementById('adj-herb-search').addEventListener('input',e=>{
     adjFilter.herb=e.target.value;renderAdjustTable();
@@ -927,35 +975,8 @@ function renderAdjust(){
     adjFilter.memo=e.target.value;renderAdjustTable();
   });
 
-  renderAdjYmBtns();
+  setupHerbDropdown(document.getElementById('adj-herb'),document.getElementById('adj-herb-dropdown'));
   renderAdjustTable();
-
-  (function(){
-    const inp=document.getElementById('adj-herb');
-    const dd=document.getElementById('adj-herb-dropdown');
-    let hlIdx=-1;
-    function open(q){
-      const list=herbsData.filter(h=>h.includes(q));
-      if(!list.length){dd.classList.remove('open');return;}
-      dd.innerHTML=list.map(h=>`<li data-v="${h}">${h}</li>`).join('');
-      dd.classList.add('open');
-      hlIdx=-1;
-      dd.querySelectorAll('li').forEach(li=>{
-        li.addEventListener('mousedown',e=>{e.preventDefault();inp.value=li.dataset.v;dd.classList.remove('open');});
-      });
-    }
-    inp.addEventListener('input',()=>{const q=inp.value.trim();q?open(q):dd.classList.remove('open');});
-    inp.addEventListener('focus',()=>{const q=inp.value.trim();if(q)open(q);});
-    inp.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('open'),150));
-    inp.addEventListener('keydown',e=>{
-      const items=dd.querySelectorAll('li');
-      if(!items.length)return;
-      if(e.key==='ArrowDown'){e.preventDefault();hlIdx=Math.min(hlIdx+1,items.length-1);items.forEach((li,i)=>li.classList.toggle('hl',i===hlIdx));}
-      else if(e.key==='ArrowUp'){e.preventDefault();hlIdx=Math.max(hlIdx-1,0);items.forEach((li,i)=>li.classList.toggle('hl',i===hlIdx));}
-      else if(e.key==='Enter'&&hlIdx>=0){inp.value=items[hlIdx].dataset.v;dd.classList.remove('open');}
-      else if(e.key==='Escape'){dd.classList.remove('open');}
-    });
-  })();
 }
 
 let settingsSearch='';
@@ -1063,12 +1084,19 @@ function renderSettings(){
 
   el.querySelectorAll('.settings-inp[data-field="price"],.settings-inp[data-field="min"]').forEach(inp=>{
     inp.addEventListener('focus',()=>inp.select());
+  });
+  el.querySelectorAll('.settings-inp[data-field="price"]').forEach(inp=>{
+    inp.addEventListener('keydown',async e=>{
+      if(e.key==='Enter'&&!e.isComposing){e.preventDefault();clearTimeout(stAutoTimer);await stSaveAll();inp.blur();}
+    });
+  });
+  const allMinInps=[...el.querySelectorAll('.settings-inp[data-field="min"]')];
+  allMinInps.forEach((inp,idx)=>{
     inp.addEventListener('keydown',async e=>{
       if(e.key==='Enter'&&!e.isComposing){
-        e.preventDefault();
-        clearTimeout(stAutoTimer);
-        await stSaveAll();
-        inp.blur();
+        e.preventDefault();clearTimeout(stAutoTimer);await stSaveAll();
+        const next=allMinInps[idx+1];
+        if(next){next.focus();next.select();}else inp.blur();
       }
     });
   });
