@@ -1604,7 +1604,7 @@ function renderDelivery(){
         <table>
           <thead><tr>
             <th style="text-align:center;width:84px">처방일</th>
-            <th style="text-align:center">환자명</th>
+            <th style="text-align:center;border-right:1px solid var(--border-2)">환자명</th>
             <th style="text-align:center;width:68px">구분</th>
             <th style="text-align:center;width:72px">차수</th>
             <th class="num" style="text-align:center;border-left:1px solid var(--border-2)">배송비</th>
@@ -1676,7 +1676,6 @@ function updateDeliveryList(){
     });
   tbody.innerHTML=!filtered.length?`<tr><td colspan="7" class="empty">처방이 없습니다</td></tr>`:
     filtered.map(r=>{
-      const dlvFee=r.fees?fmtW(r.fees.delivery??0)+'원':'-';
       const isDone=r.dlv.status==='완료';
       const badge=isDone
         ?`<span class="badge badge-done dlv-badge" style="cursor:pointer" data-rxid="${r.id}">완료</span>`
@@ -1685,10 +1684,10 @@ function updateDeliveryList(){
       const catBadge=r.category?`<span class="cat-badge cat-${r.category}">${r.category}</span>`:'-';
       return`<tr>
         <td style="text-align:center;white-space:nowrap;font-size:12px">${r.date}</td>
-        <td style="text-align:center"><b>${r.patientName}</b></td>
+        <td style="text-align:center;border-right:1px solid var(--border-2)"><b>${r.patientName}</b></td>
         <td style="text-align:center">${catBadge}</td>
         <td style="text-align:center;cursor:pointer;white-space:nowrap;font-size:12px;color:var(--text-2)" class="dlv-ses-cell" data-rxid="${r.id}">${sesText}</td>
-        <td class="num" style="border-left:1px solid var(--border-2)">${dlvFee}</td>
+        <td class="num" style="text-align:center;border-left:1px solid var(--border-2)"><input class="pat-cell-inp dlv-fee-inp" data-rxid="${r.id}" value="${r.fees?.delivery??0}" placeholder="0" style="text-align:center;width:68px;"></td>
         <td style="text-align:center">${badge}</td>
         <td><input class="pat-cell-inp dlv-memo-inp" data-rxid="${r.id}" value="${(r.dlv.memo||'').replace(/"/g,'&quot;')}" placeholder="메모" style="color:var(--text-3);min-width:100px;"></td>
       </tr>`;
@@ -1711,6 +1710,18 @@ function updateDeliveryList(){
       const d=getDelivery(rxId);
       d.memo=inp.value.trim();
       await saveDelivery(d);
+    });
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();});
+  });
+  tbody.querySelectorAll('.dlv-fee-inp').forEach(inp=>{
+    inp.addEventListener('blur',async()=>{
+      const rxId=inp.dataset.rxid;
+      const rx=prescriptionsData.find(x=>x.id===rxId);
+      if(!rx)return;
+      if(!rx.fees)rx.fees={};
+      rx.fees.delivery=Number(inp.value.replace(/[^0-9]/g,''))||0;
+      await save(RX_KEYS.prescriptions,prescriptionsData);
+      updateDeliveryList();
     });
     inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();});
   });
