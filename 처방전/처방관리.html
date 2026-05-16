@@ -286,8 +286,9 @@ let patientsData=[];
 let prescriptionsData=[];
 let herbsData=[];
 let settingsData={prices:{}};
+let deliveriesData=[];
 
-const RX_KEYS={patients:'rx_patients_v1',prescriptions:'rx_prescriptions_v1',config:'rx_config_v1'};
+const RX_KEYS={patients:'rx_patients_v1',prescriptions:'rx_prescriptions_v1',config:'rx_config_v1',deliveries:'rx_deliveries_v1'};
 const HERB_KEYS={herbs:'herb_herbs_v1',settings:'herb_settings_v1',outbound:'herb_outbound_v1'};
 
 let rxConfig={
@@ -1569,10 +1570,113 @@ function showPatientDetail(pid){
   });
 }
 
-/* ── 탭 전환 ── */
+/* ── 배송 관리 ── */
+let dlvSearch='';
+let dlvStatus='';
+
+function getDelivery(rxId){
+  return deliveriesData.find(d=>d.rxId===rxId)||{rxId,status:'대기',memo:''};
+}
+async function saveDelivery(d){
+  const idx=deliveriesData.findIndex(x=>x.rxId===d.rxId);
+  if(idx>=0)deliveriesData[idx]=d;else deliveriesData.push(d);
+  await save(RX_KEYS.deliveries,deliveriesData);
+}
+
 function renderDelivery(){
   const el=document.getElementById('view-delivery');
-  el.innerHTML=`<div class="card"><div class="section-title">배송 관리</div><p style="color:var(--text-3);font-size:13px">준비 중입니다.</p></div>`;
+  if(!document.getElementById('dlv-search')){
+    el.innerHTML=`
+    <div class="toolbar" style="flex-wrap:wrap;margin-bottom:.875rem">
+      <input type="text" id="dlv-search" placeholder="환자명 검색" style="width:130px;flex-shrink:0">
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="btn btn-sm btn-primary dlv-status-btn" data-status="">전체</button>
+        <button class="btn btn-sm btn-ghost dlv-status-btn" data-status="대기">대기</button>
+        <button class="btn btn-sm btn-ghost dlv-status-btn" data-status="발송완료">발송완료</button>
+      </div>
+    </div>
+    <div id="dlv-summary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.875rem"></div>
+    <div class="card" style="padding:0">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:center">처방일</th>
+            <th style="text-align:center">환자명</th>
+            <th style="text-align:center">처방명</th>
+            <th class="num" style="text-align:center">배송비</th>
+            <th style="text-align:center;width:90px">상태</th>
+            <th>배송 메모</th>
+          </tr></thead>
+          <tbody id="dlv-tbody"></tbody>
+        </table>
+      </div>
+    </div>`;
+    document.getElementById('dlv-search').addEventListener('input',e=>{dlvSearch=e.target.value;updateDeliveryList();});
+    document.querySelectorAll('.dlv-status-btn').forEach(b=>b.addEventListener('click',()=>{
+      dlvStatus=b.dataset.status;
+      document.querySelectorAll('.dlv-status-btn').forEach(x=>{
+        const isAll=x.dataset.status==='';
+        const isActive=x.dataset.status===dlvStatus;
+        x.className=`btn btn-sm ${isAll?(dlvStatus===''?'btn-primary':'btn-ghost'):(isActive?'btn-filter':'btn-ghost')} dlv-status-btn`;
+      });
+      updateDeliveryList();
+    }));
+  }
+  updateDeliveryList();
+}
+
+function updateDeliveryList(){
+  const tbody=document.getElementById('dlv-tbody');
+  const summaryEl=document.getElementById('dlv-summary');
+  if(!tbody)return;
+  const withDlv=[...prescriptionsData]
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id))
+    .map(r=>({...r,dlv:getDelivery(r.id)}));
+  const cntWait=withDlv.filter(r=>r.dlv.status==='대기').length;
+  const cntDone=withDlv.filter(r=>r.dlv.status==='발송완료').length;
+  if(summaryEl){
+    summaryEl.innerHTML=`
+      <span style="background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:12px;color:var(--text-2)">전체 <b>${withDlv.length}</b>건</span>
+      <span style="background:var(--amber-light);border:1px solid rgba(245,158,11,0.2);border-radius:20px;padding:3px 12px;font-size:12px;color:#92400E">대기 <b>${cntWait}</b>건</span>
+      <span style="background:var(--green-light);border:1px solid rgba(16,185,129,0.2);border-radius:20px;padding:3px 12px;font-size:12px;color:#065F46">발송완료 <b>${cntDone}</b>건</span>`;
+  }
+  const filtered=withDlv
+    .filter(r=>!dlvSearch||r.patientName.includes(dlvSearch))
+    .filter(r=>!dlvStatus||r.dlv.status===dlvStatus);
+  tbody.innerHTML=!filtered.length?`<tr><td colspan="6" class="empty">처방이 없습니다</td></tr>`:
+    filtered.map(r=>{
+      const dlvFee=r.fees?.delivery>0?fmtW(r.fees.delivery)+'원':'-';
+      const isDone=r.dlv.status==='발송완료';
+      const badge=isDone
+        ?`<span class="badge badge-done dlv-badge" style="cursor:pointer" data-rxid="${r.id}">발송완료</span>`
+        :`<span class="badge dlv-badge" style="background:var(--amber-light);color:#92400E;cursor:pointer" data-rxid="${r.id}">대기</span>`;
+      return`<tr>
+        <td style="text-align:center;white-space:nowrap">${r.date}</td>
+        <td style="text-align:center"><b>${r.patientName}</b></td>
+        <td>${r.diagnosis||'-'}</td>
+        <td class="num">${dlvFee}</td>
+        <td style="text-align:center">${badge}</td>
+        <td><input class="pat-cell-inp dlv-memo-inp" data-rxid="${r.id}" value="${(r.dlv.memo||'').replace(/"/g,'&quot;')}" placeholder="메모" style="color:var(--text-3);min-width:100px;"></td>
+      </tr>`;
+    }).join('');
+  tbody.querySelectorAll('.dlv-badge').forEach(badge=>{
+    badge.addEventListener('click',async()=>{
+      const rxId=badge.dataset.rxid;
+      const d=getDelivery(rxId);
+      d.status=d.status==='발송완료'?'대기':'발송완료';
+      await saveDelivery(d);
+      updateDeliveryList();
+    });
+  });
+  tbody.querySelectorAll('.dlv-memo-inp').forEach(inp=>{
+    inp.addEventListener('blur',async()=>{
+      const rxId=inp.dataset.rxid;
+      const d=getDelivery(rxId);
+      d.memo=inp.value.trim();
+      await saveDelivery(d);
+    });
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();});
+  });
 }
 function renderHappycall(){
   const el=document.getElementById('view-happycall');
@@ -1702,16 +1806,17 @@ document.getElementById('import-file').addEventListener('change',async e=>{
 
 /* ── 초기화 ── */
 (async()=>{
-  const[pat,rx,hb,st,cfg]=await Promise.all([
+  const[pat,rx,hb,st,cfg,dlv]=await Promise.all([
     load(RX_KEYS.patients),load(RX_KEYS.prescriptions),
     load(HERB_KEYS.herbs),load(HERB_KEYS.settings),
-    load(RX_KEYS.config),
+    load(RX_KEYS.config),load(RX_KEYS.deliveries),
   ]);
   if(pat&&Array.isArray(pat))patientsData=pat;
   if(rx&&Array.isArray(rx))prescriptionsData=rx;
   if(hb&&Array.isArray(hb)&&hb.length>0)herbsData=hb;
   if(st?.prices)settingsData.prices=st.prices;
   if(cfg&&typeof cfg==='object')rxConfig={...rxConfig,...cfg};
+  if(dlv&&Array.isArray(dlv))deliveriesData=dlv;
   document.getElementById('sync-code-display').textContent=getSyncCode();
   setSyncStatus('☁ 동기화됨');
   setStatus(herbsData.length?'불러옴 ✓':'⚠ 약재 목록 없음 — 약재관리 페이지를 먼저 열어주세요');
