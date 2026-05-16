@@ -1589,13 +1589,8 @@ function renderDelivery(){
     el.innerHTML=`
     <div class="toolbar" style="flex-wrap:wrap;margin-bottom:.875rem">
       <input type="text" id="dlv-search" placeholder="환자명 검색" style="width:130px;flex-shrink:0">
-      <div style="display:flex;gap:4px;flex-shrink:0">
-        <button class="btn btn-sm btn-primary dlv-status-btn" data-status="">전체</button>
-        <button class="btn btn-sm btn-ghost dlv-status-btn" data-status="대기">대기</button>
-        <button class="btn btn-sm btn-ghost dlv-status-btn" data-status="발송완료">발송완료</button>
-      </div>
     </div>
-    <div id="dlv-summary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.875rem"></div>
+    <div id="dlv-summary" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.875rem"></div>
     <div class="card" style="padding:0">
       <div class="tbl-wrap">
         <table>
@@ -1612,15 +1607,6 @@ function renderDelivery(){
       </div>
     </div>`;
     document.getElementById('dlv-search').addEventListener('input',e=>{dlvSearch=e.target.value;updateDeliveryList();});
-    document.querySelectorAll('.dlv-status-btn').forEach(b=>b.addEventListener('click',()=>{
-      dlvStatus=b.dataset.status;
-      document.querySelectorAll('.dlv-status-btn').forEach(x=>{
-        const isAll=x.dataset.status==='';
-        const isActive=x.dataset.status===dlvStatus;
-        x.className=`btn btn-sm ${isAll?(dlvStatus===''?'btn-primary':'btn-ghost'):(isActive?'btn-filter':'btn-ghost')} dlv-status-btn`;
-      });
-      updateDeliveryList();
-    }));
   }
   updateDeliveryList();
 }
@@ -1635,17 +1621,19 @@ function updateDeliveryList(){
   const cntWait=withDlv.filter(r=>r.dlv.status==='대기').length;
   const cntDone=withDlv.filter(r=>r.dlv.status==='발송완료').length;
   if(summaryEl){
-    summaryEl.innerHTML=`
-      <span style="background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:12px;color:var(--text-2)">전체 <b>${withDlv.length}</b>건</span>
-      <span style="background:var(--amber-light);border:1px solid rgba(245,158,11,0.2);border-radius:20px;padding:3px 12px;font-size:12px;color:#92400E">대기 <b>${cntWait}</b>건</span>
-      <span style="background:var(--green-light);border:1px solid rgba(16,185,129,0.2);border-radius:20px;padding:3px 12px;font-size:12px;color:#065F46">발송완료 <b>${cntDone}</b>건</span>`;
+    const mk=(status,label,cnt)=>`<button class="btn btn-sm ${dlvStatus===status?'btn-filter':'btn-ghost'} dlv-status-btn" data-status="${status}">${label} <b>${cnt}</b>건</button>`;
+    summaryEl.innerHTML=mk('',  '전체',   withDlv.length)+mk('대기','대기',cntWait)+mk('발송완료','발송완료',cntDone);
+    summaryEl.querySelectorAll('.dlv-status-btn').forEach(b=>b.addEventListener('click',()=>{
+      dlvStatus=b.dataset.status;
+      updateDeliveryList();
+    }));
   }
   const filtered=withDlv
     .filter(r=>!dlvSearch||r.patientName.includes(dlvSearch))
     .filter(r=>!dlvStatus||r.dlv.status===dlvStatus);
   tbody.innerHTML=!filtered.length?`<tr><td colspan="6" class="empty">처방이 없습니다</td></tr>`:
     filtered.map(r=>{
-      const dlvFee=r.fees?.delivery>0?fmtW(r.fees.delivery)+'원':'-';
+      const dlvFee=r.fees?fmtW(r.fees.delivery??0)+'원':'-';
       const isDone=r.dlv.status==='발송완료';
       const badge=isDone
         ?`<span class="badge badge-done dlv-badge" style="cursor:pointer" data-rxid="${r.id}">발송완료</span>`
