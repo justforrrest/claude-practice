@@ -1573,6 +1573,8 @@ function showPatientDetail(pid){
 /* ── 배송 관리 ── */
 let dlvSearch='';
 let dlvStatus='';
+let dlvYear='';
+let dlvMonth='';
 
 function getDelivery(rxId){
   return deliveriesData.find(d=>d.rxId===rxId)||{rxId,status:'대기',memo:''};
@@ -1590,6 +1592,12 @@ function renderDelivery(){
     <div class="toolbar" style="flex-wrap:wrap;margin-bottom:.875rem">
       <input type="text" id="dlv-search" placeholder="환자명 검색" style="width:130px;flex-shrink:0">
       <div id="dlv-summary" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+        <div id="dlv-yr-sel-wrap" style="display:none;gap:6px;align-items:center">
+          <select id="dlv-year-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:13px;font-family:var(--font-sans);background:var(--surface);color:var(--text-1);outline:none"></select>
+          <select id="dlv-month-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:13px;font-family:var(--font-sans);background:var(--surface);color:var(--text-1);outline:none"></select>
+        </div>
+      </div>
     </div>
     <div class="card" style="padding:0">
       <div class="tbl-wrap">
@@ -1607,8 +1615,24 @@ function renderDelivery(){
       </div>
     </div>`;
     document.getElementById('dlv-search').addEventListener('input',e=>{dlvSearch=e.target.value;updateDeliveryList();});
+    document.getElementById('dlv-year-sel').addEventListener('change',e=>{dlvYear=e.target.value;updateDeliveryList();});
+    document.getElementById('dlv-month-sel').addEventListener('change',e=>{dlvMonth=e.target.value;updateDeliveryList();});
   }
+  renderDlvFilters();
   updateDeliveryList();
+}
+
+function renderDlvFilters(){
+  const wrap=document.getElementById('dlv-yr-sel-wrap');
+  const ySel=document.getElementById('dlv-year-sel');
+  const mSel=document.getElementById('dlv-month-sel');
+  if(!wrap||!ySel||!mSel)return;
+  const years=[...new Set(prescriptionsData.map(r=>r.date?.slice(0,4)).filter(Boolean))].sort().reverse();
+  if(!years.length){wrap.style.display='none';return;}
+  ySel.innerHTML=`<option value="">연도 전체</option>`+years.map(y=>`<option value="${y}"${dlvYear===y?' selected':''}>${y}년</option>`).join('');
+  const MONTHS=['01','02','03','04','05','06','07','08','09','10','11','12'];
+  mSel.innerHTML=`<option value="">월 전체</option>`+MONTHS.map(m=>`<option value="${m}"${dlvMonth===m?' selected':''}>${parseInt(m)}월</option>`).join('');
+  wrap.style.display='flex';
 }
 
 function updateDeliveryList(){
@@ -1616,10 +1640,12 @@ function updateDeliveryList(){
   const summaryEl=document.getElementById('dlv-summary');
   if(!tbody)return;
   const withDlv=[...prescriptionsData]
+    .filter(r=>!dlvYear||r.date?.startsWith(dlvYear))
+    .filter(r=>!dlvMonth||r.date?.slice(5,7)===dlvMonth)
     .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id))
     .map(r=>({...r,dlv:getDelivery(r.id)}));
   const cntWait=withDlv.filter(r=>r.dlv.status==='대기').length;
-  const cntDone=withDlv.filter(r=>r.dlv.status==='발송완료').length;
+  const cntDone=withDlv.filter(r=>r.dlv.status==='완료').length;
   if(summaryEl){
     const mk=(status,label,cnt)=>{
       const active=dlvStatus===status;
@@ -1627,11 +1653,11 @@ function updateDeliveryList(){
       if(active){
         if(status==='')st='background:#ddd6fe;color:var(--text-2);border-color:rgba(109,40,217,0.15)';
         else if(status==='대기')st='background:var(--amber-light);color:#92400E;border-color:rgba(245,158,11,0.35)';
-        else if(status==='발송완료')st='background:var(--green-light);color:#065F46;border-color:rgba(16,185,129,0.35)';
+        else if(status==='완료')st='background:var(--green-light);color:#065F46;border-color:rgba(16,185,129,0.35)';
       }
       return`<button class="btn btn-sm btn-ghost dlv-status-btn" data-status="${status}"${active?` style="${st}"`:''}>${label} <b>${cnt}</b>건</button>`;
     };
-    summaryEl.innerHTML=mk('',  '전체',   withDlv.length)+mk('대기','대기',cntWait)+mk('발송완료','발송완료',cntDone);
+    summaryEl.innerHTML=mk('','전체',withDlv.length)+mk('대기','대기',cntWait)+mk('완료','완료',cntDone);
     summaryEl.querySelectorAll('.dlv-status-btn').forEach(b=>b.addEventListener('click',()=>{
       dlvStatus=b.dataset.status;
       updateDeliveryList();
@@ -1643,9 +1669,9 @@ function updateDeliveryList(){
   tbody.innerHTML=!filtered.length?`<tr><td colspan="6" class="empty">처방이 없습니다</td></tr>`:
     filtered.map(r=>{
       const dlvFee=r.fees?fmtW(r.fees.delivery??0)+'원':'-';
-      const isDone=r.dlv.status==='발송완료';
+      const isDone=r.dlv.status==='완료';
       const badge=isDone
-        ?`<span class="badge badge-done dlv-badge" style="cursor:pointer" data-rxid="${r.id}">발송완료</span>`
+        ?`<span class="badge badge-done dlv-badge" style="cursor:pointer" data-rxid="${r.id}">완료</span>`
         :`<span class="badge dlv-badge" style="background:var(--amber-light);color:#92400E;cursor:pointer" data-rxid="${r.id}">대기</span>`;
       return`<tr>
         <td style="text-align:center;white-space:nowrap">${r.date}</td>
@@ -1660,7 +1686,7 @@ function updateDeliveryList(){
     badge.addEventListener('click',async()=>{
       const rxId=badge.dataset.rxid;
       const d=getDelivery(rxId);
-      d.status=d.status==='발송완료'?'대기':'발송완료';
+      d.status=d.status==='완료'?'대기':'완료';
       await saveDelivery(d);
       updateDeliveryList();
     });
