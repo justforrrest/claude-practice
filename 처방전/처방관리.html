@@ -1647,8 +1647,15 @@ function updateDeliveryList(){
     .map(r=>({...r,dlv:getDelivery(r.id)}));
   const cntWait=withDlv.filter(r=>r.dlv.status==='대기').length;
   const cntDone=withDlv.filter(r=>r.dlv.status==='완료').length;
-  const cntMedProg=withDlv.filter(r=>r.sessionCur&&r.sessionTotal&&r.sessionCur<r.sessionTotal).length;
-  const cntMedDone=withDlv.filter(r=>r.sessionCur&&r.sessionTotal&&r.sessionCur===r.sessionTotal).length;
+  const patLatestRxMap={};
+  prescriptionsData.forEach(r=>{
+    if(!r.sessionCur||!r.sessionTotal)return;
+    const key=r.patientId||r.patientName;
+    if(!patLatestRxMap[key]||r.date>patLatestRxMap[key].date)patLatestRxMap[key]=r;
+  });
+  const getPatMedSt=r=>{const lr=patLatestRxMap[r.patientId||r.patientName];if(!lr)return'';return lr.sessionCur===lr.sessionTotal?'med-완료':'med-진행';};
+  const cntMedProg=withDlv.filter(r=>getPatMedSt(r)==='med-진행').length;
+  const cntMedDone=withDlv.filter(r=>getPatMedSt(r)==='med-완료').length;
   if(summaryEl){
     const mk=(status,label,cnt)=>{
       const active=dlvStatus===status;
@@ -1670,8 +1677,8 @@ function updateDeliveryList(){
       if(!dlvStatus)return true;
       if(dlvStatus==='대기')return r.dlv.status==='대기';
       if(dlvStatus==='완료')return r.dlv.status==='완료';
-      if(dlvStatus==='med-진행')return r.sessionCur&&r.sessionTotal&&r.sessionCur<r.sessionTotal;
-      if(dlvStatus==='med-완료')return r.sessionCur&&r.sessionTotal&&r.sessionCur===r.sessionTotal;
+      if(dlvStatus==='med-진행')return getPatMedSt(r)==='med-진행';
+      if(dlvStatus==='med-완료')return getPatMedSt(r)==='med-완료';
       return true;
     });
   tbody.innerHTML=!filtered.length?`<tr><td colspan="7" class="empty">처방이 없습니다</td></tr>`:
@@ -1687,7 +1694,7 @@ function updateDeliveryList(){
         <td style="text-align:center;border-right:1px solid var(--border-2)"><b>${r.patientName}</b></td>
         <td style="text-align:center">${catBadge}</td>
         <td style="text-align:center;cursor:pointer;white-space:nowrap;font-size:12px;color:var(--text-2)" class="dlv-ses-cell" data-rxid="${r.id}">${sesText}</td>
-        <td class="num" style="text-align:center;border-left:1px solid var(--border-2)"><input class="pat-cell-inp dlv-fee-inp" data-rxid="${r.id}" value="${r.fees?.delivery??0}" placeholder="0" style="text-align:center;width:68px;"></td>
+        <td class="num" style="text-align:center;border-left:1px solid var(--border-2)"><input class="pat-cell-inp dlv-fee-inp" data-rxid="${r.id}" value="${r.fees?.delivery??0}" placeholder="0" style="text-align:right;width:52px;">원</td>
         <td style="text-align:center">${badge}</td>
         <td><input class="pat-cell-inp dlv-memo-inp" data-rxid="${r.id}" value="${(r.dlv.memo||'').replace(/"/g,'&quot;')}" placeholder="메모" style="color:var(--text-3);min-width:100px;"></td>
       </tr>`;
