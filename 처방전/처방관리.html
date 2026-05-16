@@ -1647,12 +1647,18 @@ function updateDeliveryList(){
     .map(r=>({...r,dlv:getDelivery(r.id)}));
   const cntWait=withDlv.filter(r=>r.dlv.status==='대기').length;
   const cntDone=withDlv.filter(r=>r.dlv.status==='완료').length;
+  const cntMedProg=withDlv.filter(r=>r.sessionCur&&r.sessionTotal&&r.sessionCur<r.sessionTotal).length;
+  const cntMedDone=withDlv.filter(r=>r.sessionCur&&r.sessionTotal&&r.sessionCur===r.sessionTotal).length;
   if(summaryEl){
     const mk=(status,label,cnt)=>{
       const active=dlvStatus===status;
       return`<button class="btn btn-sm ${active?'btn-filter':'btn-ghost'} dlv-status-btn" data-status="${status}">${label} <b>${cnt}</b>건</button>`;
     };
-    summaryEl.innerHTML=mk('','전체',withDlv.length)+mk('대기','대기',cntWait)+mk('완료','완료',cntDone);
+    const SEP=`<span style="width:1px;height:16px;background:var(--border-2);align-self:center;flex-shrink:0"></span>`;
+    summaryEl.innerHTML=
+      mk('','전체',withDlv.length)+SEP+
+      mk('대기','배송대기',cntWait)+mk('완료','배송완료',cntDone)+SEP+
+      mk('med-진행','복약진행',cntMedProg)+mk('med-완료','복약완료',cntMedDone);
     summaryEl.querySelectorAll('.dlv-status-btn').forEach(b=>b.addEventListener('click',()=>{
       dlvStatus=b.dataset.status;
       updateDeliveryList();
@@ -1660,7 +1666,14 @@ function updateDeliveryList(){
   }
   const filtered=withDlv
     .filter(r=>!dlvSearch||r.patientName.includes(dlvSearch))
-    .filter(r=>!dlvStatus||r.dlv.status===dlvStatus);
+    .filter(r=>{
+      if(!dlvStatus)return true;
+      if(dlvStatus==='대기')return r.dlv.status==='대기';
+      if(dlvStatus==='완료')return r.dlv.status==='완료';
+      if(dlvStatus==='med-진행')return r.sessionCur&&r.sessionTotal&&r.sessionCur<r.sessionTotal;
+      if(dlvStatus==='med-완료')return r.sessionCur&&r.sessionTotal&&r.sessionCur===r.sessionTotal;
+      return true;
+    });
   tbody.innerHTML=!filtered.length?`<tr><td colspan="7" class="empty">처방이 없습니다</td></tr>`:
     filtered.map(r=>{
       const dlvFee=r.fees?fmtW(r.fees.delivery??0)+'원':'-';
