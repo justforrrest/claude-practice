@@ -1649,13 +1649,7 @@ function updateDeliveryList(){
   if(summaryEl){
     const mk=(status,label,cnt)=>{
       const active=dlvStatus===status;
-      let st='';
-      if(active){
-        if(status==='')st='background:#ddd6fe;color:var(--text-2);border-color:rgba(109,40,217,0.15)';
-        else if(status==='대기')st='background:var(--amber-light);color:#92400E;border-color:rgba(245,158,11,0.35)';
-        else if(status==='완료')st='background:var(--green-light);color:#065F46;border-color:rgba(16,185,129,0.35)';
-      }
-      return`<button class="btn btn-sm btn-ghost dlv-status-btn" data-status="${status}"${active?` style="${st}"`:''}>${label} <b>${cnt}</b>건</button>`;
+      return`<button class="btn btn-sm ${active?'btn-filter':'btn-ghost'} dlv-status-btn" data-status="${status}">${label} <b>${cnt}</b>건</button>`;
     };
     summaryEl.innerHTML=mk('','전체',withDlv.length)+mk('대기','대기',cntWait)+mk('완료','완료',cntDone);
     summaryEl.querySelectorAll('.dlv-status-btn').forEach(b=>b.addEventListener('click',()=>{
