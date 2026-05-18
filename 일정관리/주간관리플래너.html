@@ -1264,7 +1264,7 @@ function getWeeklyEntry(wk){
   return e;
 }
 const CELL_COLORS=['','#E5E7EB','#FEF9C3','#BFDBFE','#F9FAFB','#FECACA','#BBF7D0','#FED7AA','#FBCFE8'];
-const KEYWORD_COLORS={'업무':'#E5E7EB','해피모닝':'#FBCFE8','운동':'#BFDBFE','휴식':'','free':'','데이트':'#FECACA','공부':'#BBF7D0','계획':'#FED7AA','친목':'#FEF9C3'};
+const KEYWORD_COLORS={'업무':'#E5E7EB','해피모닝':'#FEF9C3','운동':'#BFDBFE','휴식':'','free':'','데이트':'#FECACA','공부':'#BBF7D0','계획':'#FED7AA','친목':'#FBCFE8'};
 function matchKeywordColor(text){
   const t=text||'';
   const k=Object.keys(KEYWORD_COLORS).find(k=>t.includes(k));
