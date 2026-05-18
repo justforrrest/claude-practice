@@ -1302,7 +1302,7 @@ function buildAvailTable(entry,onCounts){
     else emptyCount++;
   }));
   if(onCounts)onCounts(counts);
-  const autoKeywords=Object.keys(counts);
+  const autoKeywords=Object.keys(counts).filter(k=>k!=='휴식');
   const queue=autoKeywords.filter(k=>!entry.blockNames.includes(k));
   entry.blockNames=entry.blockNames.map(name=>{
     if(!name.trim())return queue.shift()||'';
@@ -1334,7 +1334,7 @@ function buildAvailTable(entry,onCounts){
   const freeRow=tbody.insertRow();
   makeCell(freeRow,3);
   const freeLbl=freeRow.insertCell();freeLbl.className='avail-name';freeLbl.style.cssText='font-style:italic;color:var(--text-3);';freeLbl.textContent='휴식/free';
-  const freeCnt=freeRow.insertCell();freeCnt.className='avail-count';freeCnt.textContent=emptyCount;
+  const freeCnt=freeRow.insertCell();freeCnt.className='avail-count';freeCnt.textContent=emptyCount+(counts['휴식']||0);
   return table;
 }
 function buildWRAvailTable(wEntry,wrEntry,onCounts){
@@ -1365,7 +1365,7 @@ function buildWRAvailTable(wEntry,wrEntry,onCounts){
   }
   const freeRow=tbody.insertRow();
   const freeLbl=freeRow.insertCell();freeLbl.className='avail-name';freeLbl.style.cssText='font-style:italic;color:var(--text-3);';freeLbl.textContent='휴식/free';
-  const freeCnt=freeRow.insertCell();freeCnt.className='avail-count';freeCnt.textContent=emptyCount;
+  const freeCnt=freeRow.insertCell();freeCnt.className='avail-count';freeCnt.textContent=emptyCount+(counts['휴식']||0);
   const freeExecTd=freeRow.insertCell();freeExecTd.className='avail-practice';
   const freeInp=document.createElement('input');freeInp.type='text';freeInp.value=wrEntry.blockExec[7]||'';freeInp.placeholder='-';freeInp.style.cssText=execInpStyle;
   freeInp.addEventListener('input',()=>{wrEntry.blockExec[7]=freeInp.value;});
