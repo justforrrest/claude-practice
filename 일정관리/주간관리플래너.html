@@ -543,6 +543,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
             </div>
             <button class="nav-btn" id="w-color-refresh" title="셀 색상 새로고침">↺</button>
             <button class="nav-btn" id="w-save-tpl" title="현재 주 그리드를 템플릿으로 저장">📌</button>
+            <button class="nav-btn" id="w-load-tpl" title="저장된 템플릿 불러오기">📂</button>
           </div>
         </div>
         <div class="week-grid" id="week-grid"></div>
@@ -1513,6 +1514,16 @@ document.addEventListener('input',()=>{
   },1000);
 });
 document.getElementById('w-save-tpl').onclick=saveWeekTemplate;
+document.getElementById('w-load-tpl').onclick=async()=>{
+  if(!weekTemplate){alert('저장된 템플릿이 없습니다.');return;}
+  if(!confirm('현재 주 그리드를 저장된 템플릿으로 덮어쓰시겠습니까?'))return;
+  const wk=weekKey(currentWeekDate);
+  const entry=getWeeklyEntry(wk);
+  entry.grid=deepCopy(weekTemplate.grid);
+  entry.gridColor=deepCopy(weekTemplate.gridColor);
+  await save(KEYS.weekly,weeklyData);
+  renderWeekly();
+};
 document.getElementById('w-color-refresh').onclick=()=>{
   const wk=weekKey(currentWeekDate);const entry=weeklyData[wk];if(!entry)return;
   const wEntry=getWeeklyEntry(wk);
