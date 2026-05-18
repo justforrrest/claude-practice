@@ -1045,7 +1045,7 @@ function renderCalendar(){
 function renderWeekCal(){
   const con=document.getElementById('w-cal-container');
   if(!con) return;
-  const ws=getWeekStart(currentWeekDate);
+  const ws=getWeekStart(currentWeekDate);ws.setHours(0,0,0,0);
   const we=new Date(ws);we.setDate(we.getDate()+6);
   const y=wCalDate.getFullYear(),m=wCalDate.getMonth();
   const firstDow=(new Date(y,m,1).getDay()+6)%7;
