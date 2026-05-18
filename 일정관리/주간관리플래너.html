@@ -1263,8 +1263,8 @@ function getWeeklyEntry(wk){
   if(e.blockNames.length<7) e.blockNames.push('');
   return e;
 }
-const CELL_COLORS=['','#E5E7EB','#FEF9C3','#BFDBFE','#F9FAFB','#FECACA','#BBF7D0','#FED7AA'];
-const KEYWORD_COLORS={'업무':'#E5E7EB','해피모닝':'#FEF9C3','운동':'#BFDBFE','휴식':'#F9FAFB','데이트':'#FECACA','공부':'#BBF7D0','계획':'#FED7AA'};
+const CELL_COLORS=['','#E5E7EB','#FEF9C3','#BFDBFE','#F9FAFB','#FECACA','#BBF7D0','#FED7AA','#A7F3D0'];
+const KEYWORD_COLORS={'업무':'#E5E7EB','해피모닝':'#A7F3D0','운동':'#BFDBFE','휴식':'','free':'','데이트':'#FECACA','공부':'#BBF7D0','계획':'#FED7AA','친목':'#FEF9C3'};
 function matchKeywordColor(text){
   const t=text||'';
   const k=Object.keys(KEYWORD_COLORS).find(k=>t.includes(k));
@@ -1333,7 +1333,7 @@ function buildAvailTable(entry,onCounts){
   for(let i=0;i<3;i++){const row=tbody.insertRow();makeCell(row,i);makeCell(row,i+4);}
   const freeRow=tbody.insertRow();
   makeCell(freeRow,3);
-  const freeLbl=freeRow.insertCell();freeLbl.className='avail-name';freeLbl.style.cssText='font-style:italic;color:var(--text-3);';freeLbl.textContent='free';
+  const freeLbl=freeRow.insertCell();freeLbl.className='avail-name';freeLbl.style.cssText='font-style:italic;color:var(--text-3);';freeLbl.textContent='휴식/free';
   const freeCnt=freeRow.insertCell();freeCnt.className='avail-count';freeCnt.textContent=emptyCount;
   return table;
 }
@@ -1364,7 +1364,7 @@ function buildWRAvailTable(wEntry,wrEntry,onCounts){
     execTd.appendChild(inp);
   }
   const freeRow=tbody.insertRow();
-  const freeLbl=freeRow.insertCell();freeLbl.className='avail-name';freeLbl.style.cssText='font-style:italic;color:var(--text-3);';freeLbl.textContent='free';
+  const freeLbl=freeRow.insertCell();freeLbl.className='avail-name';freeLbl.style.cssText='font-style:italic;color:var(--text-3);';freeLbl.textContent='휴식/free';
   const freeCnt=freeRow.insertCell();freeCnt.className='avail-count';freeCnt.textContent=emptyCount;
   const freeExecTd=freeRow.insertCell();freeExecTd.className='avail-practice';
   const freeInp=document.createElement('input');freeInp.type='text';freeInp.value=wrEntry.blockExec[7]||'';freeInp.placeholder='-';freeInp.style.cssText=execInpStyle;
