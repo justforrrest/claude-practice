@@ -1305,7 +1305,7 @@ function buildAvailTable(entry,onCounts){
   const autoKeywords=Object.keys(counts).filter(k=>k!=='휴식');
   const queue=autoKeywords.filter(k=>!entry.blockNames.includes(k));
   entry.blockNames=entry.blockNames.map(name=>{
-    if(!name.trim())return queue.shift()||'';
+    if(!name.trim()||name.trim()==='휴식')return queue.shift()||'';
     if(counts[name.trim()]!==undefined)return name;
     return queue.shift()||'';
   });
