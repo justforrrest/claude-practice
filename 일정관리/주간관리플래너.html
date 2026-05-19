@@ -406,6 +406,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 .mplan-date-num{font-size:10px;font-weight:600;color:var(--text-3);text-align:right;line-height:1.4;}
 .mplan-date-num.sun{color:var(--coral);}
 .mplan-date-num.sat{color:var(--sky);}
+.mplan-date-num.holiday{color:var(--coral) !important;}
 .mplan-event-row{display:flex;align-items:center;gap:2px;}
 .mplan-event-inp{flex:1;border:none;background:transparent;font-size:7px;color:var(--text-1);font-family:var(--font-sans);outline:none;min-width:0;padding:0;}
 .mplan-event-del{background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-3);padding:0 1px;line-height:1;flex-shrink:0;}
@@ -1699,7 +1700,8 @@ function renderMPlan(){
     const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dow=(firstDay+d-1)%7;
     const cell=document.createElement('div');cell.className='mplan-day'+(ds===td?' today':'');cell.dataset.date=ds;
-    const num=document.createElement('div');num.className='mplan-date-num'+(dow===6?' sun':dow===5?' sat':'');num.textContent=d;
+    const mpHoliday=getHoliday(ds);
+    const num=document.createElement('div');num.className='mplan-date-num'+(dow===6?' sun':dow===5?' sat':'')+(mpHoliday?' holiday':'');if(mpHoliday)num.title=mpHoliday;num.textContent=d;
     cell.appendChild(num);
     getMPlanEvents(ds).forEach((ev,ei)=>{
       const row=document.createElement('div');row.className='mplan-event-row';
