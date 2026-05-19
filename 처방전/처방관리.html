@@ -1654,8 +1654,8 @@ function updateDeliveryList(){
     if(!patLatestRxMap[key]||r.date>patLatestRxMap[key].date)patLatestRxMap[key]=r;
   });
   const getPatMedSt=r=>{const lr=patLatestRxMap[r.patientId||r.patientName];if(!lr)return'';return lr.sessionCur===lr.sessionTotal?'med-완료':'med-진행';};
-  const cntMedProg=withDlv.filter(r=>getPatMedSt(r)==='med-진행').length;
-  const cntMedDone=withDlv.filter(r=>getPatMedSt(r)==='med-완료').length;
+  const cntMedProg=new Set(withDlv.filter(r=>getPatMedSt(r)==='med-진행').map(r=>r.patientId||r.patientName)).size;
+  const cntMedDone=new Set(withDlv.filter(r=>getPatMedSt(r)==='med-완료').map(r=>r.patientId||r.patientName)).size;
   if(summaryEl){
     const mk=(status,label,cnt)=>{
       const active=dlvStatus===status;
