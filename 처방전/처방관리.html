@@ -1664,8 +1664,8 @@ function updateDeliveryList(){
     const SEP=`<span style="width:1px;height:16px;background:var(--border-2);align-self:center;flex-shrink:0"></span>`;
     summaryEl.innerHTML=
       mk('','전체',withDlv.length)+SEP+
-      mk('대기','배송대기',cntWait)+mk('완료','배송완료',cntDone)+SEP+
-      mk('med-진행','복약진행',cntMedProg)+mk('med-완료','복약완료',cntMedDone);
+      mk('대기','배송대기',cntWait)+SEP+
+      mk('med-진행','복약진행',cntMedProg);
     summaryEl.querySelectorAll('.dlv-status-btn').forEach(b=>b.addEventListener('click',()=>{
       dlvStatus=b.dataset.status;
       updateDeliveryList();
