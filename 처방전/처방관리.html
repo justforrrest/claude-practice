@@ -186,7 +186,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
     <div style="font-size:28px;margin-bottom:.5rem">⚠️</div>
     <h3 style="margin-bottom:.5rem">단가 미등록</h3>
     <p id="price-warn-msg" style="font-size:13px;color:var(--text-2);margin-bottom:1.25rem;line-height:1.5"></p>
-    <button class="btn btn-primary" id="price-warn-ok" style="width:100%">확인</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" id="price-warn-cancel" style="flex:1;display:none">취소</button>
+      <button class="btn btn-primary" id="price-warn-ok" style="flex:1">확인</button>
+    </div>
   </div>
 </div>
 
@@ -235,8 +238,26 @@ function showPriceWarn(herb){
   const msg=document.getElementById('price-warn-msg');
   if(!ov||!msg)return;
   msg.textContent=`'${herb}'의 단가가 등록되어 있지 않습니다.\n설정 탭 › 약재 단가에서 등록해주세요.`;
+  document.getElementById('price-warn-cancel').style.display='none';
+  document.getElementById('price-warn-ok').textContent='확인';
   ov.classList.add('open');
   document.getElementById('price-warn-ok').onclick=()=>ov.classList.remove('open');
+}
+function showPriceWarnConfirm(herbList){
+  return new Promise(resolve=>{
+    const ov=document.getElementById('price-warn-overlay');
+    const msg=document.getElementById('price-warn-msg');
+    const cancelBtn=document.getElementById('price-warn-cancel');
+    const okBtn=document.getElementById('price-warn-ok');
+    if(!ov||!msg)return resolve(true);
+    msg.textContent=`단가 미등록 약재: ${herbList.join(', ')}\n\n저장을 계속하시겠습니까?`;
+    cancelBtn.style.display='';
+    okBtn.textContent='저장 계속';
+    ov.classList.add('open');
+    const close=(result)=>{ov.classList.remove('open');cancelBtn.style.display='none';okBtn.textContent='확인';resolve(result);};
+    okBtn.onclick=()=>close(true);
+    cancelBtn.onclick=()=>close(false);
+  });
 }
 function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
 function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
@@ -937,6 +958,8 @@ async function saveRx(){
   await save(RX_KEYS.patients,patientsData);
   const herbs=rxHerbs.filter(r=>r.herb&&Number(r.qty)>0);
   if(!herbs.length){alert('약재를 1종 이상 입력해주세요.');return;}
+  const noPriceHerbs=herbs.filter(r=>getPrice(r.herb)===0).map(r=>r.herb);
+  if(noPriceHerbs.length){const ok=await showPriceWarnConfirm(noPriceHerbs);if(!ok)return;}
   const packs=Number(document.getElementById('rx-packs').value)||20;
   const totalPacks=Number(document.getElementById('rx-total-packs').value)||45;
   const perPack=herbs.reduce((s,r)=>s+getPrice(r.herb)*Number(r.qty),0);
