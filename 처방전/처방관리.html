@@ -1607,8 +1607,8 @@ function renderDelivery(){
             <th style="text-align:center;border-right:1px solid var(--border-2)">환자명</th>
             <th style="text-align:center;width:68px">구분</th>
             <th style="text-align:center;width:72px">차수</th>
-            <th style="text-align:center;width:90px">배송상태</th>
-            <th class="num" style="text-align:center;border-left:1px solid var(--border-2);width:96px">배송비</th>
+            <th style="text-align:center;border-left:1px solid var(--border-2);width:90px">배송상태</th>
+            <th class="num" style="text-align:center;width:96px">배송비</th>
             <th>배송 메모</th>
           </tr></thead>
           <tbody id="dlv-tbody"></tbody>
@@ -1694,8 +1694,8 @@ function updateDeliveryList(){
         <td style="text-align:center;border-right:1px solid var(--border-2)"><b>${r.patientName}</b></td>
         <td style="text-align:center">${catBadge}</td>
         <td style="text-align:center;cursor:pointer;white-space:nowrap;font-size:12px;color:var(--text-2)" class="dlv-ses-cell" data-rxid="${r.id}">${sesText}</td>
-        <td style="text-align:center">${badge}</td>
-        <td class="num" style="text-align:center;border-left:1px solid var(--border-2)"><input class="pat-cell-inp dlv-fee-inp" data-rxid="${r.id}" value="${r.fees?.delivery??0}" placeholder="0" style="text-align:right;width:52px;">원</td>
+        <td style="text-align:center;border-left:1px solid var(--border-2)">${badge}</td>
+        <td class="num" style="text-align:center"><input class="pat-cell-inp dlv-fee-inp" data-rxid="${r.id}" value="${r.fees?.delivery??0}" placeholder="0" style="text-align:right;width:52px;">원</td>
         <td><input class="pat-cell-inp dlv-memo-inp" data-rxid="${r.id}" value="${(r.dlv.memo||'').replace(/"/g,'&quot;')}" placeholder="메모" style="color:var(--text-3);min-width:100px;"></td>
       </tr>`;
     }).join('');
