@@ -303,9 +303,9 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 .avail-table{width:100%;border-collapse:collapse;font-size:11px;}
 .avail-table th{font-size:9px;font-weight:700;color:var(--text-3);padding:1px 4px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;line-height:1;}
 .avail-table td{padding:3px 4px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;}
-.avail-name{font-weight:600;color:var(--text-1);text-align:center !important;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.avail-count{font-weight:700;color:var(--violet);text-align:center;width:36px;}
-.avail-practice{text-align:center;width:36px;}
+.avail-name{font-weight:600;color:var(--text-1);text-align:center !important;width:33.33%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.avail-count{font-weight:700;color:var(--violet);text-align:center;width:33.33%;}
+.avail-practice{text-align:center;width:33.33%;}
 .avail-practice input{width:100%;border:none;background:transparent;outline:none;font-size:11px;text-align:center;font-family:var(--font-sans);color:var(--text-2);}
 
 
@@ -467,9 +467,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
           <button class="nav-btn" id="d-prev">&#8249;</button>
           <span style="font-size:13px;font-weight:600;padding:0 6px;" id="d-date-label"></span>
           <button class="nav-btn" id="d-next">&#8250;</button>
-          <button class="nav-btn" id="d-yesterday">어제</button>
           <button class="nav-btn" id="d-today">오늘</button>
-          <button class="nav-btn" id="d-tomorrow">내일</button>
         </div>
         <button class="nav-btn" id="d-sync-weekly">📥 주간계획 가져오기</button>
       </div>
@@ -640,7 +638,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 const KEYS={dot:'b6ix_dot_v1',daily:'b6ix_daily_v1',weekly:'b6ix_weekly_v1',wreview:'b6ix_wreview_v1',monthly:'b6ix_monthly_v1',mplan:'b6ix_mplan_v1',template:'b6ix_template_v1',tabOrder:'b6ix_tab_order_v1',colWidths:'b6ix_col_widths_v1'};
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
-function fmtDate(ds){const[y,m,d]=ds.split('-');return y+'년 '+Number(m)+'월 '+Number(d)+'일';}
+function fmtDate(ds){const[y,m,d]=ds.split('-');const dt=new Date(Number(y),Number(m)-1,Number(d));const days=['일','월','화','수','목','금','토'];return y+'년 '+Number(m)+'월 '+Number(d)+'일('+days[dt.getDay()]+')';}
 function getWeekStart(date){const d=new Date(date);const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);d.setDate(diff);return d;}
 function weekKey(date){const ws=getWeekStart(date);return ws.getFullYear()+'-'+String(ws.getMonth()+1).padStart(2,'0')+'-'+String(ws.getDate()).padStart(2,'0');}
 function monthKey(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0');}
@@ -1209,9 +1207,7 @@ function renderDaily(){
 }
 document.getElementById('d-prev').onclick=()=>{const d=new Date(currentDailyDate);d.setDate(d.getDate()-1);currentDailyDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');renderDaily();};
 document.getElementById('d-next').onclick=()=>{const d=new Date(currentDailyDate);d.setDate(d.getDate()+1);currentDailyDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');renderDaily();};
-document.getElementById('d-yesterday').onclick=()=>{const d=new Date();d.setDate(d.getDate()-1);currentDailyDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');renderDaily();};
 document.getElementById('d-today').onclick=()=>{currentDailyDate=todayStr();renderDaily();};
-document.getElementById('d-tomorrow').onclick=()=>{const d=new Date();d.setDate(d.getDate()+1);currentDailyDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');renderDaily();};
 document.getElementById('d-sync-weekly').onclick=()=>{syncWeeklyToDaily(currentDailyDate,true);renderDailyBody();setStatus('주간계획에서 가져왔습니다 ✓');};
 document.getElementById('global-save').onclick=async()=>{
   await Promise.all([
