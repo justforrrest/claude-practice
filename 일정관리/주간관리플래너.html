@@ -661,7 +661,7 @@ const KR_HOLIDAYS_VAR={
 function getHoliday(ds){const[,m,d]=ds.split('-');return KR_HOLIDAYS_VAR[ds]||KR_HOLIDAYS_FIXED[m+'-'+d]||null;}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
-function fmtDate(ds){const[y,m,d]=ds.split('-');const dt=new Date(Number(y),Number(m)-1,Number(d));const days=['일','월','화','수','목','금','토'];return y+'년 '+Number(m)+'월 '+Number(d)+'일('+days[dt.getDay()]+')';}
+function fmtDate(ds){const[y,m,d]=ds.split('-');const dt=new Date(Number(y),Number(m)-1,Number(d));const days=['일','월','화','수','목','금','토'];return y+'년 '+Number(m)+'월 '+Number(d)+'일 ('+days[dt.getDay()]+')';}
 function getWeekStart(date){const d=new Date(date);const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);d.setDate(diff);return d;}
 function weekKey(date){const ws=getWeekStart(date);return ws.getFullYear()+'-'+String(ws.getMonth()+1).padStart(2,'0')+'-'+String(ws.getDate()).padStart(2,'0');}
 function monthKey(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0');}
