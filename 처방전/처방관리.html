@@ -1597,7 +1597,6 @@ function renderDelivery(){
           <select id="dlv-year-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:13px;font-family:var(--font-sans);background:var(--surface);color:var(--text-1);outline:none"></select>
           <select id="dlv-month-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:13px;font-family:var(--font-sans);background:var(--surface);color:var(--text-1);outline:none"></select>
         </div>
-        <button id="dlv-all-done" class="btn btn-sm">전체 배송완료</button>
       </div>
     </div>
     <div class="card" style="padding:0">
@@ -1619,20 +1618,6 @@ function renderDelivery(){
     document.getElementById('dlv-search').addEventListener('input',e=>{dlvSearch=e.target.value;updateDeliveryList();});
     document.getElementById('dlv-year-sel').addEventListener('change',e=>{dlvYear=e.target.value;updateDeliveryList();});
     document.getElementById('dlv-month-sel').addEventListener('change',e=>{dlvMonth=e.target.value;updateDeliveryList();});
-    document.getElementById('dlv-all-done').addEventListener('click',async()=>{
-      const pending=prescriptionsData.filter(r=>getDelivery(r.id).status!=='완료');
-      if(!pending.length){showToast('이미 전체 배송완료 상태입니다.');return;}
-      if(!confirm(`대기 중인 처방 ${pending.length}건을 전체 배송완료로 변경하시겠습니까?`))return;
-      pending.forEach(r=>{
-        const d=getDelivery(r.id);
-        d.status='완료';
-        const idx=deliveriesData.findIndex(x=>x.rxId===r.id);
-        if(idx>=0)deliveriesData[idx]=d;else deliveriesData.push(d);
-      });
-      await save(RX_KEYS.deliveries,deliveriesData);
-      updateDeliveryList();
-      showToast(`${pending.length}건 배송완료 처리되었습니다.`);
-    });
   }
   renderDlvFilters();
   updateDeliveryList();
@@ -1692,8 +1677,8 @@ function updateDeliveryList(){
       if(!dlvStatus)return true;
       if(dlvStatus==='대기')return r.dlv.status==='대기';
       if(dlvStatus==='완료')return r.dlv.status==='완료';
-      if(dlvStatus==='med-진행')return getPatMedSt(r)==='med-진행';
-      if(dlvStatus==='med-완료')return getPatMedSt(r)==='med-완료';
+      if(dlvStatus==='med-진행'){const lr=patLatestRxMap[r.patientId||r.patientName];return lr&&lr.id===r.id&&getPatMedSt(r)==='med-진행';}
+      if(dlvStatus==='med-완료'){const lr=patLatestRxMap[r.patientId||r.patientName];return lr&&lr.id===r.id&&getPatMedSt(r)==='med-완료';}
       return true;
     });
   tbody.innerHTML=!filtered.length?`<tr><td colspan="7" class="empty">처방이 없습니다</td></tr>`:
