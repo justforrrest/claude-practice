@@ -150,6 +150,10 @@ input[type=number]{-moz-appearance:textfield;}
       <span style="font-size:11px;color:var(--text-3);flex-shrink:0">원</span>
     </div>
     <div id="pl-calc-result" style="font-size:12px;color:var(--violet-d);text-align:right;font-weight:600;min-height:16px"></div>
+    <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+      <span style="font-size:11px;color:var(--text-3);width:30px;flex-shrink:0">메모</span>
+      <input id="pl-calc-memo" type="text" placeholder="메모" style="flex:1;border:1px solid var(--border-2);border-radius:6px;padding:4px 8px;font-size:13px;font-family:var(--font-sans);outline:none;min-width:0">
+    </div>
   </div>
 </div>
 
@@ -1454,12 +1458,13 @@ function renderPricelist(){
   const qtyEl=document.getElementById('pl-calc-qty');
   const amtEl=document.getElementById('pl-calc-amt');
   const resEl=document.getElementById('pl-calc-result');
+  const memoEl=document.getElementById('pl-calc-memo');
   const LS_KEY='herb_pl_calc_hist';
 
   function loadHist(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'{}');}catch{return {};}}
-  function saveHist(herb,sup,qty,amount){
+  function saveHist(herb,sup,qty,amount,memo){
     const h=loadHist();
-    h[herb+'::'+sup]={qty,amount,ts:Date.now()};
+    h[herb+'::'+sup]={qty,amount,memo:memo||'',ts:Date.now()};
     localStorage.setItem(LS_KEY,JSON.stringify(h));
   }
 
@@ -1468,7 +1473,7 @@ function renderPricelist(){
     pop.style.left=Math.min(r.left,window.innerWidth-180)+'px';
     pop.style.top=(r.bottom+4)+'px';
     pop.style.display='block';
-    _inp=inp;qtyEl.value='';amtEl.value='';resEl.textContent='';
+    _inp=inp;qtyEl.value='';amtEl.value='';resEl.textContent='';memoEl.value='';
     const herb=inp.dataset.herb,sup=inp.dataset.sup;
 
     const ibLast=[...inboundData].filter(r=>r.herb===herb&&r.supplier===sup&&r.qty>0&&r.amount>0)
@@ -1479,7 +1484,7 @@ function renderPricelist(){
     const histTs=hist?hist.ts:0;
 
     const src=histTs>ibTs?hist:ibLast;
-    if(src){qtyEl.value=src.qty;amtEl.value=src.amount;calc();}
+    if(src){qtyEl.value=src.qty;amtEl.value=src.amount;if(src.memo)memoEl.value=src.memo;calc();}
     setTimeout(()=>qtyEl.select(),0);
   }
   function hide(){pop.style.display='none';_inp=null;}
@@ -1492,14 +1497,15 @@ function renderPricelist(){
     const p=calc();
     if(p!==null&&_inp){
       const q=parseFloat(qtyEl.value),a=parseFloat(amtEl.value);
-      saveHist(_inp.dataset.herb,_inp.dataset.sup,q,a);
+      saveHist(_inp.dataset.herb,_inp.dataset.sup,q,a,memoEl.value.trim());
       _inp.value=p;_inp.dispatchEvent(new Event('input',{bubbles:true}));const t=_inp;hide();t.focus();
     }
   }
   qtyEl.addEventListener('input',calc);
   amtEl.addEventListener('input',calc);
   qtyEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();amtEl.focus();}if(e.key==='Escape')hide();});
-  amtEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apply();}if(e.key==='Escape')hide();});
+  amtEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();memoEl.focus();}if(e.key==='Escape')hide();});
+  memoEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apply();}if(e.key==='Escape')hide();});
   document.addEventListener('click',e=>{if(pop.style.display!=='none'&&!pop.contains(e.target)&&e.target!==_inp)hide();});
   window._plCalcPop={show};
 })();
