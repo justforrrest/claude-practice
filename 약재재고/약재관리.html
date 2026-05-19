@@ -1321,6 +1321,7 @@ function renderPricelist(){
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${pricelistConsonant===c?' active':''}" data-cho="${c}">${c}</button>`).join('')}
       </div>
       <input class="search-input" id="pl-search" placeholder="약재명 검색" value="${pricelistSearch}" style="width:120px;min-width:0;flex:none;padding:4px 10px;">
+      <button class="btn btn-secondary btn-sm" id="pl-refresh" title="새로고침" style="display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
       <button class="btn btn-primary btn-sm" id="pl-save">저장</button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:.875rem;">
@@ -1347,6 +1348,16 @@ function renderPricelist(){
   const plSrEl=document.getElementById('pl-search');
   plSrEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){pricelistSearch=plSrEl.value;renderPricelist();focusEnd('pl-search');}});
   plSrEl.addEventListener('input',e=>{if(e.target.value===''){pricelistSearch='';renderPricelist();focusEnd('pl-search');}});
+
+  document.getElementById('pl-refresh').addEventListener('click',async()=>{
+    const btn=document.getElementById('pl-refresh');
+    if(btn)btn.style.opacity='.4';
+    const[pl,st]=await Promise.all([load(KEYS.pricelist),load(KEYS.settings)]);
+    if(pl&&typeof pl==='object'&&!Array.isArray(pl))pricelistData=pl;
+    if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;}
+    renderPricelist();
+    showToast('단가표를 새로고침했습니다.');
+  });
 
   document.getElementById('pl-save').addEventListener('click',async()=>{
     el.querySelectorAll('.pl-inp').forEach(inp=>{
