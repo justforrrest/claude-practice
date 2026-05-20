@@ -1643,10 +1643,14 @@ function renderWR(){
   const availContainer=document.getElementById('wr-avail-container');availContainer.innerHTML='';
   const availWrap=document.createElement('div');availWrap.className='avail-wrap';
   const availTitleRow=document.createElement('div');availTitleRow.className='avail-title-row';
-  availTitleRow.innerHTML=`<span class="avail-title">가용블럭</span><span class="avail-total">/ 42</span>`;
+  availTitleRow.innerHTML=`<span class="avail-title">가용블럭</span><div style="display:flex;align-items:center;gap:6px;"><span class="avail-total">/ 42</span><button id="wr-avail-refresh-btn" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-3);padding:0;line-height:1;" title="가용블럭 새로고침">↺</button></div>`;
   availWrap.appendChild(availTitleRow);
   const updateTotal=counts=>{availTitleRow.querySelector('.avail-total').textContent=(42-(counts['업무']||0))+'/42';};
   availWrap.appendChild(buildWRAvailTable(wEntry,entry,updateTotal,weekDays));
+  availTitleRow.querySelector('#wr-avail-refresh-btn').addEventListener('click',()=>{
+    const old=availWrap.querySelector('.avail-table');if(old)old.remove();
+    availWrap.appendChild(buildWRAvailTable(wEntry,entry,updateTotal,weekDays));
+  });
   availContainer.appendChild(availWrap);
   ['bad','good','how'].forEach(k=>{const el=document.getElementById('wr-'+k);el.value=entry[k]||'';el.oninput=()=>{entry[k]=el.value;};});
 }
