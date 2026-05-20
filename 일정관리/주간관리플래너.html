@@ -1362,7 +1362,7 @@ function buildAvailTable(entry,onCounts){
   const freeCnt=freeRow.insertCell();freeCnt.className='avail-count';freeCnt.textContent=emptyCount+(counts['휴식']||0);
   return table;
 }
-function buildWRAvailTable(wEntry,wrEntry,onCounts){
+function buildWRAvailTable(wEntry,wrEntry,onCounts,weekDays){
   const stripParens=s=>s.replace(/\s*\(.*?\)\s*/g,'').trim();
   const counts={};let emptyCount=0;
   wEntry.grid.forEach(day=>day.forEach(v=>{
@@ -1370,32 +1370,36 @@ function buildWRAvailTable(wEntry,wrEntry,onCounts){
     else emptyCount++;
   }));
   if(onCounts)onCounts(counts);
-  if(!wrEntry.blockExec)wrEntry.blockExec=Array(8).fill('');
+  const execCounts={};let freeExecCount=0;
+  if(weekDays){
+    weekDays.forEach(ds=>{
+      const dayBlocks=(dailyData[ds]&&dailyData[ds].blocks)||[];
+      dayBlocks.forEach(b=>{
+        const kw=stripParens((b.kw||'').trim());
+        const hasExec=b.checkouts&&b.checkouts.some(c=>c.text&&c.text.trim());
+        if(hasExec){
+          if(!kw||kw==='휴식')freeExecCount++;
+          else execCounts[kw]=(execCounts[kw]||0)+1;
+        }
+      });
+    });
+  }
   const table=document.createElement('table');table.className='avail-table';
   const thead=table.createTHead();const hr=thead.insertRow();
   ['블럭명','계획','실행'].forEach(t=>{const th=document.createElement('th');th.textContent=t;hr.appendChild(th);});
   const tbody=table.createTBody();
-  const execInpStyle='border:none;background:transparent;outline:none;font-size:11px;font-weight:600;color:var(--text-1);width:100%;font-family:var(--font-sans);text-align:center;';
   for(let i=0;i<7;i++){
     const row=tbody.insertRow();
     const name=(wEntry.blockNames[i]||'').trim();
     const nameTd=row.insertCell();nameTd.className='avail-name';nameTd.style.background=matchKeywordColor(name)||'';
     nameTd.textContent=name||'';
     const cntTd=row.insertCell();cntTd.className='avail-count';cntTd.textContent=name?(counts[name]||0):'';
-    const execTd=row.insertCell();execTd.className='avail-practice';
-    const inp=document.createElement('input');inp.type='text';inp.value=wrEntry.blockExec[i]||'';inp.placeholder='-';inp.style.cssText=execInpStyle;
-    inp.addEventListener('input',()=>{wrEntry.blockExec[i]=inp.value;});
-    inp.addEventListener('blur',()=>save(KEYS.wreview,wrData));
-    execTd.appendChild(inp);
+    const execTd=row.insertCell();execTd.className='avail-count';execTd.textContent=name?(execCounts[name]||0):'';
   }
   const freeRow=tbody.insertRow();
   const freeLbl=freeRow.insertCell();freeLbl.className='avail-name';freeLbl.style.cssText='font-style:italic;color:var(--text-3);';freeLbl.textContent='휴식/free';
   const freeCnt=freeRow.insertCell();freeCnt.className='avail-count';freeCnt.textContent=emptyCount+(counts['휴식']||0);
-  const freeExecTd=freeRow.insertCell();freeExecTd.className='avail-practice';
-  const freeInp=document.createElement('input');freeInp.type='text';freeInp.value=wrEntry.blockExec[7]||'';freeInp.placeholder='-';freeInp.style.cssText=execInpStyle;
-  freeInp.addEventListener('input',()=>{wrEntry.blockExec[7]=freeInp.value;});
-  freeInp.addEventListener('blur',()=>save(KEYS.wreview,wrData));
-  freeExecTd.appendChild(freeInp);
+  const freeExecTd=freeRow.insertCell();freeExecTd.className='avail-count';freeExecTd.textContent=freeExecCount;
   return table;
 }
 async function saveWeekTemplate(){
@@ -1635,13 +1639,14 @@ function renderWR(){
   const wGoal=(wEntry.goals||[]).join('\n').trim();
   const goalEl=document.getElementById('wr-goal');goalEl.value=wGoal;
   goalEl.style.height='auto';goalEl.style.minHeight=goalEl.scrollHeight+'px';
+  const weekDays=Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(d.getDate()+i);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');});
   const availContainer=document.getElementById('wr-avail-container');availContainer.innerHTML='';
   const availWrap=document.createElement('div');availWrap.className='avail-wrap';
   const availTitleRow=document.createElement('div');availTitleRow.className='avail-title-row';
   availTitleRow.innerHTML=`<span class="avail-title">가용블럭</span><span class="avail-total">/ 42</span>`;
   availWrap.appendChild(availTitleRow);
   const updateTotal=counts=>{availTitleRow.querySelector('.avail-total').textContent=(42-(counts['업무']||0))+'/42';};
-  availWrap.appendChild(buildWRAvailTable(wEntry,entry,updateTotal));
+  availWrap.appendChild(buildWRAvailTable(wEntry,entry,updateTotal,weekDays));
   availContainer.appendChild(availWrap);
   ['bad','good','how'].forEach(k=>{const el=document.getElementById('wr-'+k);el.value=entry[k]||'';el.oninput=()=>{entry[k]=el.value;};});
 }
