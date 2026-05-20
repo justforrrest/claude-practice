@@ -1340,9 +1340,9 @@ function buildAvailTable(entry,onCounts){
     if(!b.trim())return -1;
     return (counts[b.trim()]||0)-(counts[a.trim()]||0);
   });
-  const table=document.createElement('table');table.className='avail-table';
+  const table=document.createElement('table');table.className='avail-table';table.style.tableLayout='fixed';
   const thead=table.createTHead();const hr=thead.insertRow();
-  ['블럭명','계획','블럭명','계획'].forEach(t=>{const th=document.createElement('th');th.textContent=t;hr.appendChild(th);});
+  ['블럭명','계획','블럭명','계획'].forEach(t=>{const th=document.createElement('th');th.textContent=t;th.style.width='25%';hr.appendChild(th);});
   const tbody=table.createTBody();
   const inpStyle='border:none;background:transparent;outline:none;font-size:11px;font-weight:600;color:var(--text-1);width:100%;font-family:var(--font-sans);text-align:center;';
   const makeCell=(row,idx)=>{
