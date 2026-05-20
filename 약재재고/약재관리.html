@@ -982,10 +982,10 @@ function renderAdjust(){
       <div class="form-group" style="flex:1;min-width:0"><label>메모</label><input type="text" id="adj-note" placeholder="초기재고, 폐기, 조정 등" style="width:100%"></div>
       <div class="form-group" style="align-self:flex-end"><button class="btn btn-primary" id="adj-submit" style="white-space:nowrap;margin-top:auto">등록</button></div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:.875rem;margin-bottom:.75rem">
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:.875rem;margin-bottom:.75rem">
       <input type="text" id="adj-herb-search" placeholder="약재명 검색" value="${adjFilter.herb}" style="width:120px;height:30px;padding:4px 10px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;outline:none;">
       <input type="text" id="adj-memo-search" placeholder="메모 검색" value="${adjFilter.memo}" style="width:120px;height:30px;padding:4px 10px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;outline:none;">
-      <select id="adj-ym-sel" style="margin-left:auto;width:auto;flex-shrink:0;border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">${adjMonthOpts}</select>
+      <select id="adj-ym-sel" style="width:120px;height:30px;padding:4px 10px;font-size:12px;font-family:var(--font-sans);border:1px solid var(--border-2);border-radius:6px;outline:none;color:var(--text-1);background:var(--surface);">${adjMonthOpts}</select>
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">조정량</th><th>메모</th><th></th></tr></thead>
