@@ -412,6 +412,16 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
 .mplan-event-del{background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-3);padding:0 1px;line-height:1;flex-shrink:0;}
 .mplan-event-del:hover{color:#EF4444;}
 .mplan-memo-inp{flex:1;border:none;background:transparent;font-size:12px;color:var(--text-1);font-family:var(--font-sans);outline:none;padding:2px 0;}
+/* ── D-Log 팝업 ── */
+.dlog-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s;}
+.dlog-overlay.open{opacity:1;pointer-events:all;}
+.dlog-modal{background:var(--surface);border-radius:20px;padding:22px;width:min(540px,94vw);max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(100,60,220,.18);border:1px solid var(--border);}
+.dlog-modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.dlog-modal-title{font-size:15px;font-weight:700;color:var(--text-1);}
+.dlog-close{background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-3);line-height:1;padding:0;}
+.dlog-close:hover{color:var(--text-1);}
+.wr-th{cursor:pointer;transition:background .12s;}
+.wr-th:hover{background:var(--violet-light);}
 </style>
 </head>
 <body>
@@ -1564,6 +1574,45 @@ document.getElementById('w-color-refresh').onclick=()=>{
   renderWeekly();
 };
 
+/* ══ D-LOG 팝업 ══ */
+function showDailyLog(ds){
+  const entry=dailyData[ds];
+  const blocks=entry?entry.blocks:[];
+  const bad=entry?.bad||'';const good=entry?.good||'';const next=entry?.next||'';
+  const hasEmotion=bad||good||next;
+  const activeBlocks=blocks.filter(b=>b.kw||(b.checks&&b.checks.some(c=>c.text))||(b.checkouts&&b.checkouts.some(c=>c.text)));
+  const blockRows=activeBlocks.length?activeBlocks.map(b=>{
+    const checksHtml=(b.checks||[]).filter(c=>c.text).map(c=>`<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;"><span style="font-size:10px;color:${c.done?'var(--emerald)':'var(--border-2)'}">${c.done?'✓':'○'}</span><span style="font-size:12px;color:${c.done?'var(--text-2)':'var(--text-1)'};${c.done?'text-decoration:line-through':''}">${c.text}</span></div>`).join('')||'<span style="font-size:11px;color:var(--text-3)">-</span>';
+    const checkoutsHtml=(b.checkouts||[]).filter(c=>c.text).map(c=>`<div style="font-size:12px;color:var(--text-1);margin-bottom:2px;">• ${c.text}</div>`).join('')||'<span style="font-size:11px;color:var(--text-3)">-</span>';
+    const kwBg=matchKeywordColor(b.kw)||'';
+    return`<tr><td style="padding:6px 8px;font-size:13px;font-weight:700;color:var(--violet);background:${kwBg||'var(--violet-light)'};border-right:1px solid var(--border);white-space:nowrap;vertical-align:top;">${b.kw||''}</td><td style="padding:6px 8px;border-right:1px solid var(--border);vertical-align:top;">${checksHtml}</td><td style="padding:6px 8px;vertical-align:top;">${checkoutsHtml}</td></tr>`;
+  }).join(''):`<tr><td colspan="3" style="padding:16px;text-align:center;font-size:13px;color:var(--text-3);">기록 없음</td></tr>`;
+  const emotionHtml=hasEmotion?`<div style="margin-top:1rem;display:flex;flex-direction:column;gap:6px;">
+    ${bad?`<div style="padding:8px 12px;border-radius:8px;border:1px solid #F5C4B3;"><span style="font-size:10px;font-weight:700;background:#FAECE7;color:#993C1D;padding:1px 6px;border-radius:4px;margin-right:6px;">BAD</span><span style="font-size:12px;color:var(--text-2);">${bad.replace(/\n/g,'<br>')}</span></div>`:''}
+    ${good?`<div style="padding:8px 12px;border-radius:8px;border:1px solid #C0DD97;"><span style="font-size:10px;font-weight:700;background:#EAF3DE;color:#3B6D11;padding:1px 6px;border-radius:4px;margin-right:6px;">GOOD</span><span style="font-size:12px;color:var(--text-2);">${good.replace(/\n/g,'<br>')}</span></div>`:''}
+    ${next?`<div style="padding:8px 12px;border-radius:8px;border:1px solid #B5D4F4;"><span style="font-size:10px;font-weight:700;background:#E6F1FB;color:#185FA5;padding:1px 6px;border-radius:4px;margin-right:6px;">NEXT</span><span style="font-size:12px;color:var(--text-2);">${next.replace(/\n/g,'<br>')}</span></div>`:''}
+  </div>`:'';
+  const modal=document.getElementById('dlog-modal');
+  modal.innerHTML=`
+    <div class="dlog-modal-hdr">
+      <span class="dlog-modal-title">${fmtDate(ds)}</span>
+      <button class="dlog-close" id="dlog-close-btn">×</button>
+    </div>
+    <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+      <thead><tr>
+        <th style="padding:6px 8px;font-size:11px;font-weight:700;color:var(--text-3);background:var(--surface-2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);width:90px;">키워드</th>
+        <th style="padding:6px 8px;font-size:11px;font-weight:700;color:var(--text-3);background:var(--surface-2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);">계획 (Check In)</th>
+        <th style="padding:6px 8px;font-size:11px;font-weight:700;color:var(--text-3);background:var(--surface-2);border-bottom:1px solid var(--border);">실행 (Check Out)</th>
+      </tr></thead>
+      <tbody>${blockRows}</tbody>
+    </table></div>
+    ${emotionHtml}`;
+  const overlay=document.getElementById('dlog-overlay');
+  overlay.classList.add('open');
+  document.getElementById('dlog-close-btn').addEventListener('click',()=>overlay.classList.remove('open'));
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open');},{once:true});
+}
+
 /* ══ WEEKLY REVIEW ══ */
 let wrData={};let currentWRDate=new Date();
 function getWREntry(wk){
@@ -1588,6 +1637,8 @@ function renderWRGrid(){
     const d=new Date(ds+'T00:00:00');
     const th=document.createElement('div');th.className='wr-th'+(i===5?' sat':i===6?' sun':'');
     th.innerHTML=`<span class="wk-th-date">${d.getMonth()+1}/${d.getDate()}</span><span class="wk-th-day">${DAY_LABELS[i]}</span>`;
+    th.title=`${fmtDate(ds)} D-Log 보기`;
+    th.addEventListener('click',()=>showDailyLog(ds));
     grid.appendChild(th);
   });
   for(let row=0;row<6;row++){
@@ -1876,5 +1927,8 @@ initTabDrag();
 })();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
+<div class="dlog-overlay" id="dlog-overlay">
+  <div class="dlog-modal" id="dlog-modal"></div>
+</div>
 </body>
 </html>
