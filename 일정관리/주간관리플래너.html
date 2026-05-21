@@ -494,6 +494,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
           <tbody id="block-tbody"></tbody>
         </table>
       </div>
+      <div id="d-issue-wrap" style="margin-bottom:10px;"></div>
       <div style="display:flex;gap:10px;align-items:stretch;">
         <div class="card" style="flex:1;">
           <div class="emotion-section" style="margin-top:0;">
@@ -1222,6 +1223,20 @@ function renderDailyBody(){
   tbody.querySelectorAll('.add-checkout-btn').forEach(btn=>{btn.addEventListener('click',()=>{const bi=btn.dataset.bi;entry.blocks[bi].checkouts.push({text:'',done:false});renderDaily();focusLastInput(bi,'.checkout-text');});});
   tbody.querySelectorAll('.check-del-btn').forEach(btn=>{btn.addEventListener('click',()=>{entry.blocks[btn.dataset.bi].checks.splice(Number(btn.dataset.ci),1);renderDaily();});});
   tbody.querySelectorAll('.checkout-del-btn').forEach(btn=>{btn.addEventListener('click',()=>{entry.blocks[btn.dataset.bi].checkouts.splice(Number(btn.dataset.ci),1);renderDaily();});});
+  // ISSUE section
+  const issueWrap=document.getElementById('d-issue-wrap');
+  if(issueWrap){
+    issueWrap.innerHTML='';
+    if(!wEntry.issue)wEntry.issue=Array(7).fill('');
+    const mplanTxt=(mPlanData[currentDailyDate]||[]).map(ev=>ev.text).filter(Boolean).join('\n');
+    const issueCard=document.createElement('div');issueCard.className='card';issueCard.style.cssText='padding:8px 12px;display:flex;align-items:flex-start;gap:10px;margin-bottom:0;';
+    const lbl=document.createElement('span');lbl.style.cssText='background:#EEF2FF;color:#5B21B6;font-size:9px;font-weight:700;letter-spacing:.8px;padding:3px 7px;border-radius:5px;flex-shrink:0;margin-top:3px;';lbl.textContent='ISSUE';
+    const ta=document.createElement('textarea');ta.style.cssText='flex:1;border:none;background:transparent;font-size:12px;color:var(--text-1);font-family:var(--font-sans);outline:none;resize:none;min-height:20px;line-height:1.5;overflow:hidden;padding:0;';
+    ta.placeholder='오늘의 이슈...';ta.value=wEntry.issue[di]||mplanTxt;
+    ta.style.height='auto';ta.style.height=(ta.scrollHeight||20)+'px';
+    ta.addEventListener('input',()=>{wEntry.issue[di]=ta.value;ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';save(KEYS.weekly,weeklyData);});
+    issueCard.appendChild(lbl);issueCard.appendChild(ta);issueWrap.appendChild(issueCard);
+  }
   const toBulletHtml=t=>{if(!t||!t.trim())return'<span class="em-bullet">•</span>&nbsp;';return t.split('\n').map(l=>l?'<span class="em-bullet">•</span>&nbsp;'+l.replace(/^[••][\s ]*/,''):'').join('<br>');};
   ['bad','good','next'].forEach(k=>{
     const oldEl=document.getElementById('e-'+k);

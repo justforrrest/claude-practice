@@ -250,6 +250,7 @@ function addDotRow(gi){getDotMonth().goals[gi].entries.push({id:uid(),day:todayS
 /* ── D-Log data ── */
 let dailyData={};
 let weeklyData={};
+let mPlanData={};
 let currentDailyDate=todayStr();
 let openBlockIdx=null;
 const FIXED_6_BLOCKS=[
@@ -355,7 +356,8 @@ function renderDLog(){
   const issueCard=document.createElement('div');issueCard.className='issue-card';
   const issueBadge=document.createElement('span');issueBadge.className='issue-badge';issueBadge.textContent='ISSUE';
   const issueTA=document.createElement('textarea');issueTA.className='issue-inp';issueTA.placeholder='오늘의 이슈...';
-  issueTA.value=wEntry.issue[di]||'';
+  const mplanTxt=(mPlanData[currentDailyDate]||[]).map(ev=>ev.text).filter(Boolean).join('\n');
+  issueTA.value=wEntry.issue[di]||mplanTxt;
   issueTA.style.height='auto';issueTA.style.height=(issueTA.scrollHeight||20)+'px';
   issueTA.addEventListener('input',()=>{wEntry.issue[di]=issueTA.value;issueTA.style.height='auto';issueTA.style.height=issueTA.scrollHeight+'px';});
   issueCard.appendChild(issueBadge);issueCard.appendChild(issueTA);issueSec.appendChild(issueCard);
@@ -588,6 +590,7 @@ document.getElementById('sync-change-btn').addEventListener('click',()=>{
 try{
   const ld=localStorage.getItem(KEYS.daily);if(ld)dailyData=JSON.parse(ld);
   const lw=localStorage.getItem(KEYS.weekly);if(lw)weeklyData=JSON.parse(lw);
+  const lm=localStorage.getItem(KEYS.mplan);if(lm)mPlanData=JSON.parse(lm);
   const lo=localStorage.getItem(KEYS.dot);
   if(lo){const dot=JSON.parse(lo);
     if(dot.goal!==undefined&&!dot.goals){dotData={};dotData[dotMK()]={goals:[{id:uid(),name:dot.goal,color:'#7C3AED',entries:dot.entries||[]}]};}
@@ -597,7 +600,7 @@ try{
 }catch(e){}
 renderDLog();
 (async()=>{
-  const [dot,daily,weekly]=await Promise.all([load(KEYS.dot),load(KEYS.daily),load(KEYS.weekly)]);
+  const [dot,daily,weekly,mplan]=await Promise.all([load(KEYS.dot),load(KEYS.daily),load(KEYS.weekly),load(KEYS.mplan)]);
   if(dot){
     if(dot.goal!==undefined&&!dot.goals){dotData={};dotData[dotMK()]={goals:[{id:uid(),name:dot.goal,color:'#7C3AED',entries:dot.entries||[]}]};}
     else if(dot.goals!==undefined){dotData={};dotData[dotMK()]={goals:dot.goals};}
@@ -605,6 +608,7 @@ renderDLog();
   }
   if(daily)dailyData=daily;
   if(weekly)weeklyData=weekly;
+  if(mplan)mPlanData=mplan;
   document.getElementById('sync-code-display').textContent=getSyncCode();
   setSyncStatus('☁ 동기화됨');setStatus('불러옴 ✓');
   if(currentTab==='dlog')renderDLog();
