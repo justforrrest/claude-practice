@@ -158,9 +158,9 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
   <div id="blocks-container"></div>
   <button class="emotion-toggle-btn" id="emotion-toggle">
     <span><i class="ti ti-mood-happy"></i>&nbsp; 감정 기록</span>
-    <i class="ti ti-chevron-down" id="emotion-chevron" style="transition:transform .2s;"></i>
+    <i class="ti ti-chevron-down" id="emotion-chevron" style="transition:transform .2s;transform:rotate(180deg);"></i>
   </button>
-  <div class="emotion-cards" id="emotion-section" style="display:none;">
+  <div class="emotion-cards" id="emotion-section" style="display:flex;flex-direction:column;">
     <div class="emotion-card" style="border-color:#F5C4B3;">
       <div class="emotion-card-hdr"><span class="badge badge-bad">BAD</span><span class="emotion-label">오늘 아쉽거나 슬펐던 감정</span></div>
       <textarea class="emotion-inp" id="e-bad" rows="2" placeholder="오늘 아쉬웠던 점..."></textarea>
@@ -383,7 +383,7 @@ document.getElementById('d-next').addEventListener('click',()=>{const d=new Date
 document.getElementById('d-today').addEventListener('click',()=>{currentDailyDate=todayStr();renderDLog();});
 
 // Emotion toggle
-let emotionOpen=false;
+let emotionOpen=true;
 document.getElementById('emotion-toggle').addEventListener('click',()=>{
   emotionOpen=!emotionOpen;
   document.getElementById('emotion-section').style.display=emotionOpen?'flex':'none';
@@ -504,6 +504,17 @@ document.getElementById('sync-change-btn').addEventListener('click',()=>{
 });
 
 /* ── Init ── */
+try{
+  const ld=localStorage.getItem(KEYS.daily);if(ld)dailyData=JSON.parse(ld);
+  const lw=localStorage.getItem(KEYS.weekly);if(lw)weeklyData=JSON.parse(lw);
+  const lo=localStorage.getItem(KEYS.dot);
+  if(lo){const dot=JSON.parse(lo);
+    if(dot.goal!==undefined&&!dot.goals){dotData={};dotData[dotMK()]={goals:[{id:uid(),name:dot.goal,color:'#7C3AED',entries:dot.entries||[]}]};}
+    else if(dot.goals!==undefined){dotData={};dotData[dotMK()]={goals:dot.goals};}
+    else{dotData=dot;}
+  }
+}catch(e){}
+renderDLog();
 (async()=>{
   const [dot,daily,weekly]=await Promise.all([load(KEYS.dot),load(KEYS.daily),load(KEYS.weekly)]);
   if(dot){
@@ -515,7 +526,8 @@ document.getElementById('sync-change-btn').addEventListener('click',()=>{
   if(weekly)weeklyData=weekly;
   document.getElementById('sync-code-display').textContent=getSyncCode();
   setSyncStatus('☁ 동기화됨');setStatus('불러옴 ✓');
-  renderDLog();
+  if(currentTab==='dlog')renderDLog();
+  else if(currentTab==='ddot')renderDDot();
 })();
 </script>
 </body>
