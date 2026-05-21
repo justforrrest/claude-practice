@@ -1235,7 +1235,9 @@ function renderDailyBody(){
     const ta=document.createElement('textarea');ta.style.cssText='flex:1;border:none;background:transparent;font-size:12px;color:var(--text-1);font-family:var(--font-sans);outline:none;resize:none;min-height:20px;line-height:1.5;overflow:hidden;padding:0;';
     ta.placeholder='오늘의 이슈...';ta.value=wEntry.issue[di]||mplanTxt;
     ta.style.height='auto';ta.style.height=(ta.scrollHeight||20)+'px';
-    ta.addEventListener('input',()=>{wEntry.issue[di]=ta.value;ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';save(KEYS.weekly,weeklyData);});
+    ta.addEventListener('input',()=>{wEntry.issue[di]=ta.value;if(ta.scrollHeight>ta.offsetHeight)ta.style.height=ta.scrollHeight+'px';});
+    ta.addEventListener('keydown',(e)=>{if(e.key==='Enter'){e.preventDefault();wEntry.issue[di]=ta.value;save(KEYS.weekly,weeklyData);}});
+    ta.addEventListener('blur',()=>save(KEYS.weekly,weeklyData));
     issueCard.appendChild(lbl);issueCard.appendChild(ta);issueWrap.appendChild(issueCard);
   }
   const toBulletHtml=t=>{if(!t||!t.trim())return'<span class="em-bullet">•</span>&nbsp;';return t.split('\n').map(l=>l?'<span class="em-bullet">•</span>&nbsp;'+l.replace(/^[••][\s ]*/,''):'').join('<br>');};
