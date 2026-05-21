@@ -192,6 +192,13 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 </nav>
 
 <script>
+/* ── Error display ── */
+window.addEventListener('error',function(ev){
+  var c=document.getElementById('blocks-container');
+  if(c)c.innerHTML='<div style="padding:16px;color:#cc0000;background:#fff0f0;border-radius:8px;font-size:12px;font-family:monospace;white-space:pre-wrap;">JS 오류: '+ev.message+'\n파일: '+(ev.filename||'?')+'\n줄: '+ev.lineno+'</div>';
+  var d=document.getElementById('d-date-label');
+  if(d)d.textContent='오류 발생';
+});
 /* ── Constants ── */
 const KEYS={dot:'b6ix_dot_v1',daily:'b6ix_daily_v1',weekly:'b6ix_weekly_v1',wreview:'b6ix_wreview_v1',monthly:'b6ix_monthly_v1',mplan:'b6ix_mplan_v1',template:'b6ix_template_v1',tabOrder:'b6ix_tab_order_v1',colWidths:'b6ix_col_widths_v1'};
 const KR_HOLIDAYS_FIXED={'01-01':'신정','03-01':'삼일절','05-05':'어린이날','06-06':'현충일','08-15':'광복절','10-03':'개천절','10-09':'한글날','12-25':'크리스마스'};
@@ -332,7 +339,8 @@ function buildChecklist(arr,container,focusIdx){
 }
 
 function renderDLog(){
-  document.getElementById('d-date-label').textContent=fmtDateShort(currentDailyDate);
+  try{document.getElementById('d-date-label').textContent=fmtDateShort(currentDailyDate);}catch(e){}
+  try{
   const entry=getDailyEntry(currentDailyDate);
   try{syncWeeklyToDaily(currentDailyDate);}catch(e){}
   const container=document.getElementById('blocks-container');container.innerHTML='';
@@ -384,6 +392,12 @@ function renderDLog(){
   });
   // Restore visibility
   document.getElementById('emotion-section').style.display=emotionOpen?'flex':'none';
+  }catch(err){
+    try{
+      var c=document.getElementById('blocks-container');
+      if(c)c.innerHTML='<div style="padding:16px;color:#cc0000;background:#fff0f0;border-radius:8px;font-size:12px;font-family:monospace;white-space:pre-wrap;">renderDLog 오류:\n'+err.message+'</div>';
+    }catch(e2){}
+  }
 }
 
 // Date nav
