@@ -1675,6 +1675,9 @@ function renderWRGrid(){
       const cell=document.createElement('div');
       cell.className='wr-block-cell '+sc;
       cell.innerHTML=hasAny?tagsHtml+(st?`<div class="wr-stat">${st}</div>`:''):'';
+      cell.style.cursor='pointer';
+      cell.title=`${fmtDate(ds)} D-Log 보기`;
+      cell.addEventListener('click',()=>showDailyLog(ds));
       grid.appendChild(cell);
     });
   }
