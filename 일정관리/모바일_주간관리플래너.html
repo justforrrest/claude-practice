@@ -250,9 +250,17 @@ const FIXED_6_BLOCKS=[
   {kw:'',checks:[{text:'',done:false}],checkouts:[{text:'',done:false}]},
 ];
 function getDailyEntry(dateStr){
-  if(!dailyData[dateStr]){dailyData[dateStr]={blocks:JSON.parse(JSON.stringify(FIXED_6_BLOCKS)),bad:'',good:'',next:''};}
-  else{while(dailyData[dateStr].blocks.length<6){const idx=dailyData[dateStr].blocks.length;dailyData[dateStr].blocks.push(JSON.parse(JSON.stringify(FIXED_6_BLOCKS[idx]||{kw:'',checks:[{text:'',done:false}],checkouts:[{text:'',done:false}]})));}dailyData[dateStr].blocks=dailyData[dateStr].blocks.slice(0,6);}
-  return dailyData[dateStr];
+  if(!dailyData[dateStr])dailyData[dateStr]={};
+  const e=dailyData[dateStr];
+  if(!Array.isArray(e.blocks))e.blocks=JSON.parse(JSON.stringify(FIXED_6_BLOCKS));
+  while(e.blocks.length<6){const idx=e.blocks.length;e.blocks.push(JSON.parse(JSON.stringify(FIXED_6_BLOCKS[idx]||{kw:'',checks:[{text:'',done:false}],checkouts:[{text:'',done:false}]})));}
+  e.blocks=e.blocks.slice(0,6);
+  e.blocks.forEach(b=>{
+    if(!Array.isArray(b.checks))b.checks=[{text:'',done:false}];
+    if(!Array.isArray(b.checkouts))b.checkouts=[{text:'',done:false}];
+  });
+  if(!e.bad)e.bad='';if(!e.good)e.good='';if(!e.next)e.next='';
+  return e;
 }
 function getWeeklyEntry(wk){
   if(!weeklyData[wk])weeklyData[wk]={goals:[''],whys:[''],grid:Array(7).fill(0).map(()=>Array(6).fill('')),issue:Array(7).fill(''),gridColor:Array(7).fill(0).map(()=>Array(7).fill('')),coreBlocks:[{name:''},{name:''},{name:''}],blockNames:Array(7).fill('')};
@@ -326,10 +334,11 @@ function buildChecklist(arr,container,focusIdx){
 function renderDLog(){
   document.getElementById('d-date-label').textContent=fmtDateShort(currentDailyDate);
   const entry=getDailyEntry(currentDailyDate);
-  syncWeeklyToDaily(currentDailyDate);
+  try{syncWeeklyToDaily(currentDailyDate);}catch(e){}
   const container=document.getElementById('blocks-container');container.innerHTML='';
 
   entry.blocks.forEach((b,bi)=>{
+    if(!b.checks||b.checks.length===0)b.checks=[{text:'',done:false}];
     if(!b.checkouts||b.checkouts.length===0)b.checkouts=[{text:'',done:false}];
     const card=document.createElement('div');card.className='block-card';
 
