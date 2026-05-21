@@ -56,7 +56,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .block-kw-area{display:flex;align-items:center;padding:10px 14px;background:var(--violet-light);gap:8px;cursor:pointer;user-select:none;}
 .block-kw-area:active{opacity:.75;}
 .block-kw-text{flex:1;font-size:15px;font-weight:700;color:var(--violet);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.block-edit-btn{background:none;border:none;cursor:pointer;font-size:15px;color:var(--text-3);padding:0 2px;margin-left:auto;flex-shrink:0;-webkit-tap-highlight-color:transparent;line-height:1;}
+.block-edit-btn{background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-2);padding:0 4px;margin-left:auto;flex-shrink:0;-webkit-tap-highlight-color:transparent;line-height:1;}
 .block-edit-btn:active{color:var(--violet);}
 .block-num{font-size:11px;font-weight:700;color:var(--text-3);min-width:16px;flex-shrink:0;}
 .block-kw-inp{flex:1;border:none;background:transparent;font-size:15px;font-weight:700;color:var(--violet);font-family:inherit;outline:none;}
@@ -377,7 +377,7 @@ function renderDLog(){
     kwInp.addEventListener('input',()=>{const c=matchKeywordColor(kwInp.value);kwArea.style.background=c||'var(--violet-light)';});
 
     const editBtn=document.createElement('button');editBtn.type='button';editBtn.className='block-edit-btn';
-    editBtn.innerHTML='<i class="ti ti-pencil"></i>';
+    editBtn.textContent='✏';
     editBtn.addEventListener('click',(e)=>{
       e.stopPropagation();
       kwText.style.display='none';kwInp.style.display='';kwInp.focus();kwInp.select();editBtn.style.opacity='0.4';
