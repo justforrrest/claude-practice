@@ -1230,8 +1230,8 @@ function renderDailyBody(){
     issueWrap.innerHTML='';
     if(!wEntry.issue)wEntry.issue=Array(7).fill('');
     const mplanTxt=(mPlanData[currentDailyDate]||[]).map(ev=>ev.text).filter(Boolean).join('\n');
-    const issueCard=document.createElement('div');issueCard.className='card';issueCard.style.cssText='padding:8px 12px;display:flex;align-items:flex-start;gap:10px;margin-bottom:0;background:#F5F3FF;';
-    const lbl=document.createElement('span');lbl.style.cssText='background:#7C3AED;color:#fff;font-size:9px;font-weight:700;letter-spacing:.8px;padding:3px 7px;border-radius:5px;flex-shrink:0;margin-top:3px;';lbl.textContent='ISSUE';
+    const issueCard=document.createElement('div');issueCard.className='card';issueCard.style.cssText='padding:8px 12px;display:flex;align-items:center;gap:10px;margin-bottom:0;background:#F5F3FF;';
+    const lbl=document.createElement('span');lbl.style.cssText='background:#7C3AED;color:#fff;font-size:9px;font-weight:700;letter-spacing:.8px;padding:3px 7px;border-radius:5px;flex-shrink:0;';lbl.textContent='ISSUE';
     const ta=document.createElement('textarea');ta.style.cssText='flex:1;border:none;background:transparent;font-size:12px;color:var(--text-1);font-family:var(--font-sans);outline:none;resize:none;min-height:20px;line-height:1.5;overflow:hidden;padding:0;';
     ta.placeholder='오늘의 이슈...';ta.value=wEntry.issue[di]||mplanTxt;
     ta.style.height='auto';ta.style.height=(ta.scrollHeight||20)+'px';
