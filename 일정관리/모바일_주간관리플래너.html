@@ -76,6 +76,10 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .emotion-toggle-btn{width:100%;display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--surface);border-radius:14px;border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:600;color:var(--text-2);font-family:inherit;margin-bottom:8px;-webkit-tap-highlight-color:transparent;box-shadow:0 1px 6px rgba(100,60,220,.05);}
 .emotion-cards{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
 .emotion-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:12px 14px;}
+.issue-card{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:10px 14px;margin-bottom:10px;box-shadow:0 1px 6px rgba(100,60,220,.05);display:flex;align-items:flex-start;gap:10px;}
+.issue-badge{background:#EEF2FF;color:#5B21B6;font-size:9px;font-weight:700;letter-spacing:.8px;padding:3px 7px;border-radius:5px;flex-shrink:0;margin-top:2px;}
+.issue-inp{flex:1;border:none;background:transparent;font-size:13px;color:var(--text-1);font-family:inherit;outline:none;resize:none;min-height:20px;line-height:1.5;overflow:hidden;}
+.issue-inp::placeholder{color:var(--text-3);}
 .emotion-card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.3px;}
 .badge-bad{background:#FAECE7;color:#993C1D;}
@@ -153,6 +157,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
     </div>
     <button class="nav-btn" id="d-next">&#8250;</button>
   </div>
+  <div id="issue-section"></div>
   <div id="blocks-container"></div>
   <button class="emotion-toggle-btn" id="emotion-toggle">
     <span><i class="ti ti-mood-happy"></i>&nbsp; 감정 기록</span>
@@ -303,7 +308,7 @@ let _saveTimer=null;
 document.addEventListener('input',()=>{
   clearTimeout(_saveTimer);
   _saveTimer=setTimeout(async()=>{
-    if(currentTab==='dlog')await save(KEYS.daily,dailyData);
+    if(currentTab==='dlog'){await save(KEYS.daily,dailyData);await save(KEYS.weekly,weeklyData);}
     else if(currentTab==='ddot')await save(KEYS.dot,dotData);
   },1000);
 });
@@ -342,6 +347,19 @@ function renderDLog(){
   try{
   const entry=getDailyEntry(currentDailyDate);
   try{syncWeeklyToDaily(currentDailyDate);}catch(e){}
+
+  // Issue section
+  const issueSec=document.getElementById('issue-section');issueSec.innerHTML='';
+  const wk=weekKey(new Date(currentDailyDate));const wEntry=getWeeklyEntry(wk);const di=getDayIndex(currentDailyDate);
+  if(!wEntry.issue)wEntry.issue=Array(7).fill('');
+  const issueCard=document.createElement('div');issueCard.className='issue-card';
+  const issueBadge=document.createElement('span');issueBadge.className='issue-badge';issueBadge.textContent='ISSUE';
+  const issueTA=document.createElement('textarea');issueTA.className='issue-inp';issueTA.placeholder='오늘의 이슈...';
+  issueTA.value=wEntry.issue[di]||'';
+  issueTA.style.height='auto';issueTA.style.height=(issueTA.scrollHeight||20)+'px';
+  issueTA.addEventListener('input',()=>{wEntry.issue[di]=issueTA.value;issueTA.style.height='auto';issueTA.style.height=issueTA.scrollHeight+'px';});
+  issueCard.appendChild(issueBadge);issueCard.appendChild(issueTA);issueSec.appendChild(issueCard);
+
   const container=document.getElementById('blocks-container');container.innerHTML='';
 
   entry.blocks.forEach((b,bi)=>{
