@@ -55,8 +55,9 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .block-card{background:var(--surface);border-radius:14px;border:1px solid var(--border);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 6px rgba(100,60,220,.05);}
 .block-kw-area{display:flex;align-items:center;padding:10px 14px;background:var(--violet-light);gap:8px;cursor:pointer;user-select:none;}
 .block-kw-area:active{opacity:.75;}
-.block-expand-icon{font-size:13px;color:var(--text-3);margin-left:auto;transition:transform .2s;flex-shrink:0;line-height:1;}
-.block-expand-icon.open{transform:rotate(180deg);color:var(--violet);}
+.block-kw-text{flex:1;font-size:15px;font-weight:700;color:var(--violet);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.block-edit-btn{background:none;border:none;cursor:pointer;font-size:15px;color:var(--text-3);padding:0 2px;margin-left:auto;flex-shrink:0;-webkit-tap-highlight-color:transparent;line-height:1;}
+.block-edit-btn:active{color:var(--violet);}
 .block-num{font-size:11px;font-weight:700;color:var(--text-3);min-width:16px;flex-shrink:0;}
 .block-kw-inp{flex:1;border:none;background:transparent;font-size:15px;font-weight:700;color:var(--violet);font-family:inherit;outline:none;}
 .block-kw-inp::placeholder{color:var(--text-3);font-weight:400;font-size:14px;}
@@ -358,18 +359,38 @@ function renderDLog(){
     const kwArea=document.createElement('div');kwArea.className='block-kw-area';
     const kwBg=matchKeywordColor(b.kw);if(kwBg)kwArea.style.background=kwBg;
     const numSpan=document.createElement('span');numSpan.className='block-num';numSpan.textContent=bi+1;
-    const kwInp=document.createElement('input');kwInp.type='text';kwInp.className='block-kw-inp';kwInp.value=b.kw||'';kwInp.placeholder='키워드';
-    if(kwBg){kwInp.style.background=kwBg;}
-    kwInp.addEventListener('input',()=>{b.kw=kwInp.value;b.kwFromWeekly=false;const c=matchKeywordColor(kwInp.value);kwArea.style.background=c||'var(--violet-light)';});
-    const expandIcon=document.createElement('span');expandIcon.className='block-expand-icon'+(bi===openBlockIdx?' open':'');expandIcon.textContent='▾';
-    kwArea.appendChild(numSpan);kwArea.appendChild(kwInp);kwArea.appendChild(expandIcon);
+
+    const kwText=document.createElement('span');kwText.className='block-kw-text';
+    kwText.textContent=b.kw||'키워드';kwText.style.color=b.kw?'':'var(--text-3)';
+
+    const kwInp=document.createElement('input');kwInp.type='text';kwInp.className='block-kw-inp';
+    kwInp.style.display='none';kwInp.value=b.kw||'';kwInp.placeholder='키워드';
+    if(kwBg)kwInp.style.background=kwBg;
+    const saveKw=()=>{
+      b.kw=kwInp.value;b.kwFromWeekly=false;
+      const c=matchKeywordColor(kwInp.value);kwArea.style.background=c||'var(--violet-light)';
+      kwText.textContent=kwInp.value||'키워드';kwText.style.color=kwInp.value?'':'var(--text-3)';
+      kwInp.style.display='none';kwText.style.display='';editBtn.style.opacity='';
+    };
+    kwInp.addEventListener('blur',saveKw);
+    kwInp.addEventListener('keydown',(e)=>{if(e.key==='Enter'){e.preventDefault();saveKw();}});
+    kwInp.addEventListener('input',()=>{const c=matchKeywordColor(kwInp.value);kwArea.style.background=c||'var(--violet-light)';});
+
+    const editBtn=document.createElement('button');editBtn.type='button';editBtn.className='block-edit-btn';
+    editBtn.innerHTML='<i class="ti ti-pencil"></i>';
+    editBtn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      kwText.style.display='none';kwInp.style.display='';kwInp.focus();kwInp.select();editBtn.style.opacity='0.4';
+    });
+
+    kwArea.appendChild(numSpan);kwArea.appendChild(kwText);kwArea.appendChild(kwInp);kwArea.appendChild(editBtn);
     kwArea.addEventListener('click',(e)=>{
-      if(e.target===kwInp)return;
+      if(e.target===kwInp||editBtn.contains(e.target))return;
       if(openBlockIdx===bi){
-        openBlockIdx=null;body.style.display='none';expandIcon.classList.remove('open');
+        openBlockIdx=null;body.style.display='none';
       }else{
-        if(openBlockIdx!==null){const prev=container.querySelectorAll('.block-card')[openBlockIdx];if(prev){prev.querySelector('.block-body').style.display='none';prev.querySelector('.block-expand-icon').classList.remove('open');}}
-        openBlockIdx=bi;body.style.display='flex';expandIcon.classList.add('open');
+        if(openBlockIdx!==null){const prev=container.querySelectorAll('.block-card')[openBlockIdx];if(prev){prev.querySelector('.block-body').style.display='none';}}
+        openBlockIdx=bi;body.style.display='flex';
       }
     });
     card.appendChild(kwArea);
