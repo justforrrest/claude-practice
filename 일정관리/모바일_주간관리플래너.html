@@ -137,7 +137,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 /* ── M-Plan calendar ── */
 .mplan-cal-card{background:var(--surface);border-radius:14px;border:1px solid var(--border);overflow:hidden;margin-bottom:10px;box-shadow:0 1px 6px rgba(100,60,220,.05);}
 .mplan-grid{display:grid;grid-template-columns:repeat(7,1fr);}
-.mplan-header-cell{text-align:center;font-size:11px;font-weight:700;color:var(--text-3);padding:8px 2px 6px;background:var(--surface-2);}
+.mplan-header-cell{text-align:center;font-size:12px;font-weight:700;color:var(--text-2);padding:9px 2px 7px;background:#EAE6FF;border-bottom:1.5px solid var(--border-2);}
 .mplan-header-cell.sun{color:#EF4444;}
 .mplan-header-cell.sat{color:#3B82F6;}
 .mplan-day{min-height:54px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:5px 2px 4px;background:var(--surface);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,.04);overflow:hidden;min-width:0;}
@@ -716,8 +716,11 @@ function renderMPlan(){
   const daysInPrevMonth=new Date(y,m,0).getDate();
   for(let i=0;i<firstDay;i++){
     const cell=document.createElement('div');cell.className='mplan-day other-month';
+    const numWrap=document.createElement('div');numWrap.className='mplan-date-num-wrap';
     const num=document.createElement('div');num.className='mplan-date-num';num.textContent=daysInPrevMonth-firstDay+1+i;
-    cell.appendChild(num);grid.appendChild(cell);
+    numWrap.appendChild(num);cell.appendChild(numWrap);
+    const dotsWrap=document.createElement('div');dotsWrap.className='mplan-ev-dots';cell.appendChild(dotsWrap);
+    grid.appendChild(cell);
   }
   for(let d=1;d<=daysInMonth;d++){
     const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -742,7 +745,7 @@ function renderMPlan(){
     grid.appendChild(cell);
   }
   const total=firstDay+daysInMonth;const rem=total%7;
-  if(rem>0){for(let d=1;d<=7-rem;d++){const cell=document.createElement('div');cell.className='mplan-day other-month';const num=document.createElement('div');num.className='mplan-date-num';num.textContent=d;cell.appendChild(num);grid.appendChild(cell);}}
+  if(rem>0){for(let d=1;d<=7-rem;d++){const cell=document.createElement('div');cell.className='mplan-day other-month';const numWrap=document.createElement('div');numWrap.className='mplan-date-num-wrap';const num=document.createElement('div');num.className='mplan-date-num';num.textContent=d;numWrap.appendChild(num);cell.appendChild(numWrap);const dotsWrap=document.createElement('div');dotsWrap.className='mplan-ev-dots';cell.appendChild(dotsWrap);grid.appendChild(cell);}}
   calCard.appendChild(grid);con.appendChild(calCard);
   const detailWrap=document.createElement('div');detailWrap.id='mplan-detail-wrap';con.appendChild(detailWrap);
   renderMPlanEvents();
