@@ -84,7 +84,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .badge-good{background:#EAF3DE;color:#3B6D11;}
 .badge-next{background:#E6F1FB;color:#185FA5;}
 .emotion-label{font-size:11px;color:var(--text-3);}
-.emotion-inp{width:100%;border:none;background:transparent;font-size:14px;color:var(--text-1);font-family:inherit;outline:none;resize:none;min-height:40px;line-height:1.5;}
+.emotion-inp{width:100%;border:none;background:transparent;font-size:14px;color:var(--text-1);font-family:inherit;outline:none;resize:none;min-height:36px;line-height:1.5;overflow:hidden;}
 .emotion-inp::placeholder{color:var(--text-3);}
 
 /* ── Month nav ── */
@@ -167,15 +167,15 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
   <div class="emotion-cards" id="emotion-section" style="display:flex;flex-direction:column;">
     <div class="emotion-card" style="border-color:#F5C4B3;">
       <div class="emotion-card-hdr"><span class="badge badge-bad">BAD</span><span class="emotion-label">오늘 아쉽거나 슬펐던 감정</span></div>
-      <textarea class="emotion-inp" id="e-bad" rows="2" placeholder="오늘 아쉬웠던 점..."></textarea>
+      <textarea class="emotion-inp" id="e-bad" placeholder="오늘 아쉬웠던 점..."></textarea>
     </div>
     <div class="emotion-card" style="border-color:#C0DD97;">
       <div class="emotion-card-hdr"><span class="badge badge-good">GOOD</span><span class="emotion-label">오늘 좋았거나 만족스런 감정</span></div>
-      <textarea class="emotion-inp" id="e-good" rows="2" placeholder="오늘 좋았던 점..."></textarea>
+      <textarea class="emotion-inp" id="e-good" placeholder="오늘 좋았던 점..."></textarea>
     </div>
     <div class="emotion-card" style="border-color:#B5D4F4;">
       <div class="emotion-card-hdr"><span class="badge badge-next">NEXT</span><span class="emotion-label">내일 아침에 맞이할 감정을 선택하세요</span></div>
-      <textarea class="emotion-inp" id="e-next" rows="2" placeholder="내일의 감정..."></textarea>
+      <textarea class="emotion-inp" id="e-next" placeholder="내일의 감정..."></textarea>
     </div>
   </div>
 </div>
@@ -425,7 +425,8 @@ function renderDLog(){
   ['bad','good','next'].forEach(k=>{
     const el=document.getElementById('e-'+k);
     el.value=entry[k]||'';
-    el.oninput=()=>{entry[k]=el.value;};
+    el.style.height='auto';el.style.height=el.scrollHeight+'px';
+    el.oninput=()=>{entry[k]=el.value;el.style.height='auto';el.style.height=el.scrollHeight+'px';};
   });
   // Restore visibility
   document.getElementById('emotion-section').style.display=emotionOpen?'flex':'none';
