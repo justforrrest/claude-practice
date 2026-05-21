@@ -425,7 +425,7 @@ function renderDLog(){
       if(e.key!=='Enter')return;
       e.preventDefault();
       const s=el.selectionStart,v=el.value;
-      el.value=v.slice(0,s)+'\n· '+v.slice(s);
+      el.value=v.slice(0,s)+'\n• '+v.slice(s);
       el.selectionStart=el.selectionEnd=s+3;
       el.dispatchEvent(new Event('input'));
     };
