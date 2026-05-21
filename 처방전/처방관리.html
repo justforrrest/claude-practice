@@ -1749,11 +1749,10 @@ function updateDeliveryList(){
       const rx=prescriptionsData.find(x=>x.id===rxId);
       if(!rx)return;
       if(!rx.fees)rx.fees={};
-      rx.fees.delivery=Number(inp.value.replace(/[^0-9]/g,''))||0;
-      const _p=rx.packs||20,_tp=rx.totalPacks||45;
-      const _herb=(rx.herbs||[]).reduce((s,h)=>s+(h.unitPrice??getPrice(h.herb))*Number(h.qtyPerPack||0),0)*_p;
-      const _f=rx.fees;
-      rx.totalPrice=_herb+(_f.dispensing||0)*_tp+(_f.decoction||0)+(_f.packaging||0)+(_f.delivery||0);
+      const oldDlv=rx.fees.delivery??0;
+      const newDlv=Number(inp.value.replace(/[^0-9]/g,''))||0;
+      rx.fees.delivery=newDlv;
+      rx.totalPrice=(rx.totalPrice??0)-oldDlv+newDlv;
       await save(RX_KEYS.prescriptions,prescriptionsData);
       updateDeliveryList();
     });
