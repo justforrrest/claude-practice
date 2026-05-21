@@ -1462,7 +1462,10 @@ function renderWeekly(){
   days.forEach((d,di)=>{
     const td=document.createElement('td');td.className='wk-cell-td';
     const col=entry.gridColor[di][0]||'';if(col)td.style.background=col;
-    const ta=document.createElement('textarea');ta.value=entry.issue[di]||'';
+    const ta=document.createElement('textarea');
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const mplanTxt=(mPlanData[ds]||[]).map(ev=>ev.text).filter(Boolean).join('\n');
+    ta.value=entry.issue[di]||(mplanTxt);
     ta.addEventListener('input',()=>{entry.issue[di]=ta.value;});
     td.appendChild(ta);
     issueRow.appendChild(td);
