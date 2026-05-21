@@ -421,6 +421,14 @@ function renderDLog(){
     el.value=entry[k]||'';
     el.style.height='auto';el.style.height=el.scrollHeight+'px';
     el.oninput=()=>{entry[k]=el.value;el.style.height='auto';el.style.height=el.scrollHeight+'px';};
+    el.onkeydown=(e)=>{
+      if(e.key!=='Enter')return;
+      e.preventDefault();
+      const s=el.selectionStart,v=el.value;
+      el.value=v.slice(0,s)+'\n· '+v.slice(s);
+      el.selectionStart=el.selectionEnd=s+3;
+      el.dispatchEvent(new Event('input'));
+    };
   });
   // Restore visibility
   document.getElementById('emotion-section').style.display=emotionOpen?'flex':'none';
