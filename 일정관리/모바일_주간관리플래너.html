@@ -214,7 +214,7 @@ function setStatus(t){document.getElementById('status-bar').textContent=t;}
 
 /* ── Firebase ── */
 let db;
-try{firebase.initializeApp({apiKey:"AIzaSyBlmjCfXn80Ybew7xkIPkrqyOBxulWL_aM",authDomain:"weekly-planner-a2f78.firebaseapp.com",projectId:"weekly-planner-a2f78",storageBucket:"weekly-planner-a2f78.firebasestorage.app",messagingSenderId:"497461587642",appId:"1:497461587642:web:9ddbdcf093497aa7495c83"});db=firebase.firestore();}catch(e){db={collection:()=>({doc:()=>({get:async()=>({exists:false}),set:async()=>{}})});};}
+try{firebase.initializeApp({apiKey:"AIzaSyBlmjCfXn80Ybew7xkIPkrqyOBxulWL_aM",authDomain:"weekly-planner-a2f78.firebaseapp.com",projectId:"weekly-planner-a2f78",storageBucket:"weekly-planner-a2f78.firebasestorage.app",messagingSenderId:"497461587642",appId:"1:497461587642:web:9ddbdcf093497aa7495c83"});db=firebase.firestore();}catch(e){db={collection:()=>({doc:()=>({get:async()=>({exists:false}),set:async()=>{}})})};}
 function getSyncCode(){let c=localStorage.getItem('b6ix_sync');if(!c){c=Math.random().toString(36).substr(2,3).toUpperCase()+Math.random().toString(36).substr(2,3).toUpperCase();localStorage.setItem('b6ix_sync',c);}return c;}
 function setSyncStatus(t){const el=document.getElementById('sync-status');if(el)el.textContent=t;}
 function toFsVal(key,val){return key===KEYS.weekly?{__json:JSON.stringify(val)}:val;}
