@@ -584,10 +584,30 @@ function renderDDot(){
   DOT_COLORS.forEach(c=>{const sw=document.createElement('button');sw.type='button';sw.className='dot-color-sw'+(c===goal.color?' active':'');sw.style.background=c;sw.addEventListener('click',()=>{goal.color=c;save(KEYS.dot,dotData);renderDDot();});colorRow.appendChild(sw);});
   goalCard.appendChild(colorRow);
 
-  // Entries
+  // Entries — 날짜 내림차순 정렬
+  goal.entries.sort((a,b)=>(b.day||'').localeCompare(a.day||''));
+  let dotDragSrcIdx=-1;
   const entryList=document.createElement('div');entryList.className='dot-entry-list';
   goal.entries.forEach((e,ei)=>{
     const row=document.createElement('div');row.className='dot-entry-row';
+    // 드래그 핸들
+    const handle=document.createElement('span');handle.textContent='⠿';
+    handle.style.cssText='font-size:15px;color:var(--text-3);padding:0 4px 0 0;cursor:grab;touch-action:none;flex-shrink:0;-webkit-tap-highlight-color:transparent;';
+    handle.addEventListener('touchstart',(ev)=>{
+      ev.preventDefault();dotDragSrcIdx=ei;row.style.opacity='0.5';row.style.background='var(--violet-light)';
+    },{passive:false});
+    handle.addEventListener('touchend',(ev)=>{
+      row.style.opacity='';row.style.background='';
+      if(dotDragSrcIdx<0||dotDragSrcIdx===ei){dotDragSrcIdx=-1;return;}
+      const touch=ev.changedTouches[0];
+      const target=document.elementFromPoint(touch.clientX,touch.clientY)?.closest('.dot-entry-row');
+      if(target){
+        const rows=[...entryList.querySelectorAll('.dot-entry-row')];
+        const ti=rows.indexOf(target);
+        if(ti>=0&&ti!==dotDragSrcIdx){const moved=goal.entries.splice(dotDragSrcIdx,1)[0];goal.entries.splice(ti,0,moved);save(KEYS.dot,dotData);renderDDot();}
+      }
+      dotDragSrcIdx=-1;
+    },{passive:true});
     const daySpan=document.createElement('span');daySpan.className='dot-entry-day';daySpan.textContent=fmtDotDay(e.day);daySpan.title='날짜 수정';
     daySpan.addEventListener('click',()=>{
       const dateInp=document.createElement('input');dateInp.type='date';dateInp.value=e.day;dateInp.style.cssText='border:1px solid var(--border-2);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text-1);background:transparent;outline:none;width:110px;';
@@ -602,7 +622,7 @@ function renderDDot(){
     inp.addEventListener('blur',()=>save(KEYS.dot,dotData));
     const del=document.createElement('button');del.type='button';del.className='dot-entry-del';del.textContent='×';
     del.addEventListener('click',async()=>{goal.entries.splice(ei,1);await save(KEYS.dot,dotData);renderDDot();});
-    row.appendChild(daySpan);row.appendChild(dot);row.appendChild(inp);row.appendChild(del);
+    row.appendChild(handle);row.appendChild(daySpan);row.appendChild(dot);row.appendChild(inp);row.appendChild(del);
     entryList.appendChild(row);
   });
   goalCard.appendChild(entryList);

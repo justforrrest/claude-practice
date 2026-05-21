@@ -959,6 +959,7 @@ function renderDot(){
   content.appendChild(colorPicker);
 
   // Entry list
+  goal.entries.sort((a,b)=>(b.day||'').localeCompare(a.day||''));
   const list=document.createElement('div');list.className='dot-list';
   goal.entries.forEach((e,ei)=>{
     const row=document.createElement('div');row.className='dot-row';
