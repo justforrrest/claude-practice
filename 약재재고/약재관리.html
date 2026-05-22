@@ -1591,7 +1591,7 @@ document.querySelector('.tabs').addEventListener('dragend',e=>{
 document.querySelector('.tabs').addEventListener('dragover',e=>{
   e.preventDefault();
   const t=e.target.closest('.tab');
-  if(t&&t!==dragSrcTab){
+  if(t&&t!==dragSrcTab&&t.dataset.tab!=='meds'){
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('drag-over'));
     t.classList.add('drag-over');
   }
@@ -1602,13 +1602,13 @@ document.querySelector('.tabs').addEventListener('dragleave',e=>{
 document.querySelector('.tabs').addEventListener('drop',e=>{
   e.preventDefault();
   const t=e.target.closest('.tab');
-  if(!t||!dragSrcTab||t===dragSrcTab)return;
+  if(!t||!dragSrcTab||t===dragSrcTab||t.dataset.tab==='meds')return;
   const tabs=document.querySelector('.tabs');
   const all=[...tabs.querySelectorAll('.tab')];
   const si=all.indexOf(dragSrcTab),ti=all.indexOf(t);
   tabs.insertBefore(dragSrcTab,si<ti?t.nextSibling:t);
   t.classList.remove('drag-over');
-  localStorage.setItem('tabOrder',JSON.stringify([...tabs.querySelectorAll('.tab')].map(x=>x.dataset.tab)));
+  localStorage.setItem('tabOrder',JSON.stringify([...tabs.querySelectorAll('.tab[draggable]')].map(x=>x.dataset.tab)));
 });
 /* ── 상비약관리 ── */
 function renderMeds(){
@@ -1808,10 +1808,13 @@ document.getElementById('sync-modal-overlay').addEventListener('click',e=>{
   const savedTabOrder=JSON.parse(localStorage.getItem('tabOrder')||'null');
   if(savedTabOrder){
     const tabsEl=document.querySelector('.tabs');
+    const medsBtn=tabsEl.querySelector('[data-tab="meds"]');
     savedTabOrder.forEach(tabKey=>{
+      if(tabKey==='meds')return;
       const btn=tabsEl.querySelector(`[data-tab="${tabKey}"]`);
       if(btn)tabsEl.appendChild(btn);
     });
+    if(medsBtn)tabsEl.appendChild(medsBtn);
   }
   renderStock();
   document.getElementById('save-all-btn').addEventListener('click',async()=>{
