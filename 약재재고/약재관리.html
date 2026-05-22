@@ -1643,20 +1643,24 @@ function renderMeds(){
       <button class="btn btn-primary btn-sm" onclick="openAddMed()">+ 품목 추가</button>
     </div>
     <div id="add-med-form" style="display:none;margin-bottom:.875rem">
-      <div class="form-row" style="background:var(--surface-2);padding:12px;border-radius:8px;border:1px solid var(--border)">
-        <div class="form-group grow"><label>품목명</label><input type="text" id="mf-name" placeholder="예) 소화제"></div>
-        <div class="form-group" style="min-width:90px"><label>현재재고</label><input type="number" id="mf-qty" value="0" min="0"></div>
-        <div class="form-group" style="min-width:90px"><label>최소재고</label><input type="number" id="mf-minqty" value="1" min="0"></div>
-        <div class="form-group" style="min-width:70px"><label>단위</label><input type="text" id="mf-unit" value="개"></div>
-        <div class="form-group" style="min-width:90px"><label>단가(원)</label><input type="number" id="mf-price" value="0" min="0"></div>
-        <div class="form-group"><label>구입처</label><input type="text" id="mf-supplier"></div>
-        <div class="form-group grow"><label>메모</label><input type="text" id="mf-note"></div>
-        <div class="form-group" style="justify-content:flex-end;min-width:120px">
-          <label style="opacity:0">저장</label>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-primary btn-sm" onclick="saveMed()">저장</button>
-            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('add-med-form').style.display='none'">취소</button>
+      <div style="background:var(--surface-2);padding:12px;border-radius:8px;border:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
+        <div class="form-row">
+          <div class="form-group grow" style="min-width:100px"><label>품목명</label><input type="text" id="mf-name" placeholder="예) 소화제"></div>
+          <div class="form-group" style="min-width:0;width:58px"><label>현재재고</label><input type="number" id="mf-qty" value="0" min="0"></div>
+          <div class="form-group" style="min-width:0;width:58px"><label>최소재고</label><input type="number" id="mf-minqty" value="1" min="0"></div>
+          <div class="form-group" style="min-width:0;width:52px"><label>단위</label><input type="text" id="mf-unit" value="개"></div>
+          <div class="form-group" style="min-width:0;width:88px"><label>단가(원)</label><input type="number" id="mf-price" value="0" min="0"></div>
+          <div class="form-group grow" style="min-width:80px"><label>구입처</label><input type="text" id="mf-supplier"></div>
+          <div class="form-group" style="justify-content:flex-end;min-width:0;flex:none">
+            <label style="opacity:0">저장</label>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-primary btn-sm" onclick="saveMed()">저장</button>
+              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('add-med-form').style.display='none'">취소</button>
+            </div>
           </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group grow"><label>메모</label><input type="text" id="mf-note"></div>
         </div>
       </div>
     </div>
