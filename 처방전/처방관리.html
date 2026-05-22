@@ -36,11 +36,12 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .section-title{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.75rem;}
 .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:.875rem;}
 .btn{border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-family:var(--font-sans);cursor:pointer;transition:opacity .15s;white-space:nowrap;}
-.btn-primary{background:var(--violet-d);color:#fff;}
-.btn-primary:hover{opacity:.85;}
-.btn-secondary{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
-.btn-secondary:hover{background:var(--violet-light);color:var(--text-1);}
-.btn-sm{padding:4px 10px;font-size:12px;}
+.btn.btn-primary{background:var(--violet-d);color:#fff;border:none;}
+.btn.btn-primary:hover{opacity:.85;}
+.btn.btn-secondary{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
+.btn.btn-secondary:hover{background:var(--violet-light);color:var(--text-1);}
+.btn-sm{background:none;border:1px solid var(--border-2);border-radius:6px;padding:4px 10px;font-size:12px;font-family:var(--font-sans);color:var(--text-2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-sm:hover{background:var(--violet-light);color:var(--violet-d);}
 .btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border);}
 .btn-ghost:hover{background:var(--violet-light);color:var(--text-1);}
 .btn-filter{background:#ddd6fe;color:var(--text-2);border:1px solid rgba(109,40,217,0.15);}
@@ -141,8 +142,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
       <span id="sync-status" style="color:var(--text-3);font-size:11px;"></span>
     </div>
     <div style="display:flex;gap:6px;align-items:center;">
-      <button class="btn btn-secondary btn-sm" id="json-export-btn" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>내보내기</button>
-      <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 16 12 21 17 16"/><line x1="12" y1="21" x2="12" y2="9"/></svg>가져오기<input type="file" id="import-file" accept=".json" style="display:none"></label>
+      <button class="btn-sm" id="json-export-btn">⬆ 내보내기</button>
+      <label class="btn-sm" style="cursor:pointer;margin:0;">⬇ 가져오기<input type="file" id="import-file" accept=".json" style="display:none"></label>
       <button class="btn btn-primary btn-sm" id="export-btn">저장</button>
       <span id="status-bar" style="font-size:11px;color:var(--text-3);padding-left:6px;border-left:1px solid var(--border-2);">불러오는 중...</span>
     </div>
