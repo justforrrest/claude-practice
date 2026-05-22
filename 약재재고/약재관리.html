@@ -1598,7 +1598,7 @@ function renderMeds(){
 
   /* 품목 목록 행 */
   function itemRows(){
-    if(!medsData.length)return`<tr><td colspan="8" class="empty">등록된 품목이 없습니다</td></tr>`;
+    if(!medsData.length)return`<tr><td colspan="7" class="empty">등록된 품목이 없습니다</td></tr>`;
     return medsData.slice().sort((a,b)=>{
       const aLow=a.qty<a.minQty?0:1,bLow=b.qty<b.minQty?0:1;
       return aLow-bLow||a.name.localeCompare(b.name,'ko');
@@ -1606,9 +1606,8 @@ function renderMeds(){
       const low=m.qty<m.minQty;
       return`<tr style="${low?'background:#FEF2F2;':''}">
         <td>${m.name}${low?'<span class="badge badge-low" style="margin-left:6px">부족</span>':''}</td>
-        <td class="num">${m.qty.toLocaleString()}</td>
-        <td class="num" style="color:var(--text-3)">${m.minQty.toLocaleString()}</td>
-        <td>${m.unit}</td>
+        <td class="num">${m.qty.toLocaleString()}${m.unit}</td>
+        <td class="num" style="color:var(--text-3)">${m.minQty.toLocaleString()}${m.unit}</td>
         <td class="num">${m.unitPrice?m.unitPrice.toLocaleString()+' 원':'-'}</td>
         <td>${m.supplier||'-'}</td>
         <td style="max-width:120px;color:var(--text-3);font-size:12px">${m.note||''}</td>
@@ -1664,7 +1663,7 @@ function renderMeds(){
     <div class="tbl-wrap"><table>
       <thead><tr>
         <th>품목명</th><th class="num">현재재고</th><th class="num">최소재고</th>
-        <th>단위</th><th class="num">단가</th><th>구입처</th><th>메모</th><th>입출고</th>
+        <th class="num">단가</th><th>구입처</th><th>메모</th><th>입출고</th>
       </tr></thead>
       <tbody id="meds-tbody">${itemRows()}</tbody>
     </table></div>
