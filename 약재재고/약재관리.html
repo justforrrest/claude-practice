@@ -31,6 +31,7 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .tab.active{color:var(--violet-d);border-bottom-color:var(--violet-d);font-weight:600;}
 .tab:not(.active):hover{color:var(--text-1);background:var(--violet-light);}
 .tab.dragging{opacity:0.35;}
+.tab[data-tab="meds"]{margin-left:auto;}
 .tab[data-tab="meds"]:not(.active){background:#DDD6FE;color:var(--violet-d);font-weight:500;}
 .tab.drag-over{background:var(--violet-light);color:var(--violet-d);}
 .view{display:none;}.view.active{display:block;}
@@ -125,8 +126,7 @@ input[type=number]{-moz-appearance:textfield;}
     <button class="tab" data-tab="adjust" draggable="true">재고조정</button>
     <button class="tab" data-tab="pricelist" draggable="true">단가표</button>
     <button class="tab" data-tab="settings" draggable="true">약재명/단가조정</button>
-    <span style="flex:1"></span>
-    <button class="tab" data-tab="meds">상비약관리</button>
+    <button class="tab" data-tab="meds">상비약 재고</button>
   </div>
 
   <div class="view active" id="view-stock"></div>
