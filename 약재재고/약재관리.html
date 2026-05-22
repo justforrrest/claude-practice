@@ -22,7 +22,7 @@
 }
 body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-height:100vh;padding:1.5rem 1rem;}
 .container{max-width:960px;margin:0 auto;}
-.app-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1.25rem;padding:.875rem 1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
 .app-title{font-size:21px;font-weight:700;letter-spacing:-.5px;background:linear-gradient(135deg,var(--violet-d) 0%,var(--pink) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .app-meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-3);flex-wrap:wrap;}
 .sync-code-box{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-weight:600;letter-spacing:1px;color:var(--violet-d);font-size:12px;}
@@ -109,13 +109,17 @@ input[type=number]{-moz-appearance:textfield;}
 
   <div class="app-header">
     <div class="app-title">약재관리</div>
-    <div class="app-meta">
-      <span>동기화 코드</span>
-      <span class="sync-code-box" id="sync-code-display">-</span>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:6px 10px;background:var(--surface-2);border-radius:10px;font-size:12px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(100,60,220,.06);">
+    <div style="display:flex;align-items:center;gap:8px;color:var(--text-2);">
+      <span style="color:var(--text-3);">☁ 동기화 코드</span>
+      <strong id="sync-code-display" style="color:var(--violet-d);letter-spacing:3px;font-size:13px;">-</strong>
       <button class="btn btn-secondary btn-sm" id="change-sync-btn">코드 변경</button>
-      <span id="sync-status"></span>
+      <span id="sync-status" style="color:var(--text-3);font-size:11px;"></span>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;">
       <button class="btn btn-primary btn-sm" id="save-all-btn">저장</button>
-      <span id="status-bar">불러오는 중...</span>
+      <span id="status-bar" style="font-size:11px;color:var(--text-3);padding-left:6px;border-left:1px solid var(--border-2);">불러오는 중...</span>
     </div>
   </div>
 
