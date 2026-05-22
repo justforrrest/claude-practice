@@ -48,11 +48,12 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);min-h
 .search-input{flex:1;min-width:160px;border:1px solid var(--border-2);border-radius:8px;padding:7px 12px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);}
 .search-input:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
 .btn{border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-family:var(--font-sans);cursor:pointer;transition:opacity .15s;white-space:nowrap;}
-.btn-primary{background:var(--violet-d);color:#fff;}
-.btn-primary:hover{opacity:.85;}
-.btn-secondary{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
-.btn-secondary:hover{background:var(--violet-light);color:var(--text-1);}
-.btn-sm{padding:4px 10px;font-size:12px;}
+.btn.btn-primary{background:var(--violet-d);color:#fff;border:none;}
+.btn.btn-primary:hover{opacity:.85;}
+.btn.btn-secondary{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
+.btn.btn-secondary:hover{background:var(--violet-light);color:var(--text-1);}
+.btn-sm{background:none;border:1px solid var(--border-2);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:400;font-family:var(--font-sans);color:var(--text-2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-sm:hover{background:var(--violet-light);color:var(--violet-d);}
 .btn-del{background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-3);padding:3px 6px;border-radius:4px;transition:all .15s;}
 .btn-del:hover{background:var(--coral-light);color:var(--coral);}
 .btn-edit{background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:3px 5px;border-radius:4px;transition:all .15s;}
@@ -118,6 +119,8 @@ input[type=number]{-moz-appearance:textfield;}
       <span id="sync-status" style="color:var(--text-3);font-size:11px;"></span>
     </div>
     <div style="display:flex;gap:6px;align-items:center;">
+      <button class="btn-sm" id="json-export-btn">⬆ 내보내기</button>
+      <label class="btn-sm" style="cursor:pointer;margin:0;">⬇ 가져오기<input type="file" id="import-file" accept=".json" style="display:none"></label>
       <button class="btn btn-primary btn-sm" id="save-all-btn">저장</button>
       <span id="status-bar" style="font-size:11px;color:var(--text-3);padding-left:6px;border-left:1px solid var(--border-2);">불러오는 중...</span>
     </div>
@@ -1046,9 +1049,6 @@ function renderSettings(){
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <input type="text" id="herb-new-name" placeholder="새 약재명" style="border:1px solid var(--border-2);border-radius:8px;padding:5px 10px;font-size:13px;font-family:var(--font-sans);outline:none;width:120px;">
         <button class="btn btn-secondary btn-sm" id="herb-add-btn">+ 추가</button>
-        <div style="width:1px;height:18px;background:var(--border);margin:0 2px;"></div>
-        <button class="btn btn-secondary btn-sm" id="export-btn" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>내보내기</button>
-        <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 16 12 21 17 16"/><line x1="12" y1="21" x2="12" y2="9"/></svg>가져오기<input type="file" id="import-input" accept=".json" style="display:none"></label>
         <button class="btn btn-primary btn-sm" id="settings-save">설정 저장</button>
       </div>
     </div>
@@ -1162,29 +1162,6 @@ function renderSettings(){
     });
   });
 
-  document.getElementById('export-btn').addEventListener('click',async function(e){
-    const data={inbound:inboundData,outbound:outboundData,settings:settingsData};
-    await window._exportToFolder(JSON.stringify(data,null,2),'herb_data_'+todayStr()+'.json',this,e.shiftKey);
-  });
-
-  document.getElementById('import-input').addEventListener('change',async e=>{
-    const file=e.target.files[0];if(!file)return;
-    try{
-      const text=await file.text();
-      const data=JSON.parse(text);
-      if(data.inbound&&Array.isArray(data.inbound)){inboundData=data.inbound.map(r=>({...r,id:r.id||uid()}));await save(KEYS.inbound,inboundData);}
-      if(data.outbound&&Array.isArray(data.outbound)){outboundData=data.outbound.map(r=>({...r,id:r.id||uid()}));await save(KEYS.outbound,outboundData);}
-      if(data.settings){
-        if(data.settings.prices)settingsData.prices={...settingsData.prices,...data.settings.prices};
-        if(data.settings.minStock)settingsData.minStock={...settingsData.minStock,...data.settings.minStock};
-        if(data.settings.memos)settingsData.memos={...settingsData.memos,...data.settings.memos};
-        await save(KEYS.settings,settingsData);
-      }
-      alert(`가져오기 완료 — 입고 ${inboundData.length}건, 출고 ${outboundData.length}건`);
-      renderSettings();
-    }catch(err){alert('파일 형식이 올바르지 않습니다.');}
-    e.target.value='';
-  });
 
   // 새 약재 추가
   document.getElementById('herb-add-btn').addEventListener('click',async()=>{
@@ -1835,6 +1812,30 @@ document.getElementById('sync-modal-overlay').addEventListener('click',e=>{
       save(KEYS.medlogs,medLogsData),
     ]);
     setStatus('전체 저장 완료 ✓');
+  });
+  document.getElementById('json-export-btn').addEventListener('click',async function(e){
+    const data={inbound:inboundData,outbound:outboundData,settings:settingsData,suppliers:suppliersData,pricelist:pricelistData,herbs:herbsData,adjust:adjustData,meds:medsData,medlogs:medLogsData};
+    await window._exportToFolder(JSON.stringify(data,null,2),'herb_all_'+todayStr()+'.json',this,e.shiftKey);
+  });
+  document.getElementById('import-file').addEventListener('change',async e=>{
+    const file=e.target.files[0];if(!file)return;
+    try{
+      const text=await file.text();
+      const data=JSON.parse(text);
+      if(data.inbound&&Array.isArray(data.inbound))inboundData=data.inbound.map(r=>({...r,id:r.id||uid()}));
+      if(data.outbound&&Array.isArray(data.outbound))outboundData=data.outbound.map(r=>({...r,id:r.id||uid()}));
+      if(data.adjust&&Array.isArray(data.adjust))adjustData=data.adjust.map(r=>({...r,id:r.id||uid()}));
+      if(data.herbs&&Array.isArray(data.herbs))herbsData=data.herbs;
+      if(data.suppliers&&Array.isArray(data.suppliers))suppliersData=data.suppliers;
+      if(data.pricelist&&Array.isArray(data.pricelist))pricelistData=data.pricelist;
+      if(data.meds&&Array.isArray(data.meds))medsData=data.meds;
+      if(data.medlogs&&Array.isArray(data.medlogs))medLogsData=data.medlogs;
+      if(data.settings)settingsData={...settingsData,...data.settings};
+      await Promise.all([save(KEYS.inbound,inboundData),save(KEYS.outbound,outboundData),save(KEYS.settings,settingsData),save(KEYS.suppliers,suppliersData),save(KEYS.pricelist,pricelistData),save(KEYS.herbs,herbsData),save(KEYS.adjust,adjustData),save(KEYS.meds,medsData),save(KEYS.medlogs,medLogsData)]);
+      setStatus('가져오기 완료 ✓');
+      document.querySelector('.tab[data-tab="stock"]').click();
+    }catch(err){alert('파일 형식이 올바르지 않습니다.');}
+    e.target.value='';
   });
 })();
 </script>
