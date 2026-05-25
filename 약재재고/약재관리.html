@@ -1598,7 +1598,7 @@ function renderMeds(){
 
   /* 품목 목록 행 */
   function itemRows(){
-    if(!medsData.length)return`<tr><td colspan="7" class="empty">등록된 품목이 없습니다</td></tr>`;
+    if(!medsData.length)return`<tr><td colspan="6" class="empty">등록된 품목이 없습니다</td></tr>`;
     return medsData.slice().sort((a,b)=>{
       const aLow=a.qty<a.minQty?0:1,bLow=b.qty<b.minQty?0:1;
       return aLow-bLow||a.name.localeCompare(b.name,'ko');
@@ -1608,9 +1608,8 @@ function renderMeds(){
         <td>${m.name}${low?'<span class="badge badge-low" style="margin-left:6px">부족</span>':''}</td>
         <td class="num">${m.qty.toLocaleString()}${m.unit}</td>
         <td class="num" style="color:var(--text-3)">${m.minQty.toLocaleString()}${m.unit}</td>
-        <td class="num">${m.unitPrice?m.unitPrice.toLocaleString()+' 원':'-'}</td>
         <td>${m.supplier||'-'}</td>
-        <td style="max-width:120px;color:var(--text-3);font-size:12px">${m.note||''}</td>
+        <td style="max-width:160px"><input type="text" value="${(m.note||'').replace(/"/g,'&quot;')}" placeholder="메모" onchange="saveMedNote('${m.id}',this.value)" style="border:none;background:transparent;width:100%;font-size:12px;font-family:inherit;color:var(--text-3);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
         <td style="white-space:nowrap">
           <button class="btn btn-sm btn-primary" onclick="medInOut('${m.id}','in')">입고▲</button>
           <button class="btn btn-sm btn-secondary" style="margin-left:4px" onclick="medInOut('${m.id}','out')">출고▼</button>
@@ -1649,7 +1648,6 @@ function renderMeds(){
           <div class="form-group" style="min-width:0;width:58px"><label>현재재고</label><input type="number" id="mf-qty" value="0" min="0"></div>
           <div class="form-group" style="min-width:0;width:58px"><label>최소재고</label><input type="number" id="mf-minqty" value="1" min="0"></div>
           <div class="form-group" style="min-width:0;width:52px"><label>단위</label><input type="text" id="mf-unit" value="개"></div>
-          <div class="form-group" style="min-width:0;width:88px"><label>단가(원)</label><input type="number" id="mf-price" value="0" min="0"></div>
           <div class="form-group grow" style="min-width:80px"><label>구입처</label><input type="text" id="mf-supplier"></div>
           <div class="form-group" style="justify-content:flex-end;min-width:0;flex:none">
             <label style="opacity:0">저장</label>
@@ -1667,7 +1665,7 @@ function renderMeds(){
     <div class="tbl-wrap"><table>
       <thead><tr>
         <th>품목명</th><th class="num" style="width:72px">현재재고</th><th class="num" style="width:72px">최소재고</th>
-        <th class="num" style="width:84px">단가</th><th style="width:90px">구입처</th><th>메모</th><th style="width:140px">입출고</th>
+        <th style="width:90px">구입처</th><th>메모</th><th style="width:140px">입출고</th>
       </tr></thead>
       <tbody id="meds-tbody">${itemRows()}</tbody>
     </table></div>
@@ -1738,6 +1736,12 @@ function delMedLog(id){
   save(KEYS.meds,medsData);
   save(KEYS.medlogs,medLogsData);
   renderMeds();
+}
+
+function saveMedNote(id,value){
+  const med=medsData.find(m=>m.id===id);if(!med)return;
+  med.note=value.trim();
+  save(KEYS.meds,medsData);
 }
 
 function renderTab(tab){
