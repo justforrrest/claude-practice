@@ -1862,27 +1862,26 @@ function renderHappycall(){
       <thead><tr>
         <th style="width:90px;white-space:nowrap">처방일</th>
         <th style="width:90px">환자명</th>
-        <th style="width:120px">처방명</th>
-        <th style="width:56px;text-align:center">복약</th>
+        <th style="width:80px;text-align:center">구분·차수</th>
         <th style="width:72px;text-align:center">상태</th>
         <th style="width:90px;white-space:nowrap">콜 날짜</th>
         <th>메모</th>
         <th style="width:48px"></th>
       </tr></thead>
-      <tbody>${!list.length?`<tr><td colspan="8" class="empty">처방 이력이 없습니다</td></tr>`:
+      <tbody>${!list.length?`<tr><td colspan="7" class="empty">처방 이력이 없습니다</td></tr>`:
         list.map(rx=>{
           const hc=rx.happycall||{};
           const st=hc.status||'대기';
-          const session=(rx.sessionCur&&rx.sessionTotal)?`${rx.sessionCur}/${rx.sessionTotal}`:'-';
+          const session=(rx.sessionCur&&rx.sessionTotal)?`${rx.sessionCur}/${rx.sessionTotal}`:'';
+          const catSession=[rx.category||'',session].filter(Boolean).join(' ');
           return`<tr>
             <td style="white-space:nowrap">${rx.date||''}</td>
             <td style="white-space:nowrap;font-weight:600">${rx.patientName||''}</td>
-            <td style="color:var(--text-3);font-size:12px;white-space:nowrap">${rx.diagnosis||''}</td>
-            <td style="text-align:center;font-size:12px">${session}</td>
-            <td style="text-align:center">${hcBadge(st)}</td>
+            <td style="text-align:center;font-size:12px;color:var(--text-3)">${catSession||'-'}</td>
+            <td style="text-align:center"><span class="hc-status-cycle" data-rxid="${rx.id}" style="cursor:pointer" title="클릭으로 상태 변경">${hcBadge(st)}</span></td>
             <td style="white-space:nowrap">
               <span style="display:inline-flex;align-items:center;gap:2px;position:relative">
-                <input type="text" class="hc-date-inp" data-rxid="${rx.id}" value="${normalizeHcDate(hc.date)}" placeholder="mm/dd"
+                <input type="text" class="hc-date-inp" data-rxid="${rx.id}" value="${normalizeHcDate(hc.date)}"
                   style="border:1px solid transparent;border-radius:0;background:transparent;font-size:12px;font-family:var(--font-sans);color:var(--text-3);width:44px;outline:none;padding:2px 3px;"
                   onblur="saveHcDate(this)" onfocus="this.style.borderColor='var(--border-2)';this.style.background='var(--surface)';">
                 <input type="date" class="hc-cal-inp" data-rxid="${rx.id}" tabindex="-1"
@@ -1916,6 +1915,18 @@ function renderHappycall(){
       const txt=span.querySelector('.hc-date-inp');
       cal.onchange=()=>{txt.value=normalizeHcDate(cal.value);saveHcDate(txt);};
       if(cal.showPicker)cal.showPicker();
+    });
+  });
+  el.querySelectorAll('.hc-status-cycle').forEach(span=>{
+    span.addEventListener('click',async()=>{
+      const rxId=span.dataset.rxid;
+      const cycle=['대기','완료','부재'];
+      const rx=prescriptionsData.find(r=>r.id===rxId);if(!rx)return;
+      const cur=(rx.happycall?.status)||'대기';
+      const next=cycle[(cycle.indexOf(cur)+1)%cycle.length];
+      prescriptionsData=prescriptionsData.map(r=>r.id!==rxId?r:{...r,happycall:{...(r.happycall||{}),status:next}});
+      await save(RX_KEYS.prescriptions,prescriptionsData);
+      renderHappycall();
     });
   });
 }
