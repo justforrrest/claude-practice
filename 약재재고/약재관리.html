@@ -168,6 +168,27 @@ input[type=number]{-moz-appearance:textfield;}
   </div>
 </div>
 
+<div class="sync-modal-overlay" id="med-inout-overlay">
+  <div class="sync-modal" style="width:300px">
+    <h3 id="med-inout-title"></h3>
+    <p id="med-inout-info" style="margin-bottom:1rem"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1rem">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">수량</label>
+        <input id="med-inout-qty" type="number" min="0" step="1" placeholder="0" style="width:100%;border:1px solid var(--border-2);border-radius:8px;padding:9px 12px;font-size:20px;font-family:var(--font-sans);font-weight:700;text-align:center;outline:none;color:var(--violet-d);">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">용도/메모</label>
+        <input id="med-inout-note" type="text" placeholder="용도 또는 메모 입력" style="width:100%;border:1px solid var(--border-2);border-radius:8px;padding:9px 12px;font-size:14px;font-family:var(--font-sans);outline:none;color:var(--text-1);">
+      </div>
+    </div>
+    <div class="sync-modal-actions">
+      <button class="btn btn-secondary" id="med-inout-cancel">취소</button>
+      <button class="btn btn-primary" id="med-inout-confirm">확인</button>
+    </div>
+  </div>
+</div>
+
 <div class="sync-modal-overlay" id="sync-modal-overlay">
   <div class="sync-modal">
     <h3>기기 연결</h3>
@@ -1711,21 +1732,16 @@ function delMed(id){
   renderMeds();
 }
 
+let _medInOutCtx=null;
 function medInOut(medId,type){
   const med=medsData.find(m=>m.id===medId);if(!med)return;
-  const label=type==='in'?'입고':'출고';
-  const qtyStr=prompt(`[${med.name}] ${label} 수량을 입력하세요 (현재: ${med.qty}${med.unit})`);
-  if(qtyStr===null)return;
-  const qty=parseFloat(qtyStr);
-  if(!qty||qty<=0)return alert('유효한 수량을 입력하세요');
-  if(type==='out'&&qty>med.qty){if(!confirm(`현재 재고(${med.qty})보다 많은 수량입니다. 계속할까요?`))return;}
-  const note=prompt('메모 (선택사항)','');
-  if(note===null)return;
-  med.qty=type==='in'?med.qty+qty:med.qty-qty;
-  medLogsData.push({id:uid(),medId,medName:med.name,type,qty,date:todayStr(),note:note||''});
-  save(KEYS.meds,medsData);
-  save(KEYS.medlogs,medLogsData);
-  renderMeds();
+  _medInOutCtx={medId,type,med};
+  document.getElementById('med-inout-title').textContent=`[${med.name}] ${type==='in'?'입고':'출고'}`;
+  document.getElementById('med-inout-info').textContent=`현재 재고: ${med.qty}${med.unit}`;
+  document.getElementById('med-inout-qty').value='';
+  document.getElementById('med-inout-note').value='';
+  document.getElementById('med-inout-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('med-inout-qty').focus(),50);
 }
 
 function delMedLog(id){
@@ -1765,6 +1781,34 @@ function renderTab(tab){
   else if(tab==='settings')renderSettings();
   else if(tab==='meds')renderMeds();
 }
+
+/* ── 입출고 모달 ── */
+document.getElementById('med-inout-cancel').addEventListener('click',()=>{
+  document.getElementById('med-inout-overlay').classList.remove('open');_medInOutCtx=null;
+});
+document.getElementById('med-inout-overlay').addEventListener('click',e=>{
+  if(e.target===e.currentTarget){document.getElementById('med-inout-overlay').classList.remove('open');_medInOutCtx=null;}
+});
+document.getElementById('med-inout-confirm').addEventListener('click',async()=>{
+  if(!_medInOutCtx)return;
+  const{medId,type,med}=_medInOutCtx;
+  const qty=parseFloat(document.getElementById('med-inout-qty').value);
+  if(!qty||qty<=0)return alert('유효한 수량을 입력하세요');
+  if(type==='out'&&qty>med.qty){if(!confirm(`현재 재고(${med.qty})보다 많은 수량입니다. 계속할까요?`))return;}
+  const note=document.getElementById('med-inout-note').value.trim();
+  med.qty=type==='in'?med.qty+qty:med.qty-qty;
+  medLogsData.push({id:uid(),medId,medName:med.name,type,qty,date:todayStr(),note});
+  await save(KEYS.meds,medsData);
+  await save(KEYS.medlogs,medLogsData);
+  document.getElementById('med-inout-overlay').classList.remove('open');
+  _medInOutCtx=null;
+  renderMeds();
+});
+['med-inout-qty','med-inout-note'].forEach(id=>{
+  document.getElementById(id).addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.isComposing)document.getElementById('med-inout-confirm').click();
+  });
+});
 
 /* ── 동기화 코드 변경 모달 ── */
 document.getElementById('change-sync-btn').addEventListener('click',()=>{
