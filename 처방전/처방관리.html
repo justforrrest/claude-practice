@@ -1831,9 +1831,8 @@ function renderHappycall(){
 
   el.innerHTML=`
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
+    <div style="margin-bottom:.875rem">
       <div class="section-title" style="margin:0">해피콜 관리</div>
-      <button id="hc-all-done-btn" class="btn btn-sm" style="background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7">전체 완료 처리</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:.875rem;flex-wrap:wrap">
       ${[['전체',cntAll,'var(--violet-d)','var(--surface-2)','var(--border)'],['대기',cntPend,HC_ST['대기'].color,HC_ST['대기'].bg,HC_ST['대기'].border],['완료',cntDone,HC_ST['완료'].color,HC_ST['완료'].bg,HC_ST['완료'].border],['부재',cntAbsent,HC_ST['부재'].color,HC_ST['부재'].bg,HC_ST['부재'].border]].map(([label,cnt,col,bg,bdr])=>{
@@ -1852,10 +1851,6 @@ function renderHappycall(){
         <select id="hc-month-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);width:60px;">
           <option value="">월 전체</option>
           ${months.map(m=>`<option value="${m}"${hcMonth===m?' selected':''}>${m}월</option>`).join('')}
-        </select>
-        <select id="hc-status-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);width:72px;">
-          <option value="" disabled hidden${hcStatusFilter===''?' selected':''}>상태</option>
-          ${Object.keys(HC_ST).map(s=>`<option value="${s}"${hcStatusFilter===s?' selected':''}>${s}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -1883,8 +1878,8 @@ function renderHappycall(){
             <td style="white-space:nowrap">
               <span style="display:inline-flex;align-items:center;gap:2px;position:relative">
                 <input type="text" class="hc-date-inp" data-rxid="${rx.id}" value="${normalizeHcDate(hc.date)}"
-                  style="border:1px solid transparent;border-radius:0;background:transparent;font-size:12px;font-family:var(--font-sans);color:var(--text-3);width:44px;outline:none;padding:2px 3px;"
-                  onblur="saveHcDate(this)" onfocus="this.style.borderColor='var(--border-2)';this.style.background='var(--surface)';">
+                  style="border:none;border-radius:0;background:transparent;font-size:12px;font-family:var(--font-sans);color:var(--text-3);width:44px;outline:none;padding:2px 3px;"
+                  onblur="saveHcDate(this)">
                 <input type="date" class="hc-cal-inp" data-rxid="${rx.id}" tabindex="-1"
                   style="position:absolute;left:0;top:0;width:0;height:0;opacity:0;pointer-events:none;">
                 <button class="hc-cal-btn" data-rxid="${rx.id}" style="background:none;border:none;cursor:pointer;font-size:10px;padding:0 1px;color:var(--text-3);line-height:1;opacity:.55">📅</button>
@@ -1892,8 +1887,8 @@ function renderHappycall(){
             </td>
             <td>
               <input type="text" class="hc-note-inp" data-rxid="${rx.id}" value="${(hc.note||'').replace(/"/g,'&quot;')}"
-                style="border:1px solid transparent;border-radius:0;background:transparent;font-size:12px;font-family:var(--font-sans);color:var(--text-3);width:100%;outline:none;padding:2px 3px;"
-                onblur="saveHcNote(this)" onfocus="this.style.borderColor='var(--border-2)';this.style.background='var(--surface)';">
+                style="border:none;border-radius:0;background:transparent;font-size:12px;font-family:var(--font-sans);color:var(--text-3);width:100%;outline:none;padding:2px 3px;"
+                onblur="saveHcNote(this)">
             </td>
             <td style="text-align:right"><button class="btn-sm hc-edit-btn" data-rxid="${rx.id}" style="font-size:11px">수정</button></td>
           </tr>`;
@@ -1902,17 +1897,9 @@ function renderHappycall(){
     </table></div>
   </div>`;
 
-  document.getElementById('hc-all-done-btn').addEventListener('click',async()=>{
-    if(!confirm('현재 목록의 모든 해피콜 상태를 완료로 변경할까요?'))return;
-    const ids=new Set(list.map(r=>r.id));
-    prescriptionsData=prescriptionsData.map(r=>ids.has(r.id)?{...r,happycall:{...(r.happycall||{}),status:'완료'}}:r);
-    await save(RX_KEYS.prescriptions,prescriptionsData);
-    renderHappycall();
-  });
   document.getElementById('hc-search').addEventListener('input',e=>{hcSearch=e.target.value.trim();renderHappycall();});
   document.getElementById('hc-year-sel').addEventListener('change',e=>{hcYear=e.target.value;renderHappycall();});
   document.getElementById('hc-month-sel').addEventListener('change',e=>{hcMonth=e.target.value;renderHappycall();});
-  document.getElementById('hc-status-sel').addEventListener('change',e=>{hcStatusFilter=e.target.value;renderHappycall();});
   el.querySelectorAll('.hc-edit-btn').forEach(btn=>{
     btn.addEventListener('click',()=>openHcModal(btn.dataset.rxid));
   });
@@ -1952,7 +1939,6 @@ function normalizeHcDate(v){
   return v;
 }
 function saveHcDate(el){
-  el.style.borderColor='transparent';el.style.background='transparent';
   const normalized=normalizeHcDate(el.value);
   el.value=normalized;
   const rxId=el.dataset.rxid;
@@ -1960,7 +1946,6 @@ function saveHcDate(el){
   save(RX_KEYS.prescriptions,prescriptionsData);
 }
 function saveHcNote(el){
-  el.style.borderColor='transparent';el.style.background='transparent';
   const rxId=el.dataset.rxid;
   const note=el.value.trim();
   prescriptionsData=prescriptionsData.map(r=>r.id!==rxId?r:{...r,happycall:{...(r.happycall||{}),note}});
