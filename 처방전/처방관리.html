@@ -115,6 +115,12 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 /* 환자 인라인 편집 */
 .pat-cell-inp{border:none;background:transparent;font-family:var(--font-sans);font-size:13px;color:inherit;outline:none;width:100%;padding:2px 4px;border-radius:4px;min-width:36px;}
 .pat-cell-inp:focus{background:var(--violet-light);}
+/* 해피콜 상태 버튼 */
+.hc-st-btn{padding:4px 12px;border:2px solid var(--border-2);border-radius:20px;font-size:12px;font-weight:600;font-family:var(--font-sans);background:var(--surface);cursor:pointer;transition:all .15s;}
+.hc-st-btn.sel-대기{border-color:#F59E0B;background:#FEF3C7;color:#92400E;}
+.hc-st-btn.sel-완료{border-color:#10B981;background:#D1FAE5;color:#065F46;}
+.hc-st-btn.sel-부재{border-color:#EF4444;background:#FEE2E2;color:#991B1B;}
+.hc-st-btn.sel-취소{border-color:#9CA3AF;background:#F3F4F6;color:#374151;}
 /* 동기화 모달 */
 .sync-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:999;align-items:center;justify-content:center;}
 .sync-modal-overlay.open{display:flex;}
@@ -195,6 +201,37 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
     <div style="display:flex;gap:8px">
       <button class="btn btn-secondary" id="price-warn-cancel" style="flex:1;display:none">취소</button>
       <button class="btn btn-primary" id="price-warn-ok" style="flex:1">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 해피콜 수정 모달 -->
+<div class="sync-modal-overlay" id="hc-modal-overlay">
+  <div class="sync-modal" style="width:320px">
+    <h3>해피콜 수정</h3>
+    <p id="hc-modal-info" style="font-size:12px;color:var(--text-3);margin-bottom:1rem;line-height:1.5"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1rem">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">상태</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="hc-st-btn" data-st="대기">대기</button>
+          <button class="hc-st-btn" data-st="완료">완료</button>
+          <button class="hc-st-btn" data-st="부재">부재</button>
+          <button class="hc-st-btn" data-st="취소">취소</button>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">날짜</label>
+        <input type="date" id="hc-modal-date" style="width:100%">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">메모</label>
+        <input type="text" id="hc-modal-note" placeholder="메모 (선택)" style="width:100%">
+      </div>
+    </div>
+    <div class="sync-modal-actions">
+      <button class="btn btn-secondary" id="hc-modal-cancel">취소</button>
+      <button class="btn btn-primary" id="hc-modal-confirm">저장</button>
     </div>
   </div>
 </div>
@@ -1765,9 +1802,125 @@ function updateDeliveryList(){
     inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();});
   });
 }
+let hcYear='',hcMonth='',hcSearch='',hcStatusFilter='';
+const HC_ST={
+  '대기':{bg:'#FEF3C7',color:'#92400E',border:'#FDE68A'},
+  '완료':{bg:'#D1FAE5',color:'#065F46',border:'#A7F3D0'},
+  '부재':{bg:'#FEE2E2',color:'#991B1B',border:'#FECACA'},
+  '취소':{bg:'#F3F4F6',color:'#374151',border:'#E5E7EB'},
+};
+function hcBadge(st){const s=HC_ST[st]||HC_ST['대기'];return`<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:${s.bg};color:${s.color}">${st}</span>`;}
+
 function renderHappycall(){
   const el=document.getElementById('view-happycall');
-  el.innerHTML=`<div class="card"><div class="section-title">해피콜 관리</div><p style="color:var(--text-3);font-size:13px">준비 중입니다.</p></div>`;
+  const years=[...new Set(prescriptionsData.map(r=>r.date?.slice(0,4)).filter(Boolean))].sort().reverse();
+  const months=['01','02','03','04','05','06','07','08','09','10','11','12'];
+
+  let list=[...prescriptionsData]
+    .filter(r=>r.date)
+    .filter(r=>!hcYear||r.date.startsWith(hcYear))
+    .filter(r=>!hcMonth||r.date.slice(5,7)===hcMonth)
+    .filter(r=>!hcSearch||r.patientName?.includes(hcSearch))
+    .filter(r=>!hcStatusFilter||(r.happycall?.status||'대기')===hcStatusFilter)
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+
+  const cntAll=list.length;
+  const cntPend=list.filter(r=>!r.happycall||r.happycall.status==='대기').length;
+  const cntDone=list.filter(r=>r.happycall?.status==='완료').length;
+  const cntAbsent=list.filter(r=>r.happycall?.status==='부재').length;
+
+  el.innerHTML=`
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:.875rem">
+      <div class="section-title" style="margin:0">해피콜 관리</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <input id="hc-search" type="text" placeholder="환자명 검색" value="${hcSearch}" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:12px;font-family:var(--font-sans);outline:none;width:100px;color:var(--text-1);">
+        <select id="hc-year-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 8px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);height:auto;">
+          <option value="">연도 전체</option>
+          ${years.map(y=>`<option value="${y}"${hcYear===y?' selected':''}>${y}년</option>`).join('')}
+        </select>
+        <select id="hc-month-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 8px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);height:auto;">
+          <option value="">월 전체</option>
+          ${months.map(m=>`<option value="${m}"${hcMonth===m?' selected':''}>${m}월</option>`).join('')}
+        </select>
+        <select id="hc-status-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 8px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);height:auto;">
+          <option value="">전체 상태</option>
+          ${Object.keys(HC_ST).map(s=>`<option value="${s}"${hcStatusFilter===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:.875rem;flex-wrap:wrap">
+      ${[['전체',cntAll,'var(--violet-d)','var(--surface-2)','var(--border)'],['대기',cntPend,HC_ST['대기'].color,HC_ST['대기'].bg,HC_ST['대기'].border],['완료',cntDone,HC_ST['완료'].color,HC_ST['완료'].bg,HC_ST['완료'].border],['부재',cntAbsent,HC_ST['부재'].color,HC_ST['부재'].bg,HC_ST['부재'].border]].map(([label,cnt,col,bg,bdr])=>`
+      <div style="background:${bg};border:1px solid ${bdr};border-radius:8px;padding:.4rem .875rem;min-width:62px;text-align:center">
+        <div style="font-size:20px;font-weight:700;color:${col}">${cnt}</div>
+        <div style="font-size:11px;color:${col};opacity:.75">${label}</div>
+      </div>`).join('')}
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th style="width:90px;white-space:nowrap">처방일</th>
+        <th style="width:90px">환자명</th>
+        <th>진단명</th>
+        <th style="width:56px;text-align:center">복약</th>
+        <th style="width:72px;text-align:center">상태</th>
+        <th style="width:90px;white-space:nowrap">콜 날짜</th>
+        <th>메모</th>
+        <th style="width:48px"></th>
+      </tr></thead>
+      <tbody>${!list.length?`<tr><td colspan="8" class="empty">처방 이력이 없습니다</td></tr>`:
+        list.map(rx=>{
+          const hc=rx.happycall||{};
+          const st=hc.status||'대기';
+          const session=(rx.sessionCur&&rx.sessionTotal)?`${rx.sessionCur}/${rx.sessionTotal}`:'-';
+          return`<tr>
+            <td style="white-space:nowrap">${rx.date||''}</td>
+            <td style="white-space:nowrap;font-weight:600">${rx.patientName||''}</td>
+            <td style="color:var(--text-3);font-size:12px;white-space:nowrap">${rx.diagnosis||''}</td>
+            <td style="text-align:center;font-size:12px">${session}</td>
+            <td style="text-align:center">${hcBadge(st)}</td>
+            <td style="font-size:12px;color:var(--text-3);white-space:nowrap">${hc.date||''}</td>
+            <td style="font-size:12px;color:var(--text-3)">${hc.note||''}</td>
+            <td style="text-align:right"><button class="btn-sm hc-edit-btn" data-rxid="${rx.id}" style="font-size:11px">수정</button></td>
+          </tr>`;
+        }).join('')
+      }</tbody>
+    </table></div>
+  </div>`;
+
+  document.getElementById('hc-search').addEventListener('input',e=>{hcSearch=e.target.value.trim();renderHappycall();});
+  document.getElementById('hc-year-sel').addEventListener('change',e=>{hcYear=e.target.value;renderHappycall();});
+  document.getElementById('hc-month-sel').addEventListener('change',e=>{hcMonth=e.target.value;renderHappycall();});
+  document.getElementById('hc-status-sel').addEventListener('change',e=>{hcStatusFilter=e.target.value;renderHappycall();});
+  el.querySelectorAll('.hc-edit-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>openHcModal(btn.dataset.rxid));
+  });
+}
+
+let _hcRxId=null;
+function openHcModal(rxId){
+  const rx=prescriptionsData.find(r=>r.id===rxId);if(!rx)return;
+  _hcRxId=rxId;
+  const hc=rx.happycall||{};
+  document.getElementById('hc-modal-info').textContent=`${rx.patientName}  ·  처방일: ${rx.date}${rx.diagnosis?' · '+rx.diagnosis:''}`;
+  document.getElementById('hc-modal-date').value=hc.date||todayStr();
+  document.getElementById('hc-modal-note').value=hc.note||'';
+  const curSt=hc.status||'대기';
+  document.querySelectorAll('.hc-st-btn').forEach(b=>{
+    b.className='hc-st-btn';
+    if(b.dataset.st===curSt)b.classList.add('sel-'+curSt);
+  });
+  document.getElementById('hc-modal-overlay').classList.add('open');
+}
+async function saveHcModal(){
+  if(!_hcRxId)return;
+  const status=document.querySelector('.hc-st-btn[class*="sel-"]')?.dataset.st||'대기';
+  const date=document.getElementById('hc-modal-date').value;
+  const note=document.getElementById('hc-modal-note').value.trim();
+  prescriptionsData=prescriptionsData.map(r=>r.id===_hcRxId?{...r,happycall:{status,date,note}}:r);
+  await save(RX_KEYS.prescriptions,prescriptionsData);
+  document.getElementById('hc-modal-overlay').classList.remove('open');
+  _hcRxId=null;
+  renderHappycall();
 }
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
@@ -1782,6 +1935,17 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   if(t.dataset.tab==='register'&&!editingRxId)rxHerbs=[];
   switchTab(t.dataset.tab);
 }));
+
+/* ── 해피콜 모달 이벤트 ── */
+document.querySelectorAll('.hc-st-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.hc-st-btn').forEach(b=>b.className='hc-st-btn');
+    btn.classList.add('sel-'+btn.dataset.st);
+  });
+});
+document.getElementById('hc-modal-cancel').addEventListener('click',()=>{document.getElementById('hc-modal-overlay').classList.remove('open');_hcRxId=null;});
+document.getElementById('hc-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget){e.currentTarget.classList.remove('open');_hcRxId=null;}});
+document.getElementById('hc-modal-confirm').addEventListener('click',saveHcModal);
 
 /* ── 모달 이벤트 ── */
 document.getElementById('detail-modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
