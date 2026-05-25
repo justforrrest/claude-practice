@@ -1693,7 +1693,7 @@ function saveMed(){
     qty:parseFloat(document.getElementById('mf-qty').value)||0,
     minQty:parseFloat(document.getElementById('mf-minqty').value)||0,
     unit:document.getElementById('mf-unit').value.trim()||'개',
-    unitPrice:parseFloat(document.getElementById('mf-price').value)||0,
+    unitPrice:0,
     supplier:document.getElementById('mf-supplier').value.trim(),
     note:document.getElementById('mf-note').value.trim()
   };
