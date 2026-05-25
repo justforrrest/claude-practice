@@ -1618,14 +1618,14 @@ document.querySelector('.tabs').addEventListener('drop',e=>{
 function renderMeds(){
   const el=document.getElementById('view-meds');
   const zeroItems=medsData.filter(m=>m.qty<=0);
-  const lowItems=medsData.filter(m=>m.qty>0&&m.qty<m.minQty);
+  const lowItems=medsData.filter(m=>m.qty>0&&m.qty<=m.minQty);
 
   /* 품목 목록 행 */
   function itemRows(){
     if(!medsData.length)return`<tr><td colspan="7" class="empty">등록된 품목이 없습니다</td></tr>`;
     return medsData.map(m=>{
       const zero=m.qty<=0;
-      const low=!zero&&m.qty<m.minQty;
+      const low=!zero&&m.qty<=m.minQty;
       const rowBg=zero?'background:#F3F4F6;':low?'background:#FEF2F2;':'';
       return`<tr data-med-id="${m.id}" draggable="true" style="${rowBg}">
         <td class="med-drag-handle">⠿</td>
@@ -1635,8 +1635,8 @@ function renderMeds(){
         <td style="width:90px"><input type="text" value="${(m.supplier||'').replace(/"/g,'&quot;')}" placeholder="-" onchange="saveMedSupplier('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:100%;font-size:13px;font-family:inherit;color:var(--text-2);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
         <td style="max-width:160px"><input type="text" value="${(m.note||'').replace(/"/g,'&quot;')}" placeholder="메모" onchange="saveMedNote('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:100%;font-size:12px;font-family:inherit;color:var(--text-3);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
         <td style="white-space:nowrap">
-          <button class="btn btn-sm" style="background:var(--green);color:#fff;margin:0" onclick="medInOut('${m.id}','in')">입고▲</button>
-          <button class="btn btn-sm" style="background:var(--coral);color:#fff;margin-left:4px" onclick="medInOut('${m.id}','out')">출고▼</button>
+          <button class="btn btn-sm" style="background:var(--green-light);color:#065F46;margin:0" onclick="medInOut('${m.id}','in')">입고▲</button>
+          <button class="btn btn-sm" style="background:var(--coral-light);color:#991B1B;margin-left:4px" onclick="medInOut('${m.id}','out')">출고▼</button>
           <button class="btn-del" style="margin-left:4px" onclick="delMed('${m.id}')">삭제</button>
         </td>
       </tr>`;
