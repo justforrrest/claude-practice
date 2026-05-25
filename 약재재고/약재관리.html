@@ -1645,7 +1645,7 @@ function renderMeds(){
     if(!medLogsData.length)return`<tr><td colspan="5" class="empty">이력이 없습니다</td></tr>`;
     return medLogsData.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(l=>`<tr>
       <td style="white-space:nowrap"><input type="date" value="${l.date}" onchange="saveMedLogDate('${l.id}',this.value)" style="border:none;background:transparent;font-size:13px;font-family:inherit;color:var(--text-2);outline:none;padding:0;width:100px;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
-      <td style="white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis">${l.medName}</td>
+      <td style="white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis">${l.medName}</td>
       <td style="white-space:nowrap"><span class="badge ${l.type==='in'?'badge-ok':'badge-low'}">${l.type==='in'?'입고↑':'출고↓'}</span></td>
       <td class="num" style="white-space:nowrap">${l.qty.toLocaleString()}</td>
       <td><input type="text" value="${(l.note||'').replace(/"/g,'&quot;')}" placeholder="메모" onchange="saveMedLogNote('${l.id}',this.value)" style="border:none;background:transparent;width:100%;font-size:12px;font-family:inherit;color:var(--text-3);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
@@ -1685,7 +1685,7 @@ function renderMeds(){
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr>
-        <th style="width:120px">품목명</th><th class="num" style="width:72px">현재재고</th><th class="num" style="width:72px">최소재고</th>
+        <th style="width:160px">품목명</th><th class="num" style="width:72px">현재재고</th><th class="num" style="width:72px">최소재고</th>
         <th style="width:90px">구입처</th><th>메모</th><th style="width:140px">입출고</th>
       </tr></thead>
       <tbody id="meds-tbody">${itemRows()}</tbody>
@@ -1694,7 +1694,7 @@ function renderMeds(){
   <div class="card mt">
     <div class="section-title" style="margin-bottom:.875rem">입출고 이력</div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th style="width:90px;white-space:nowrap">날짜</th><th style="width:120px;white-space:nowrap">품목명</th><th style="width:56px;white-space:nowrap">구분</th><th class="num" style="width:56px;white-space:nowrap">수량</th><th>메모</th><th style="width:44px;text-align:right"></th></tr></thead>
+      <thead><tr><th style="width:90px;white-space:nowrap">날짜</th><th style="width:160px;white-space:nowrap">품목명</th><th style="width:56px;white-space:nowrap">구분</th><th class="num" style="width:56px;white-space:nowrap">수량</th><th>메모</th><th style="width:44px;text-align:right"></th></tr></thead>
       <tbody id="medlogs-tbody">${logRows()}</tbody>
     </table></div>
   </div>`;
