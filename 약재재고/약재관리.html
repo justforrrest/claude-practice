@@ -496,6 +496,7 @@ let pricelistData={...DEFAULT_PRICELIST};
 let herbsData=[...HERBS];
 let adjustData=[];
 let medsData=[];
+let medLogSearch='',medLogMonth='';
 let medLogsData=[];
 let editingInboundId=null,editingOutboundId=null,editingHerbName=null,editingSupplierName=null;
 let inboundMonth='',outboundMonth='';
@@ -1642,8 +1643,12 @@ function renderMeds(){
 
   /* 이력 행 */
   function logRows(){
-    if(!medLogsData.length)return`<tr><td colspan="5" class="empty">이력이 없습니다</td></tr>`;
-    return medLogsData.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(l=>`<tr>
+    if(!medLogsData.length)return`<tr><td colspan="6" class="empty">이력이 없습니다</td></tr>`;
+    let logs=medLogsData.slice().sort((a,b)=>b.date.localeCompare(a.date));
+    if(medLogMonth)logs=logs.filter(l=>l.date.startsWith(medLogMonth));
+    if(medLogSearch)logs=logs.filter(l=>l.medName.includes(medLogSearch));
+    if(!logs.length)return`<tr><td colspan="6" class="empty">검색 결과 없음</td></tr>`;
+    return logs.map(l=>`<tr>
       <td style="white-space:nowrap"><input type="date" value="${l.date}" onchange="saveMedLogDate('${l.id}',this.value)" style="border:none;background:transparent;font-size:13px;font-family:inherit;color:var(--text-2);outline:none;padding:0;width:100px;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
       <td style="white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis">${l.medName}</td>
       <td style="white-space:nowrap"><span class="badge ${l.type==='in'?'badge-ok':'badge-low'}">${l.type==='in'?'입고↑':'출고↓'}</span></td>
@@ -1702,13 +1707,31 @@ function renderMeds(){
     </div>
   </div>
   <div class="card mt">
-    <div class="section-title" style="margin-bottom:.875rem">입출고 이력</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem;gap:8px;">
+      <div class="section-title" style="margin:0;white-space:nowrap">입출고 이력</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input id="medlog-search" type="text" placeholder="품목 검색" value="${medLogSearch}" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:12px;font-family:var(--font-sans);outline:none;width:100px;color:var(--text-1);">
+        <select id="medlog-month" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 8px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">
+          <option value="">전체</option>
+          ${[...new Set(medLogsData.map(l=>l.date.slice(0,7)))].sort((a,b)=>b.localeCompare(a)).map(m=>`<option value="${m}"${medLogMonth===m?' selected':''}>${m}</option>`).join('')}
+        </select>
+      </div>
+    </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th style="width:90px;white-space:nowrap">날짜</th><th style="width:160px;white-space:nowrap">품목명</th><th style="width:56px;white-space:nowrap">구분</th><th class="num" style="width:56px;white-space:nowrap">수량</th><th>메모</th><th style="width:44px;text-align:right"></th></tr></thead>
       <tbody id="medlogs-tbody">${logRows()}</tbody>
     </table></div>
   </div>`;
   setupMedDnd();
+  // 이력 검색·월 필터
+  const mlSearch=document.getElementById('medlog-search');
+  const mlMonth=document.getElementById('medlog-month');
+  if(mlSearch){
+    mlSearch.addEventListener('input',e=>{medLogSearch=e.target.value.trim();renderMeds();});
+  }
+  if(mlMonth){
+    mlMonth.addEventListener('change',e=>{medLogMonth=e.target.value;renderMeds();});
+  }
   // 품목 목록 접기/펼치기
   const toggle=document.getElementById('meds-list-toggle');
   const body=document.getElementById('meds-list-body');
