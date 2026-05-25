@@ -1617,16 +1617,19 @@ document.querySelector('.tabs').addEventListener('drop',e=>{
 /* ── 상비약관리 ── */
 function renderMeds(){
   const el=document.getElementById('view-meds');
-  const lowItems=medsData.filter(m=>m.qty<m.minQty);
+  const zeroItems=medsData.filter(m=>m.qty<=0);
+  const lowItems=medsData.filter(m=>m.qty>0&&m.qty<m.minQty);
 
   /* 품목 목록 행 */
   function itemRows(){
     if(!medsData.length)return`<tr><td colspan="7" class="empty">등록된 품목이 없습니다</td></tr>`;
     return medsData.map(m=>{
-      const low=m.qty<m.minQty;
-      return`<tr data-med-id="${m.id}" draggable="true" style="${low?'background:#FEF2F2;':''}">
+      const zero=m.qty<=0;
+      const low=!zero&&m.qty<m.minQty;
+      const rowBg=zero?'background:#F3F4F6;':low?'background:#FEF2F2;':'';
+      return`<tr data-med-id="${m.id}" draggable="true" style="${rowBg}">
         <td class="med-drag-handle">⠿</td>
-        <td>${m.name}${low?'<span class="badge badge-low" style="margin-left:6px">부족</span>':''}</td>
+        <td>${m.name}${zero?'<span class="badge badge-zero" style="margin-left:6px">없음</span>':low?'<span class="badge badge-low" style="margin-left:6px">부족</span>':''}</td>
         <td class="num">${m.qty.toLocaleString()}${m.unit}</td>
         <td class="num" style="color:var(--text-3);white-space:nowrap"><input type="number" min="0" value="${m.minQty}" onchange="saveMedMinQty('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:52px;font-size:13px;font-family:inherit;color:inherit;text-align:right;outline:none;padding:0;-moz-appearance:textfield;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'">${m.unit}</td>
         <td style="width:90px"><input type="text" value="${(m.supplier||'').replace(/"/g,'&quot;')}" placeholder="-" onchange="saveMedSupplier('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:100%;font-size:13px;font-family:inherit;color:var(--text-2);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
@@ -1654,8 +1657,15 @@ function renderMeds(){
   }
 
   el.innerHTML=`
-  ${lowItems.length?`<div class="card" style="background:#FEF2F2;border-color:#FECACA;margin-bottom:.75rem;padding:.75rem 1rem;font-size:13px;color:#991B1B;">
-    ⚠ 재고 부족 품목: ${lowItems.map(m=>`<strong>${m.name}</strong> (${m.qty}${m.unit})`).join(', ')}
+  <div class="stats" style="margin-bottom:.75rem">
+    <div class="stat-card"><div class="stat-num">${medsData.length}</div><div class="stat-label">전체 품목</div></div>
+    <div class="stat-card"><div class="stat-num warn">${lowItems.length}</div><div class="stat-label">부족</div></div>
+    <div class="stat-card"><div class="stat-num muted">${zeroItems.length}</div><div class="stat-label">재고 없음</div></div>
+  </div>
+  ${(lowItems.length||zeroItems.length)?`<div class="card" style="${zeroItems.length?'background:#F3F4F6;border-color:#D1D5DB;':'background:#FEF2F2;border-color:#FECACA;'}margin-bottom:.75rem;padding:.75rem 1rem;font-size:13px;color:${zeroItems.length?'#374151':'#991B1B'};">
+    ${zeroItems.length?`⚠ 재고 없음: ${zeroItems.map(m=>`<strong>${m.name}</strong>`).join(', ')}`:''}
+    ${zeroItems.length&&lowItems.length?'<br>':''}
+    ${lowItems.length?`⚠ 재고 부족: ${lowItems.map(m=>`<strong>${m.name}</strong> (${m.qty}${m.unit})`).join(', ')}`:''}
   </div>`:''}
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:0;" id="meds-list-toggle">
