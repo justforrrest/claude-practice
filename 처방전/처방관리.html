@@ -1880,8 +1880,21 @@ function renderHappycall(){
             <td style="color:var(--text-3);font-size:12px;white-space:nowrap">${rx.diagnosis||''}</td>
             <td style="text-align:center;font-size:12px">${session}</td>
             <td style="text-align:center">${hcBadge(st)}</td>
-            <td style="font-size:12px;color:var(--text-3);white-space:nowrap">${hc.date||''}</td>
-            <td style="font-size:12px;color:var(--text-3)">${hc.note||''}</td>
+            <td style="white-space:nowrap">
+              <span style="display:inline-flex;align-items:center;gap:2px;position:relative">
+                <input type="text" class="hc-date-inp" data-rxid="${rx.id}" value="${normalizeHcDate(hc.date)}" placeholder="mm/dd"
+                  style="border:1px solid transparent;border-radius:0;background:transparent;font-size:12px;font-family:var(--font-sans);color:var(--text-3);width:44px;outline:none;padding:2px 3px;"
+                  onblur="saveHcDate(this)" onfocus="this.style.borderColor='var(--border-2)';this.style.background='var(--surface)';">
+                <input type="date" class="hc-cal-inp" data-rxid="${rx.id}" tabindex="-1"
+                  style="position:absolute;left:0;top:0;width:0;height:0;opacity:0;pointer-events:none;">
+                <button class="hc-cal-btn" data-rxid="${rx.id}" style="background:none;border:none;cursor:pointer;font-size:10px;padding:0 1px;color:var(--text-3);line-height:1;opacity:.55">📅</button>
+              </span>
+            </td>
+            <td>
+              <input type="text" class="hc-note-inp" data-rxid="${rx.id}" value="${(hc.note||'').replace(/"/g,'&quot;')}"
+                style="border:1px solid transparent;border-radius:0;background:transparent;font-size:12px;font-family:var(--font-sans);color:var(--text-3);width:100%;outline:none;padding:2px 3px;"
+                onblur="saveHcNote(this)" onfocus="this.style.borderColor='var(--border-2)';this.style.background='var(--surface)';">
+            </td>
             <td style="text-align:right"><button class="btn-sm hc-edit-btn" data-rxid="${rx.id}" style="font-size:11px">수정</button></td>
           </tr>`;
         }).join('')
@@ -1896,16 +1909,54 @@ function renderHappycall(){
   el.querySelectorAll('.hc-edit-btn').forEach(btn=>{
     btn.addEventListener('click',()=>openHcModal(btn.dataset.rxid));
   });
+  el.querySelectorAll('.hc-cal-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const span=btn.parentElement;
+      const cal=span.querySelector('.hc-cal-inp');
+      const txt=span.querySelector('.hc-date-inp');
+      cal.onchange=()=>{txt.value=normalizeHcDate(cal.value);saveHcDate(txt);};
+      if(cal.showPicker)cal.showPicker();
+    });
+  });
 }
 
 function hcCardClick(filterVal){hcStatusFilter=filterVal;renderHappycall();}
+
+function normalizeHcDate(v){
+  v=(v||'').trim();
+  if(!v)return'';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v.slice(5).replace('-','/');
+  if(/^\d{2}-\d{2}$/.test(v))return v.replace('-','/');
+  if(/^\d{2}\/\d{2}$/.test(v))return v;
+  if(/^\d{4}$/.test(v))return v.slice(0,2)+'/'+v.slice(2);
+  if(/^\d{1}[\/\-]\d{2}$/.test(v))return'0'+v[0]+'/'+v.slice(2);
+  return v;
+}
+function saveHcDate(el){
+  el.style.borderColor='transparent';el.style.background='transparent';
+  const normalized=normalizeHcDate(el.value);
+  el.value=normalized;
+  const rxId=el.dataset.rxid;
+  prescriptionsData=prescriptionsData.map(r=>r.id!==rxId?r:{...r,happycall:{...(r.happycall||{}),date:normalized}});
+  save(RX_KEYS.prescriptions,prescriptionsData);
+}
+function saveHcNote(el){
+  el.style.borderColor='transparent';el.style.background='transparent';
+  const rxId=el.dataset.rxid;
+  const note=el.value.trim();
+  prescriptionsData=prescriptionsData.map(r=>r.id!==rxId?r:{...r,happycall:{...(r.happycall||{}),note}});
+  save(RX_KEYS.prescriptions,prescriptionsData);
+}
 let _hcRxId=null;
 function openHcModal(rxId){
   const rx=prescriptionsData.find(r=>r.id===rxId);if(!rx)return;
   _hcRxId=rxId;
   const hc=rx.happycall||{};
   document.getElementById('hc-modal-info').textContent=`${rx.patientName}  ·  처방일: ${rx.date}${rx.diagnosis?' · '+rx.diagnosis:''}`;
-  document.getElementById('hc-modal-date').value=hc.date||todayStr();
+  const _d=hc.date||'';
+  let _full=_d;
+  if(/^\d{2}\/\d{2}$/.test(_d)){const[m,day]=_d.split('/');_full=`${new Date().getFullYear()}-${m}-${day}`;}
+  document.getElementById('hc-modal-date').value=_full||todayStr();
   document.getElementById('hc-modal-note').value=hc.note||'';
   const curSt=hc.status||'대기';
   document.querySelectorAll('.hc-st-btn').forEach(b=>{
@@ -1917,7 +1968,7 @@ function openHcModal(rxId){
 async function saveHcModal(){
   if(!_hcRxId)return;
   const status=document.querySelector('.hc-st-btn[class*="sel-"]')?.dataset.st||'대기';
-  const date=document.getElementById('hc-modal-date').value;
+  const date=normalizeHcDate(document.getElementById('hc-modal-date').value);
   const note=document.getElementById('hc-modal-note').value.trim();
   prescriptionsData=prescriptionsData.map(r=>r.id===_hcRxId?{...r,happycall:{status,date,note}}:r);
   await save(RX_KEYS.prescriptions,prescriptionsData);
