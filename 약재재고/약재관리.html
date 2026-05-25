@@ -1607,7 +1607,7 @@ function renderMeds(){
       return`<tr style="${low?'background:#FEF2F2;':''}">
         <td>${m.name}${low?'<span class="badge badge-low" style="margin-left:6px">부족</span>':''}</td>
         <td class="num">${m.qty.toLocaleString()}${m.unit}</td>
-        <td class="num" style="color:var(--text-3)">${m.minQty.toLocaleString()}${m.unit}</td>
+        <td class="num" style="color:var(--text-3)"><input type="number" min="0" value="${m.minQty}" onchange="saveMedMinQty('${m.id}',this.value)" style="border:none;background:transparent;width:52px;font-size:13px;font-family:inherit;color:inherit;text-align:right;outline:none;padding:0;-moz-appearance:textfield;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'">${m.unit}</td>
         <td style="width:90px"><input type="text" value="${(m.supplier||'').replace(/"/g,'&quot;')}" placeholder="-" onchange="saveMedSupplier('${m.id}',this.value)" style="border:none;background:transparent;width:100%;font-size:13px;font-family:inherit;color:var(--text-2);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
         <td style="max-width:160px"><input type="text" value="${(m.note||'').replace(/"/g,'&quot;')}" placeholder="메모" onchange="saveMedNote('${m.id}',this.value)" style="border:none;background:transparent;width:100%;font-size:12px;font-family:inherit;color:var(--text-3);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
         <td style="white-space:nowrap">
@@ -1736,6 +1736,12 @@ function delMedLog(id){
   save(KEYS.meds,medsData);
   save(KEYS.medlogs,medLogsData);
   renderMeds();
+}
+
+function saveMedMinQty(id,value){
+  const med=medsData.find(m=>m.id===id);if(!med)return;
+  med.minQty=parseFloat(value)||0;
+  save(KEYS.meds,medsData);
 }
 
 function saveMedSupplier(id,value){
