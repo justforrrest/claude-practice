@@ -1831,9 +1831,16 @@ function renderHappycall(){
 
   el.innerHTML=`
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:.875rem">
+    <div style="margin-bottom:.875rem">
       <div class="section-title" style="margin:0">해피콜 관리</div>
-      <div style="display:flex;gap:4px;align-items:center;flex-wrap:nowrap">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:.875rem;flex-wrap:wrap">
+      ${[['전체',cntAll,'var(--violet-d)','var(--surface-2)','var(--border)'],['대기',cntPend,HC_ST['대기'].color,HC_ST['대기'].bg,HC_ST['대기'].border],['완료',cntDone,HC_ST['완료'].color,HC_ST['완료'].bg,HC_ST['완료'].border],['부재',cntAbsent,HC_ST['부재'].color,HC_ST['부재'].bg,HC_ST['부재'].border]].map(([label,cnt,col,bg,bdr])=>`
+      <div style="background:${bg};border:1px solid ${bdr};border-radius:8px;padding:.4rem .875rem;min-width:62px;text-align:center">
+        <div style="font-size:20px;font-weight:700;color:${col}">${cnt}</div>
+        <div style="font-size:11px;color:${col};opacity:.75">${label}</div>
+      </div>`).join('')}
+      <div style="margin-left:auto;display:flex;gap:4px;align-items:center;flex-wrap:nowrap">
         <input id="hc-search" type="text" placeholder="환자명" value="${hcSearch}" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 8px;font-size:12px;font-family:var(--font-sans);outline:none;width:76px;color:var(--text-1);">
         <select id="hc-year-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);width:76px;">
           <option value="">연도 전체</option>
@@ -1848,13 +1855,6 @@ function renderHappycall(){
           ${Object.keys(HC_ST).map(s=>`<option value="${s}"${hcStatusFilter===s?' selected':''}>${s}</option>`).join('')}
         </select>
       </div>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:.875rem;flex-wrap:wrap">
-      ${[['전체',cntAll,'var(--violet-d)','var(--surface-2)','var(--border)'],['대기',cntPend,HC_ST['대기'].color,HC_ST['대기'].bg,HC_ST['대기'].border],['완료',cntDone,HC_ST['완료'].color,HC_ST['완료'].bg,HC_ST['완료'].border],['부재',cntAbsent,HC_ST['부재'].color,HC_ST['부재'].bg,HC_ST['부재'].border]].map(([label,cnt,col,bg,bdr])=>`
-      <div style="background:${bg};border:1px solid ${bdr};border-radius:8px;padding:.4rem .875rem;min-width:62px;text-align:center">
-        <div style="font-size:20px;font-weight:700;color:${col}">${cnt}</div>
-        <div style="font-size:11px;color:${col};opacity:.75">${label}</div>
-      </div>`).join('')}
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr>
