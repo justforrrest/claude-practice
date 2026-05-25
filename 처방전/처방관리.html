@@ -1833,17 +1833,17 @@ function renderHappycall(){
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:.875rem">
       <div class="section-title" style="margin:0">해피콜 관리</div>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <input id="hc-search" type="text" placeholder="환자명 검색" value="${hcSearch}" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:12px;font-family:var(--font-sans);outline:none;width:100px;color:var(--text-1);">
-        <select id="hc-year-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 8px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);height:auto;">
+      <div style="display:flex;gap:4px;align-items:center;flex-wrap:nowrap">
+        <input id="hc-search" type="text" placeholder="환자명" value="${hcSearch}" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 8px;font-size:12px;font-family:var(--font-sans);outline:none;width:76px;color:var(--text-1);">
+        <select id="hc-year-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);width:76px;">
           <option value="">연도 전체</option>
           ${years.map(y=>`<option value="${y}"${hcYear===y?' selected':''}>${y}년</option>`).join('')}
         </select>
-        <select id="hc-month-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 8px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);height:auto;">
+        <select id="hc-month-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);width:60px;">
           <option value="">월 전체</option>
           ${months.map(m=>`<option value="${m}"${hcMonth===m?' selected':''}>${m}월</option>`).join('')}
         </select>
-        <select id="hc-status-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 8px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);height:auto;">
+        <select id="hc-status-sel" style="border:1px solid var(--border-2);border-radius:8px;padding:4px 6px;font-size:12px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);width:72px;">
           <option value="">전체 상태</option>
           ${Object.keys(HC_ST).map(s=>`<option value="${s}"${hcStatusFilter===s?' selected':''}>${s}</option>`).join('')}
         </select>
