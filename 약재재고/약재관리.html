@@ -1635,8 +1635,8 @@ function renderMeds(){
         <td style="width:90px"><input type="text" value="${(m.supplier||'').replace(/"/g,'&quot;')}" placeholder="-" onchange="saveMedSupplier('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:100%;font-size:13px;font-family:inherit;color:var(--text-2);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
         <td style="max-width:160px"><input type="text" value="${(m.note||'').replace(/"/g,'&quot;')}" placeholder="메모" onchange="saveMedNote('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:100%;font-size:12px;font-family:inherit;color:var(--text-3);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
         <td style="white-space:nowrap">
-          <button class="btn btn-sm btn-primary" onclick="medInOut('${m.id}','in')">입고▲</button>
-          <button class="btn btn-sm btn-secondary" style="margin-left:4px" onclick="medInOut('${m.id}','out')">출고▼</button>
+          <button class="btn btn-sm" style="background:var(--green);color:#fff;margin:0" onclick="medInOut('${m.id}','in')">입고▲</button>
+          <button class="btn btn-sm" style="background:var(--coral);color:#fff;margin-left:4px" onclick="medInOut('${m.id}','out')">출고▼</button>
           <button class="btn-del" style="margin-left:4px" onclick="delMed('${m.id}')">삭제</button>
         </td>
       </tr>`;
