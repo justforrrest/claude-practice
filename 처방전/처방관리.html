@@ -1818,18 +1818,28 @@ function renderHappycall(){
   const years=[...new Set(prescriptionsData.map(r=>r.date?.slice(0,4)).filter(Boolean))].sort().reverse();
   const months=['01','02','03','04','05','06','07','08','09','10','11','12'];
 
-  let list=[...prescriptionsData]
+  const _seen=new Set();
+  const _deduped=[...prescriptionsData]
     .filter(r=>r.date)
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id))
+    .filter(r=>{const k=r.patientId||r.patientName;if(_seen.has(k))return false;_seen.add(k);return true;});
+
+  const _derivedSt=r=>{
+    const hc=r.happycall||{};
+    if(hc.status)return hc.status;
+    return(r.sessionCur&&r.sessionTotal&&r.sessionCur>=r.sessionTotal)?'완료':'대기';
+  };
+
+  let list=_deduped
     .filter(r=>!hcYear||r.date.startsWith(hcYear))
     .filter(r=>!hcMonth||r.date.slice(5,7)===hcMonth)
     .filter(r=>!hcSearch||r.patientName?.includes(hcSearch))
-    .filter(r=>!hcStatusFilter||(r.happycall?.status||'대기')===hcStatusFilter)
-    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+    .filter(r=>!hcStatusFilter||_derivedSt(r)===hcStatusFilter);
 
   const cntAll=list.length;
-  const cntPend=list.filter(r=>!r.happycall||r.happycall.status==='대기').length;
-  const cntDone=list.filter(r=>r.happycall?.status==='완료').length;
-  const cntAbsent=list.filter(r=>r.happycall?.status==='부재').length;
+  const cntPend=list.filter(r=>_derivedSt(r)==='대기').length;
+  const cntDone=list.filter(r=>_derivedSt(r)==='완료').length;
+  const cntAbsent=list.filter(r=>_derivedSt(r)==='부재').length;
 
   el.innerHTML=`
   <div class="card">
@@ -1869,8 +1879,7 @@ function renderHappycall(){
       <tbody>${!list.length?`<tr><td colspan="7" class="empty">처방 이력이 없습니다</td></tr>`:
         list.map(rx=>{
           const hc=rx.happycall||{};
-          const sessionDone=rx.sessionCur&&rx.sessionTotal&&rx.sessionCur>=rx.sessionTotal;
-          const st=hc.status||(sessionDone?'완료':'대기');
+          const st=_derivedSt(rx);
           const session=(rx.sessionCur&&rx.sessionTotal)?`${rx.sessionCur}/${rx.sessionTotal}`:'';
           const catSession=[rx.category||'',session].filter(Boolean).join(' ');
           return`<tr>
