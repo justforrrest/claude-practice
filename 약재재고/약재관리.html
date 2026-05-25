@@ -1746,6 +1746,7 @@ function medInOut(medId,type){
 
 function delMedLog(id){
   const log=medLogsData.find(l=>l.id===id);if(!log)return;
+  if(!confirm('이력을 삭제하면 재고 수량도 함께 되돌려집니다. 계속할까요?'))return;
   const med=medsData.find(m=>m.id===log.medId);
   if(med){med.qty=log.type==='in'?med.qty-log.qty:med.qty+log.qty;}
   medLogsData=medLogsData.filter(l=>l.id!==id);
