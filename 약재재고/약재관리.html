@@ -1644,11 +1644,11 @@ function renderMeds(){
   function logRows(){
     if(!medLogsData.length)return`<tr><td colspan="5" class="empty">이력이 없습니다</td></tr>`;
     return medLogsData.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(l=>`<tr>
-      <td style="white-space:nowrap">${l.date}</td>
+      <td style="white-space:nowrap"><input type="date" value="${l.date}" onchange="saveMedLogDate('${l.id}',this.value)" style="border:none;background:transparent;font-size:13px;font-family:inherit;color:var(--text-2);outline:none;padding:0;width:100px;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
       <td style="white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis">${l.medName}</td>
       <td style="white-space:nowrap"><span class="badge ${l.type==='in'?'badge-ok':'badge-low'}">${l.type==='in'?'입고↑':'출고↓'}</span></td>
       <td class="num" style="white-space:nowrap">${l.qty.toLocaleString()}</td>
-      <td style="color:var(--text-3);font-size:12px">${l.note||''}</td>
+      <td><input type="text" value="${(l.note||'').replace(/"/g,'&quot;')}" placeholder="메모" onchange="saveMedLogNote('${l.id}',this.value)" style="border:none;background:transparent;width:100%;font-size:12px;font-family:inherit;color:var(--text-3);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
       <td style="white-space:nowrap;text-align:right"><button class="btn-del" onclick="delMedLog('${l.id}')">삭제</button></td>
     </tr>`).join('');
   }
@@ -1752,6 +1752,18 @@ function delMedLog(id){
   save(KEYS.meds,medsData);
   save(KEYS.medlogs,medLogsData);
   renderMeds();
+}
+
+function saveMedLogDate(id,value){
+  const log=medLogsData.find(l=>l.id===id);if(!log||!value)return;
+  log.date=value;
+  save(KEYS.medlogs,medLogsData);
+}
+
+function saveMedLogNote(id,value){
+  const log=medLogsData.find(l=>l.id===id);if(!log)return;
+  log.note=value.trim();
+  save(KEYS.medlogs,medLogsData);
 }
 
 function saveMedMinQty(id,value){
