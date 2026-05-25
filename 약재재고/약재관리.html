@@ -88,6 +88,8 @@ input.pl-inp:focus{border:none;background:transparent;outline:none;box-shadow:no
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 input[type=number]{-moz-appearance:textfield;}
 .empty{text-align:center;color:var(--text-3);padding:2.5rem;font-size:13px;}
+.med-drag-handle{color:var(--border-2);cursor:grab;padding:0 6px 0 2px;font-size:15px;user-select:none;line-height:1;}
+tr.med-dnd-over td{border-top:2px solid var(--violet-d)!important;}
 .mt{margin-top:.875rem;}
 .herb-ac-wrap{position:relative;}
 .herb-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border-2);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);list-style:none;margin:2px 0 0;padding:4px 0;max-height:200px;overflow-y:auto;z-index:200;display:none;}
@@ -1619,18 +1621,16 @@ function renderMeds(){
 
   /* 품목 목록 행 */
   function itemRows(){
-    if(!medsData.length)return`<tr><td colspan="6" class="empty">등록된 품목이 없습니다</td></tr>`;
-    return medsData.slice().sort((a,b)=>{
-      const aLow=a.qty<a.minQty?0:1,bLow=b.qty<b.minQty?0:1;
-      return aLow-bLow||a.name.localeCompare(b.name,'ko');
-    }).map(m=>{
+    if(!medsData.length)return`<tr><td colspan="7" class="empty">등록된 품목이 없습니다</td></tr>`;
+    return medsData.map(m=>{
       const low=m.qty<m.minQty;
-      return`<tr style="${low?'background:#FEF2F2;':''}">
+      return`<tr data-med-id="${m.id}" draggable="true" style="${low?'background:#FEF2F2;':''}">
+        <td class="med-drag-handle">⠿</td>
         <td>${m.name}${low?'<span class="badge badge-low" style="margin-left:6px">부족</span>':''}</td>
         <td class="num">${m.qty.toLocaleString()}${m.unit}</td>
-        <td class="num" style="color:var(--text-3);white-space:nowrap"><input type="number" min="0" value="${m.minQty}" onchange="saveMedMinQty('${m.id}',this.value)" style="border:none;background:transparent;width:52px;font-size:13px;font-family:inherit;color:inherit;text-align:right;outline:none;padding:0;-moz-appearance:textfield;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'">${m.unit}</td>
-        <td style="width:90px"><input type="text" value="${(m.supplier||'').replace(/"/g,'&quot;')}" placeholder="-" onchange="saveMedSupplier('${m.id}',this.value)" style="border:none;background:transparent;width:100%;font-size:13px;font-family:inherit;color:var(--text-2);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
-        <td style="max-width:160px"><input type="text" value="${(m.note||'').replace(/"/g,'&quot;')}" placeholder="메모" onchange="saveMedNote('${m.id}',this.value)" style="border:none;background:transparent;width:100%;font-size:12px;font-family:inherit;color:var(--text-3);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
+        <td class="num" style="color:var(--text-3);white-space:nowrap"><input type="number" min="0" value="${m.minQty}" onchange="saveMedMinQty('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:52px;font-size:13px;font-family:inherit;color:inherit;text-align:right;outline:none;padding:0;-moz-appearance:textfield;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'">${m.unit}</td>
+        <td style="width:90px"><input type="text" value="${(m.supplier||'').replace(/"/g,'&quot;')}" placeholder="-" onchange="saveMedSupplier('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:100%;font-size:13px;font-family:inherit;color:var(--text-2);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
+        <td style="max-width:160px"><input type="text" value="${(m.note||'').replace(/"/g,'&quot;')}" placeholder="메모" onchange="saveMedNote('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:100%;font-size:12px;font-family:inherit;color:var(--text-3);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
         <td style="white-space:nowrap">
           <button class="btn btn-sm btn-primary" onclick="medInOut('${m.id}','in')">입고▲</button>
           <button class="btn btn-sm btn-secondary" style="margin-left:4px" onclick="medInOut('${m.id}','out')">출고▼</button>
@@ -1658,9 +1658,15 @@ function renderMeds(){
     ⚠ 재고 부족 품목: ${lowItems.map(m=>`<strong>${m.name}</strong> (${m.qty}${m.unit})`).join(', ')}
   </div>`:''}
   <div class="card">
-    <div class="section-title" style="margin-bottom:.875rem">품목 목록</div>
-    <div class="toolbar">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:0;" id="meds-list-toggle">
+      <div class="section-title" style="margin:0">품목 목록</div>
+      <span id="meds-list-chevron" style="font-size:12px;color:var(--text-3);user-select:none">▲</span>
+    </div>
+    <div id="meds-list-body" style="display:block">
+    <div class="toolbar" style="margin-top:.875rem">
       <button class="btn btn-primary btn-sm" onclick="openAddMed()">+ 품목 추가</button>
+      <button class="btn btn-secondary btn-sm" onclick="resetMedOrder('name')">ㄱㄴㄷ 정렬</button>
+      <button class="btn btn-secondary btn-sm" onclick="resetMedOrder('supplier')">구입처별 정렬</button>
     </div>
     <div id="add-med-form" style="display:none;margin-bottom:.875rem">
       <div style="background:var(--surface-2);padding:12px;border-radius:8px;border:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
@@ -1685,11 +1691,13 @@ function renderMeds(){
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr>
+        <th style="width:18px"></th>
         <th style="width:160px">품목명</th><th class="num" style="width:72px">현재재고</th><th class="num" style="width:72px">최소재고</th>
         <th style="width:90px">구입처</th><th>메모</th><th style="width:140px">입출고</th>
       </tr></thead>
       <tbody id="meds-tbody">${itemRows()}</tbody>
     </table></div>
+    </div>
   </div>
   <div class="card mt">
     <div class="section-title" style="margin-bottom:.875rem">입출고 이력</div>
@@ -1698,6 +1706,65 @@ function renderMeds(){
       <tbody id="medlogs-tbody">${logRows()}</tbody>
     </table></div>
   </div>`;
+  setupMedDnd();
+  // 품목 목록 접기/펼치기
+  const toggle=document.getElementById('meds-list-toggle');
+  const body=document.getElementById('meds-list-body');
+  const chevron=document.getElementById('meds-list-chevron');
+  const collapsed=localStorage.getItem('medsListCollapsed')==='1';
+  if(collapsed){body.style.display='none';chevron.textContent='▼';}
+  toggle.addEventListener('click',()=>{
+    const isHidden=body.style.display==='none';
+    body.style.display=isHidden?'block':'none';
+    chevron.textContent=isHidden?'▲':'▼';
+    localStorage.setItem('medsListCollapsed',isHidden?'0':'1');
+  });
+}
+
+let _dragMedId=null;
+function setupMedDnd(){
+  const tbody=document.getElementById('meds-tbody');
+  if(!tbody)return;
+  tbody.querySelectorAll('tr[data-med-id]').forEach(row=>{
+    row.addEventListener('dragstart',e=>{
+      _dragMedId=row.dataset.medId;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(()=>row.style.opacity='0.35',0);
+    });
+    row.addEventListener('dragend',()=>{
+      row.style.opacity='';
+      _dragMedId=null;
+      tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('med-dnd-over'));
+    });
+    row.addEventListener('dragover',e=>{
+      if(!_dragMedId)return;
+      e.preventDefault();
+      tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('med-dnd-over'));
+      row.classList.add('med-dnd-over');
+    });
+    row.addEventListener('drop',async e=>{
+      e.preventDefault();
+      row.classList.remove('med-dnd-over');
+      if(!_dragMedId||_dragMedId===row.dataset.medId)return;
+      const fi=medsData.findIndex(m=>m.id===_dragMedId);
+      const ti=medsData.findIndex(m=>m.id===row.dataset.medId);
+      if(fi===-1||ti===-1)return;
+      const[item]=medsData.splice(fi,1);
+      medsData.splice(ti,0,item);
+      await save(KEYS.meds,medsData);
+      renderMeds();
+    });
+  });
+}
+
+function resetMedOrder(by){
+  if(by==='supplier'){
+    medsData.sort((a,b)=>(a.supplier||'').localeCompare(b.supplier||'','ko')||a.name.localeCompare(b.name,'ko'));
+  }else{
+    medsData.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  }
+  save(KEYS.meds,medsData);
+  renderMeds();
 }
 
 function openAddMed(){
