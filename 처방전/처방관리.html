@@ -1869,7 +1869,8 @@ function renderHappycall(){
       <tbody>${!list.length?`<tr><td colspan="7" class="empty">처방 이력이 없습니다</td></tr>`:
         list.map(rx=>{
           const hc=rx.happycall||{};
-          const st=hc.status||'대기';
+          const singleSession=rx.sessionCur===1&&rx.sessionTotal===1;
+          const st=hc.status||(singleSession?'완료':'대기');
           const session=(rx.sessionCur&&rx.sessionTotal)?`${rx.sessionCur}/${rx.sessionTotal}`:'';
           const catSession=[rx.category||'',session].filter(Boolean).join(' ');
           return`<tr>
@@ -1915,14 +1916,14 @@ function renderHappycall(){
     });
   });
   el.querySelectorAll('.hc-status-cycle').forEach(span=>{
-    span.addEventListener('click',async()=>{
+    span.addEventListener('click',()=>{
       const rxId=span.dataset.rxid;
       const cycle=['대기','완료','부재'];
       const rx=prescriptionsData.find(r=>r.id===rxId);if(!rx)return;
       const cur=(rx.happycall?.status)||'대기';
       const next=cycle[(cycle.indexOf(cur)+1)%cycle.length];
       prescriptionsData=prescriptionsData.map(r=>r.id!==rxId?r:{...r,happycall:{...(r.happycall||{}),status:next}});
-      await save(RX_KEYS.prescriptions,prescriptionsData);
+      save(RX_KEYS.prescriptions,prescriptionsData);
       renderHappycall();
     });
   });
