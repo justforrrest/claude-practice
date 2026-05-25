@@ -1831,8 +1831,9 @@ function renderHappycall(){
 
   el.innerHTML=`
   <div class="card">
-    <div style="margin-bottom:.875rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
       <div class="section-title" style="margin:0">해피콜 관리</div>
+      <button id="hc-all-done-btn" class="btn btn-sm" style="background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7">전체 완료 처리</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:.875rem;flex-wrap:wrap">
       ${[['전체',cntAll,'var(--violet-d)','var(--surface-2)','var(--border)'],['대기',cntPend,HC_ST['대기'].color,HC_ST['대기'].bg,HC_ST['대기'].border],['완료',cntDone,HC_ST['완료'].color,HC_ST['완료'].bg,HC_ST['완료'].border],['부재',cntAbsent,HC_ST['부재'].color,HC_ST['부재'].bg,HC_ST['부재'].border]].map(([label,cnt,col,bg,bdr])=>{
@@ -1901,6 +1902,13 @@ function renderHappycall(){
     </table></div>
   </div>`;
 
+  document.getElementById('hc-all-done-btn').addEventListener('click',async()=>{
+    if(!confirm('현재 목록의 모든 해피콜 상태를 완료로 변경할까요?'))return;
+    const ids=new Set(list.map(r=>r.id));
+    prescriptionsData=prescriptionsData.map(r=>ids.has(r.id)?{...r,happycall:{...(r.happycall||{}),status:'완료'}}:r);
+    await save(RX_KEYS.prescriptions,prescriptionsData);
+    renderHappycall();
+  });
   document.getElementById('hc-search').addEventListener('input',e=>{hcSearch=e.target.value.trim();renderHappycall();});
   document.getElementById('hc-year-sel').addEventListener('change',e=>{hcYear=e.target.value;renderHappycall();});
   document.getElementById('hc-month-sel').addEventListener('change',e=>{hcMonth=e.target.value;renderHappycall();});
