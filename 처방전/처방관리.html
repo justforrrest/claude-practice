@@ -123,6 +123,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 .hc-st-btn.sel-완료{border-color:#10B981;background:#D1FAE5;color:#065F46;}
 .hc-st-btn.sel-부재{border-color:#EF4444;background:#FEE2E2;color:#991B1B;}
 .hc-st-btn.sel-취소{border-color:#9CA3AF;background:#F3F4F6;color:#374151;}
+/* 처방 상세 모달은 처방이력 모달 위에 표시 */
+#detail-modal-overlay{z-index:600;}
 /* 동기화 모달 */
 .sync-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:999;align-items:center;justify-content:center;}
 .sync-modal-overlay.open{display:flex;}
@@ -1461,7 +1463,6 @@ function showRxHistory(pid){
   document.getElementById('rx-history-modal-overlay').classList.add('open');
   document.getElementById('close-rx-hist').addEventListener('click',()=>document.getElementById('rx-history-modal-overlay').classList.remove('open'));
   document.querySelectorAll('.rx-hist-diag').forEach(td=>td.addEventListener('click',()=>{
-    document.getElementById('rx-history-modal-overlay').classList.remove('open');
     showDetail(td.dataset.rxid);
   }));
 }
@@ -1512,7 +1513,7 @@ function showRefRxModal(patId,patName){
     });
   };
   document.getElementById('ref-rx-modal-content').innerHTML=`
-    <div style="display:flex;height:480px;border-radius:14px;overflow:hidden">
+    <div style="display:flex;height:calc(100vh - 5rem);border-radius:14px;overflow:hidden">
       <div style="width:200px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column">
         <div style="padding:.875rem 1rem;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;flex-shrink:0">${patName} 이전 처방</div>
         <div style="flex:1;overflow-y:auto">
