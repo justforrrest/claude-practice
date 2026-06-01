@@ -105,6 +105,7 @@ tr.med-dnd-over td{border-top:2px solid var(--violet-d)!important;}
 .sync-modal input:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
 .sync-modal-actions{display:flex;gap:8px;margin-top:1rem;}
 .sync-modal-actions .btn{flex:1;}
+textarea,[contenteditable]{cursor:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="20"><line x1="8" y1="1" x2="8" y2="19" stroke="%23111" stroke-width="1.2"/><line x1="4" y1="1" x2="12" y2="1" stroke="%23111" stroke-width="1.2"/><line x1="4" y1="19" x2="12" y2="19" stroke="%23111" stroke-width="1.2"/></svg>') 8 10,text;}
 </style>
 </head>
 <body>
@@ -500,6 +501,7 @@ let medLogSearch='',medLogMonth='';
 let medLogsData=[];
 let editingInboundId=null,editingOutboundId=null,editingHerbName=null,editingSupplierName=null;
 let inboundMonth='',outboundMonth='';
+let inboundSearch='',outboundSearch='';
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function focusEnd(id){const el=document.getElementById(id);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}}
@@ -643,7 +645,9 @@ function renderInbound(){
   const allSorted=[...inboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
   const ibMonths=[...new Set(allSorted.map(r=>r.date.slice(0,7)))];
   if(inboundMonth&&!ibMonths.includes(inboundMonth))inboundMonth='';
-  const filtered=inboundMonth?allSorted.filter(r=>r.date.startsWith(inboundMonth)):allSorted.slice(0,50);
+  const ibBase=inboundMonth?allSorted.filter(r=>r.date.startsWith(inboundMonth)):allSorted;
+  const ibQ=inboundSearch.trim();
+  const filtered=ibQ?ibBase.filter(r=>r.herb.includes(ibQ)):(inboundMonth?ibBase:ibBase.slice(0,50));
   const monthOpts=`<option value="">전체 (최근 50건)</option>${ibMonths.map(m=>`<option value="${m}"${inboundMonth===m?' selected':''}>${m}</option>`).join('')}`;
   const herbOpts=`<option value="">약재 선택</option>${herbsData.map(h=>`<option>${h}</option>`).join('')}`;
   const supOpts=suppliersData.map(s=>`<option>${s}</option>`).join('');
@@ -670,7 +674,10 @@ function renderInbound(){
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
       <div class="section-title" style="margin:0">입고 이력</div>
-      <select id="ib-month-sel" style="width:auto;flex-shrink:0;border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">${monthOpts}</select>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0;">
+        <input type="text" id="ib-search" placeholder="약재명 검색" style="width:140px;border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">
+        <select id="ib-month-sel" style="width:auto;flex-shrink:0;border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">${monthOpts}</select>
+      </div>
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th class="num">단가 (원/g)</th><th class="num">금액 (원)</th><th>공급업체</th><th>메모</th><th></th></tr></thead>
@@ -707,6 +714,16 @@ function renderInbound(){
   </div>`;
 
   document.getElementById('ib-month-sel').addEventListener('change',e=>{inboundMonth=e.target.value;renderInbound();});
+
+  const ibSearchEl=document.getElementById('ib-search');
+  ibSearchEl.value=inboundSearch;
+  ibSearchEl.addEventListener('input',e=>{
+    const caret=e.target.selectionStart;
+    inboundSearch=e.target.value;
+    renderInbound();
+    const next=document.getElementById('ib-search');
+    if(next){next.focus();next.setSelectionRange(caret,caret);}
+  });
 
   setupHerbDropdown(document.getElementById('in-herb'),document.getElementById('in-herb-dd'));
 
@@ -823,7 +840,9 @@ function renderOutbound(){
   const allSorted=[...outboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
   const obMonths=[...new Set(allSorted.map(r=>r.date.slice(0,7)))];
   if(outboundMonth&&!obMonths.includes(outboundMonth))outboundMonth='';
-  const filtered=outboundMonth?allSorted.filter(r=>r.date.startsWith(outboundMonth)):allSorted.slice(0,50);
+  const obBase=outboundMonth?allSorted.filter(r=>r.date.startsWith(outboundMonth)):allSorted;
+  const obQ=outboundSearch.trim();
+  const filtered=obQ?obBase.filter(r=>r.herb.includes(obQ)):(outboundMonth?obBase:obBase.slice(0,50));
   const monthOpts=`<option value="">전체 (최근 50건)</option>${obMonths.map(m=>`<option value="${m}"${outboundMonth===m?' selected':''}>${m}</option>`).join('')}`;
   const herbOpts=`<option value="">약재 선택</option>${herbsData.map(h=>`<option>${h}</option>`).join('')}`;
   el.innerHTML=`
@@ -846,7 +865,10 @@ function renderOutbound(){
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
       <div class="section-title" style="margin:0">출고 이력</div>
-      <select id="ob-month-sel" style="width:auto;flex-shrink:0;border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">${monthOpts}</select>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0;">
+        <input type="text" id="ob-search" placeholder="약재명 검색" style="width:140px;border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">
+        <select id="ob-month-sel" style="width:auto;flex-shrink:0;border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">${monthOpts}</select>
+      </div>
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th>용도</th><th>메모</th><th></th></tr></thead>
@@ -877,6 +899,16 @@ function renderOutbound(){
   </div>`;
 
   document.getElementById('ob-month-sel').addEventListener('change',e=>{outboundMonth=e.target.value;renderOutbound();});
+
+  const obSearchEl=document.getElementById('ob-search');
+  obSearchEl.value=outboundSearch;
+  obSearchEl.addEventListener('input',e=>{
+    const caret=e.target.selectionStart;
+    outboundSearch=e.target.value;
+    renderOutbound();
+    const next=document.getElementById('ob-search');
+    if(next){next.focus();next.setSelectionRange(caret,caret);}
+  });
 
   setupHerbDropdown(document.getElementById('out-herb'),document.getElementById('out-herb-dd'));
 
