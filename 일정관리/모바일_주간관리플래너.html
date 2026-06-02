@@ -166,6 +166,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .mplan-memo-row{display:flex;align-items:center;gap:6px;padding:3px 0;}
 .mplan-memo-inp{flex:1;border:none;background:transparent;font-size:13px;color:var(--text-1);font-family:inherit;outline:none;padding:2px 0;}
 .mplan-memo-inp::placeholder{color:var(--text-3);}
+textarea,[contenteditable]{cursor:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="20"><line x1="8" y1="1" x2="8" y2="19" stroke="%23111" stroke-width="1.2"/><line x1="4" y1="1" x2="12" y2="1" stroke="%23111" stroke-width="1.2"/><line x1="4" y1="19" x2="12" y2="19" stroke="%23111" stroke-width="1.2"/></svg>') 8 10,text;}
 </style>
 </head>
 <body>
@@ -272,7 +273,7 @@ async function save(key,val){
 
 /* ── Colors ── */
 const DOT_COLORS=['#EC4899','#7C3AED','#10B981','#0EA5E9','#F59E0B','#F97316'];
-const KEYWORD_COLORS={'업무':'#E5E7EB','해피모닝':'#FEF9C3','운동':'#BFDBFE','휴식':'','free':'','데이트':'#FECACA','공부':'#BBF7D0','계획':'#FED7AA','친목':'#FBCFE8'};
+const KEYWORD_COLORS={'업무':'#E5E7EB','해피모닝':'#FEF9C3','운동':'#BFDBFE','휴식':'','free':'','데이트':'#FECACA','공부':'#BBF7D0','계획':'#FED7AA','친목':'#FBCFE8','집안일':'#DDD6FE'};
 function matchKeywordColor(text){const t=text||'';const k=Object.keys(KEYWORD_COLORS).find(k=>t.includes(k));return k?KEYWORD_COLORS[k]:null;}
 
 /* ── D-Dot data ── */
