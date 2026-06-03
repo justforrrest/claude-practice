@@ -241,13 +241,15 @@ textarea{resize:vertical;min-height:60px;line-height:1.5;}
   font-family:var(--font-sans);text-align:center;
 }
 .check-cell{display:flex;flex-direction:column;gap:4px;padding:2px 0;}
-.check-row{display:flex;align-items:center;gap:5px;}
+.check-row{display:flex;align-items:flex-start;gap:5px;}
 .check-row input[type=checkbox]{width:14px;height:14px;accent-color:var(--violet);flex-shrink:0;}
-.check-row input[type=text]{
+.check-row input[type=text],.check-row textarea{
   border:none;background:transparent;font-size:13px;
   outline:none;padding:0;width:100%;font-family:var(--font-sans);
 }
-.check-row-dot{color:var(--border-2);font-size:8px;flex-shrink:0;line-height:1;}
+.check-row textarea{resize:none;overflow:hidden;line-height:1.4;min-height:18px;white-space:pre-wrap;word-break:break-word;display:block;}
+.check-row-dot{color:var(--border-2);font-size:8px;flex-shrink:0;line-height:1;margin-top:6px;}
+.check-del-btn,.checkout-del-btn{margin-top:2px;}
 .checkout-cell{vertical-align:top;}
 .add-item-btn,.add-checkout-btn{display:none;}
 .kw-input.from-weekly{color:#7C3AED;}
@@ -1184,6 +1186,7 @@ function renderDailyBody(){
   if(!wEntry.grid[di]) wEntry.grid[di]=Array(6).fill('');
 
   const tbody=document.getElementById('block-tbody');tbody.innerHTML='';
+  const escTa=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   entry.blocks.forEach((b,bi)=>{
     if(!b.checkouts || b.checkouts.length===0) b.checkouts=[{text:'',done:false}];
     const kw=(b.kw||'').replace(/"/g,'&quot;');
@@ -1191,13 +1194,13 @@ function renderDailyBody(){
     const checksHtml=b.checks.map((c,ci)=>`
       <div class="check-row">
         <span class="check-row-dot">•</span>
-        <input type="text" value="${c.text.replace(/"/g,'&quot;')}" data-bi="${bi}" data-ci="${ci}" class="check-text" />
+        <textarea rows="1" data-bi="${bi}" data-ci="${ci}" class="check-text">${escTa(c.text)}</textarea>
         ${b.checks.length>1?`<button class="check-del-btn" data-bi="${bi}" data-ci="${ci}">×</button>`:''}
       </div>`).join('');
     const checkoutsHtml=b.checkouts.map((c,ci)=>`
       <div class="check-row">
         <span class="check-row-dot">•</span>
-        <input type="text" value="${c.text.replace(/"/g,'&quot;')}" data-bi="${bi}" data-ci="${ci}" class="checkout-text" />
+        <textarea rows="1" data-bi="${bi}" data-ci="${ci}" class="checkout-text">${escTa(c.text)}</textarea>
         ${b.checkouts.length>1?`<button class="checkout-del-btn" data-bi="${bi}" data-ci="${ci}">×</button>`:''}
       </div>`).join('');
     tr.innerHTML=`
@@ -1213,12 +1216,15 @@ function renderDailyBody(){
     inp.addEventListener('input',()=>{const bi=Number(inp.dataset.bi);entry.blocks[bi].kw=inp.value;entry.blocks[bi].kwFromWeekly=false;inp.classList.remove('from-weekly');applyBg(inp.value);});
     inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const bi=Number(inp.dataset.bi);const rows=document.getElementById('block-tbody').querySelectorAll('tr');if(rows[bi+1]){const next=rows[bi+1].querySelector('.kw-input');if(next)next.focus();}}});
   });
+  const growField=el=>{if(el.scrollHeight>el.clientHeight)el.style.height=el.scrollHeight+'px';};
   tbody.querySelectorAll('.check-text').forEach(inp=>{
-    inp.addEventListener('input',()=>{entry.blocks[inp.dataset.bi].checks[inp.dataset.ci].text=inp.value;});
+    growField(inp);
+    inp.addEventListener('input',()=>{entry.blocks[inp.dataset.bi].checks[inp.dataset.ci].text=inp.value;growField(inp);});
     inp.addEventListener('keydown',(e)=>{const bi=inp.dataset.bi;if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const nextBi=Number(bi)+1;const rows=document.getElementById('block-tbody').querySelectorAll('tr');if(rows[nextBi]){const ins=rows[nextBi].querySelectorAll('.check-text');if(ins.length)ins[0].focus();}}else if(e.key==='Enter'&&e.shiftKey){e.preventDefault();entry.blocks[bi].checks.push({text:'',done:false});renderDaily();focusLastInput(bi,'.check-text');}else if(e.key==='Backspace'&&inp.value===''&&entry.blocks[bi].checks.length>1){e.preventDefault();const ci=Number(inp.dataset.ci);entry.blocks[bi].checks.splice(ci,1);renderDaily();const tr=document.getElementById('block-tbody').querySelectorAll('tr')[Number(bi)];if(tr){const ins=tr.querySelectorAll('.check-text');if(ins.length)ins[Math.max(0,ci-1)].focus();}}});
   });
   tbody.querySelectorAll('.checkout-text').forEach(inp=>{
-    inp.addEventListener('input',()=>{entry.blocks[inp.dataset.bi].checkouts[inp.dataset.ci].text=inp.value;});
+    growField(inp);
+    inp.addEventListener('input',()=>{entry.blocks[inp.dataset.bi].checkouts[inp.dataset.ci].text=inp.value;growField(inp);});
     inp.addEventListener('keydown',(e)=>{const bi=inp.dataset.bi;if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const nextBi=Number(bi)+1;const rows=document.getElementById('block-tbody').querySelectorAll('tr');if(rows[nextBi]){const ins=rows[nextBi].querySelectorAll('.checkout-text');if(ins.length)ins[0].focus();}}else if(e.key==='Enter'&&e.shiftKey){e.preventDefault();entry.blocks[bi].checkouts.push({text:'',done:false});renderDaily();focusLastInput(bi,'.checkout-text');}else if(e.key==='Backspace'&&inp.value===''&&entry.blocks[bi].checkouts.length>1){e.preventDefault();const ci=Number(inp.dataset.ci);entry.blocks[bi].checkouts.splice(ci,1);renderDaily();const tr=document.getElementById('block-tbody').querySelectorAll('tr')[Number(bi)];if(tr){const ins=tr.querySelectorAll('.checkout-text');if(ins.length)ins[Math.max(0,ci-1)].focus();}}});
   });
   tbody.querySelectorAll('.add-item-btn').forEach(btn=>{btn.addEventListener('click',()=>{const bi=btn.dataset.bi;entry.blocks[bi].checks.push({text:'',done:false});renderDaily();focusLastInput(bi,'.check-text');});});
@@ -1251,6 +1257,7 @@ function renderDailyBody(){
     el.addEventListener('keydown',ev=>{
       if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();save(KEYS.daily,dailyData);}
       else if(ev.key==='Enter'&&ev.shiftKey){ev.preventDefault();document.execCommand('insertHTML',false,'<br><span class="em-bullet">•</span>&nbsp;');entry[k]=el.innerText.replace(/\n$/,'');}
+      else if(ev.key==='Backspace'){const sel=window.getSelection();if(sel.isCollapsed&&sel.rangeCount){const r=sel.getRangeAt(0),pre=r.cloneRange();pre.selectNodeContents(el);pre.setEnd(r.endContainer,r.endOffset);if(pre.toString().length<=2)ev.preventDefault();}}
     });
     el.addEventListener('paste',ev=>{ev.preventDefault();document.execCommand('insertText',false,ev.clipboardData.getData('text/plain'));});
   });
