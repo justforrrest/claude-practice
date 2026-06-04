@@ -497,6 +497,7 @@ let pricelistData={...DEFAULT_PRICELIST};
 let herbsData=[...HERBS];
 let adjustData=[];
 let medsData=[];
+let medShowHidden=false;
 let medLogSearch='',medLogMonth='';
 let medLogsData=[];
 let editingInboundId=null,editingOutboundId=null,editingHerbName=null,editingSupplierName=null;
@@ -640,14 +641,117 @@ function setupHerbDropdown(inp,dd){
 }
 
 /* ── 입고 ── */
-function renderInbound(){
-  const el=document.getElementById('view-inbound');
+// 입고 이력 tbody만 갱신 (검색창/입력 요소는 보존 → 한글 조합 유지)
+function renderInboundTbody(){
+  const tbody=document.getElementById('ib-tbody');
+  if(!tbody)return;
   const allSorted=[...inboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
   const ibMonths=[...new Set(allSorted.map(r=>r.date.slice(0,7)))];
   if(inboundMonth&&!ibMonths.includes(inboundMonth))inboundMonth='';
   const ibBase=inboundMonth?allSorted.filter(r=>r.date.startsWith(inboundMonth)):allSorted;
   const ibQ=inboundSearch.trim();
   const filtered=ibQ?ibBase.filter(r=>r.herb.includes(ibQ)):(inboundMonth?ibBase:ibBase.slice(0,50));
+  tbody.innerHTML=filtered.length===0?'<tr><td colspan="8" class="empty">입고 이력이 없습니다</td></tr>':filtered.map(r=>{
+    if(editingInboundId===r.id){
+      const hOpts=herbsData.map(h=>`<option${h===r.herb?' selected':''}>${h}</option>`).join('');
+      const sOpts=suppliersData.map(s=>`<option${s===r.supplier?' selected':''}>${s}</option>`).join('');
+      return`<tr style="background:var(--violet-light)">
+        <td><input class="settings-inp ei-date" type="date" value="${r.date}" style="width:116px"></td>
+        <td><select class="settings-inp ei-herb" style="width:88px">${hOpts}</select></td>
+        <td><input class="settings-inp ei-qty" type="number" step="0.1" value="${r.qty}" style="width:70px;text-align:right"></td>
+        <td><input class="settings-inp ei-price" type="number" step="0.1" value="${r.price||''}" placeholder="-" style="width:70px;text-align:right"></td>
+        <td><input class="settings-inp ei-amount" type="number" step="1" value="${r.amount||''}" placeholder="-" style="width:82px;text-align:right"></td>
+        <td><select class="settings-inp ei-sup" style="width:78px">${sOpts}</select></td>
+        <td><input class="settings-inp ei-note" type="text" value="${r.note||''}" style="min-width:80px;width:100%"></td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-primary btn-sm ib-save" data-id="${r.id}">✓</button>
+          <button class="btn btn-secondary btn-sm ib-cancel" style="margin-left:2px">✕</button>
+        </td>
+      </tr>`;
+    }
+    return`<tr>
+      <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
+      <td class="num">${r.price>0?fmt(r.price):'-'}</td>
+      <td class="num">${r.amount>0?fmt(r.amount):'-'}</td>
+      <td>${r.supplier||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-edit ib-edit" data-id="${r.id}">✎</button>
+        <button class="btn-del" data-id="${r.id}" data-type="ib">×</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.ib-edit').forEach(btn=>{
+    btn.addEventListener('click',()=>{editingInboundId=btn.dataset.id;renderInboundTbody();});
+  });
+  tbody.querySelectorAll('.ib-cancel').forEach(btn=>{
+    btn.addEventListener('click',()=>{editingInboundId=null;renderInboundTbody();});
+  });
+  tbody.querySelectorAll('.ib-save').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const tr=btn.closest('tr');
+      const herb=tr.querySelector('.ei-herb').value;
+      const qty=parseFloat(tr.querySelector('.ei-qty').value);
+      const price=parseFloat(tr.querySelector('.ei-price').value)||0;
+      const amount=parseFloat(tr.querySelector('.ei-amount').value)||0;
+      const date=tr.querySelector('.ei-date').value;
+      const supplier=tr.querySelector('.ei-sup').value;
+      const note=tr.querySelector('.ei-note').value.trim();
+      if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
+      inboundData=inboundData.map(r=>r.id===btn.dataset.id?{...r,herb,qty,price,amount,date,supplier,note}:r);
+      await save(KEYS.inbound,inboundData);
+      editingInboundId=null;renderInbound();
+    });
+  });
+
+  // 편집 행 자동계산
+  const eiQty=tbody.querySelector('.ei-qty'),eiPrice=tbody.querySelector('.ei-price'),eiAmt=tbody.querySelector('.ei-amount');
+  if(eiQty&&eiPrice&&eiAmt){
+    const eCalcAmt=()=>{const q=parseFloat(eiQty.value),p=parseFloat(eiPrice.value);if(q>0&&p>0)eiAmt.value=Math.round(q*p);};
+    const eCalcPrc=()=>{const q=parseFloat(eiQty.value),a=parseFloat(eiAmt.value);if(q>0&&a>0)eiPrice.value=+(a/q).toFixed(2);};
+    eiPrice.addEventListener('input',eCalcAmt);
+    eiAmt.addEventListener('input',eCalcPrc);
+    eiQty.addEventListener('input',()=>{if(eiPrice.value)eCalcAmt();else if(eiAmt.value)eCalcPrc();});
+  }
+
+  const ibEditTr=tbody.querySelector('.ib-save')?.closest('tr');
+  if(ibEditTr){
+    let ibAutoTimer=null;
+    ibEditTr.querySelectorAll('input,select').forEach(i=>{
+      i.addEventListener('input',()=>{
+        clearTimeout(ibAutoTimer);
+        ibAutoTimer=setTimeout(async()=>{
+          const herb=ibEditTr.querySelector('.ei-herb').value;
+          const qty=parseFloat(ibEditTr.querySelector('.ei-qty').value);
+          const date=ibEditTr.querySelector('.ei-date').value;
+          if(!herb||!qty||isNaN(qty)||!date)return;
+          const price=parseFloat(ibEditTr.querySelector('.ei-price').value)||0;
+          const amount=parseFloat(ibEditTr.querySelector('.ei-amount').value)||0;
+          const sup=ibEditTr.querySelector('.ei-sup')?.value||'';
+          const note=ibEditTr.querySelector('.ei-note')?.value.trim()||'';
+          const id=ibEditTr.querySelector('.ib-save').dataset.id;
+          inboundData=inboundData.map(r=>r.id===id?{...r,herb,qty,price,amount,date,supplier:sup,note}:r);
+          await save(KEYS.inbound,inboundData);
+        },1000);
+      });
+    });
+  }
+
+  tbody.querySelectorAll('.btn-del[data-type="ib"]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      if(!confirm('삭제하시겠습니까?'))return;
+      inboundData=inboundData.filter(r=>r.id!==btn.dataset.id);
+      await save(KEYS.inbound,inboundData);
+      renderInbound();
+    });
+  });
+}
+
+function renderInbound(){
+  const el=document.getElementById('view-inbound');
+  const allSorted=[...inboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  const ibMonths=[...new Set(allSorted.map(r=>r.date.slice(0,7)))];
+  if(inboundMonth&&!ibMonths.includes(inboundMonth))inboundMonth='';
   const monthOpts=`<option value="">전체 (최근 50건)</option>${ibMonths.map(m=>`<option value="${m}"${inboundMonth===m?' selected':''}>${m}</option>`).join('')}`;
   const herbOpts=`<option value="">약재 선택</option>${herbsData.map(h=>`<option>${h}</option>`).join('')}`;
   const supOpts=suppliersData.map(s=>`<option>${s}</option>`).join('');
@@ -681,49 +785,15 @@ function renderInbound(){
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th class="num">단가 (원/g)</th><th class="num">금액 (원)</th><th>공급업체</th><th>메모</th><th></th></tr></thead>
-      <tbody>${filtered.length===0?'<tr><td colspan="8" class="empty">입고 이력이 없습니다</td></tr>':filtered.map(r=>{
-        if(editingInboundId===r.id){
-          const hOpts=herbsData.map(h=>`<option${h===r.herb?' selected':''}>${h}</option>`).join('');
-          const sOpts=suppliersData.map(s=>`<option${s===r.supplier?' selected':''}>${s}</option>`).join('');
-          return`<tr style="background:var(--violet-light)">
-            <td><input class="settings-inp ei-date" type="date" value="${r.date}" style="width:116px"></td>
-            <td><select class="settings-inp ei-herb" style="width:88px">${hOpts}</select></td>
-            <td><input class="settings-inp ei-qty" type="number" step="0.1" value="${r.qty}" style="width:70px;text-align:right"></td>
-            <td><input class="settings-inp ei-price" type="number" step="0.1" value="${r.price||''}" placeholder="-" style="width:70px;text-align:right"></td>
-            <td><input class="settings-inp ei-amount" type="number" step="1" value="${r.amount||''}" placeholder="-" style="width:82px;text-align:right"></td>
-            <td><select class="settings-inp ei-sup" style="width:78px">${sOpts}</select></td>
-            <td><input class="settings-inp ei-note" type="text" value="${r.note||''}" style="min-width:80px;width:100%"></td>
-            <td style="white-space:nowrap">
-              <button class="btn btn-primary btn-sm ib-save" data-id="${r.id}">✓</button>
-              <button class="btn btn-secondary btn-sm ib-cancel" style="margin-left:2px">✕</button>
-            </td>
-          </tr>`;
-        }
-        return`<tr>
-          <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
-          <td class="num">${r.price>0?fmt(r.price):'-'}</td>
-          <td class="num">${r.amount>0?fmt(r.amount):'-'}</td>
-          <td>${r.supplier||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
-          <td style="white-space:nowrap">
-            <button class="btn-edit ib-edit" data-id="${r.id}">✎</button>
-            <button class="btn-del" data-id="${r.id}" data-type="ib">×</button>
-          </td>
-        </tr>`;
-      }).join('')}</tbody>
+      <tbody id="ib-tbody"></tbody>
     </table></div>
   </div>`;
 
-  document.getElementById('ib-month-sel').addEventListener('change',e=>{inboundMonth=e.target.value;renderInbound();});
+  document.getElementById('ib-month-sel').addEventListener('change',e=>{inboundMonth=e.target.value;renderInboundTbody();});
 
   const ibSearchEl=document.getElementById('ib-search');
   ibSearchEl.value=inboundSearch;
-  ibSearchEl.addEventListener('input',e=>{
-    const caret=e.target.selectionStart;
-    inboundSearch=e.target.value;
-    renderInbound();
-    const next=document.getElementById('ib-search');
-    if(next){next.focus();next.setSelectionRange(caret,caret);}
-  });
+  ibSearchEl.addEventListener('input',e=>{inboundSearch=e.target.value;renderInboundTbody();});
 
   setupHerbDropdown(document.getElementById('in-herb'),document.getElementById('in-herb-dd'));
 
@@ -768,81 +838,104 @@ function renderInbound(){
     renderInbound();
   });
 
-  el.querySelectorAll('.ib-edit').forEach(btn=>{
-    btn.addEventListener('click',()=>{editingInboundId=btn.dataset.id;renderInbound();});
-  });
-  el.querySelectorAll('.ib-cancel').forEach(btn=>{
-    btn.addEventListener('click',()=>{editingInboundId=null;renderInbound();});
-  });
-  el.querySelectorAll('.ib-save').forEach(btn=>{
-    btn.addEventListener('click',async()=>{
-      const tr=btn.closest('tr');
-      const herb=tr.querySelector('.ei-herb').value;
-      const qty=parseFloat(tr.querySelector('.ei-qty').value);
-      const price=parseFloat(tr.querySelector('.ei-price').value)||0;
-      const amount=parseFloat(tr.querySelector('.ei-amount').value)||0;
-      const date=tr.querySelector('.ei-date').value;
-      const supplier=tr.querySelector('.ei-sup').value;
-      const note=tr.querySelector('.ei-note').value.trim();
-      if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
-      inboundData=inboundData.map(r=>r.id===btn.dataset.id?{...r,herb,qty,price,amount,date,supplier,note}:r);
-      await save(KEYS.inbound,inboundData);
-      editingInboundId=null;renderInbound();
-    });
-  });
-
-  // 편집 행 자동계산
-  const eiQty=el.querySelector('.ei-qty'),eiPrice=el.querySelector('.ei-price'),eiAmt=el.querySelector('.ei-amount');
-  if(eiQty&&eiPrice&&eiAmt){
-    const eCalcAmt=()=>{const q=parseFloat(eiQty.value),p=parseFloat(eiPrice.value);if(q>0&&p>0)eiAmt.value=Math.round(q*p);};
-    const eCalcPrc=()=>{const q=parseFloat(eiQty.value),a=parseFloat(eiAmt.value);if(q>0&&a>0)eiPrice.value=+(a/q).toFixed(2);};
-    eiPrice.addEventListener('input',eCalcAmt);
-    eiAmt.addEventListener('input',eCalcPrc);
-    eiQty.addEventListener('input',()=>{if(eiPrice.value)eCalcAmt();else if(eiAmt.value)eCalcPrc();});
-  }
-
-  const ibEditTr=el.querySelector('.ib-save')?.closest('tr');
-  if(ibEditTr){
-    let ibAutoTimer=null;
-    ibEditTr.querySelectorAll('input,select').forEach(i=>{
-      i.addEventListener('input',()=>{
-        clearTimeout(ibAutoTimer);
-        ibAutoTimer=setTimeout(async()=>{
-          const herb=ibEditTr.querySelector('.ei-herb').value;
-          const qty=parseFloat(ibEditTr.querySelector('.ei-qty').value);
-          const date=ibEditTr.querySelector('.ei-date').value;
-          if(!herb||!qty||isNaN(qty)||!date)return;
-          const price=parseFloat(ibEditTr.querySelector('.ei-price').value)||0;
-          const amount=parseFloat(ibEditTr.querySelector('.ei-amount').value)||0;
-          const sup=ibEditTr.querySelector('.ei-sup')?.value||'';
-          const note=ibEditTr.querySelector('.ei-note')?.value.trim()||'';
-          const id=ibEditTr.querySelector('.ib-save').dataset.id;
-          inboundData=inboundData.map(r=>r.id===id?{...r,herb,qty,price,amount,date,supplier:sup,note}:r);
-          await save(KEYS.inbound,inboundData);
-        },1000);
-      });
-    });
-  }
-
-  el.querySelectorAll('.btn-del[data-type="ib"]').forEach(btn=>{
-    btn.addEventListener('click',async()=>{
-      if(!confirm('삭제하시겠습니까?'))return;
-      inboundData=inboundData.filter(r=>r.id!==btn.dataset.id);
-      await save(KEYS.inbound,inboundData);
-      renderInbound();
-    });
-  });
+  renderInboundTbody();
 }
 
 /* ── 출고 ── */
-function renderOutbound(){
-  const el=document.getElementById('view-outbound');
+// 출고 이력 tbody만 갱신 (검색창/입력 요소는 보존 → 한글 조합 유지)
+function renderOutboundTbody(){
+  const tbody=document.getElementById('ob-tbody');
+  if(!tbody)return;
   const allSorted=[...outboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
   const obMonths=[...new Set(allSorted.map(r=>r.date.slice(0,7)))];
   if(outboundMonth&&!obMonths.includes(outboundMonth))outboundMonth='';
   const obBase=outboundMonth?allSorted.filter(r=>r.date.startsWith(outboundMonth)):allSorted;
   const obQ=outboundSearch.trim();
   const filtered=obQ?obBase.filter(r=>r.herb.includes(obQ)):(outboundMonth?obBase:obBase.slice(0,50));
+  tbody.innerHTML=filtered.length===0?'<tr><td colspan="6" class="empty">출고 이력이 없습니다</td></tr>':filtered.map(r=>{
+    if(editingOutboundId===r.id){
+      return`<tr style="background:var(--violet-light)">
+        <td><input class="settings-inp eo-date" type="date" value="${r.date}" style="width:116px"></td>
+        <td><div class="herb-ac-wrap" style="width:120px"><input type="text" class="settings-inp eo-herb" value="${r.herb}" style="width:100%" autocomplete="off" placeholder="약재 검색"><ul class="herb-dropdown eo-herb-dd"></ul></div></td>
+        <td><input class="settings-inp eo-qty" type="number" step="0.1" value="${r.qty}" style="width:70px;text-align:right"></td>
+        <td><input class="settings-inp eo-purpose" type="text" value="${r.purpose||''}" style="width:90px"></td>
+        <td><input class="settings-inp eo-note" type="text" value="${r.note||''}" style="min-width:80px;width:100%"></td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-primary btn-sm ob-save" data-id="${r.id}">✓</button>
+          <button class="btn btn-secondary btn-sm ob-cancel" style="margin-left:2px">✕</button>
+        </td>
+      </tr>`;
+    }
+    return`<tr>
+      <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
+      <td>${r.purpose||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-edit ob-edit" data-id="${r.id}">✎</button>
+        <button class="btn-del" data-id="${r.id}" data-type="ob">×</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const eoHerbInp=tbody.querySelector('.eo-herb');const eoHerbDd=tbody.querySelector('.eo-herb-dd');
+  if(eoHerbInp&&eoHerbDd)setupHerbDropdown(eoHerbInp,eoHerbDd);
+
+  tbody.querySelectorAll('.ob-edit').forEach(btn=>{
+    btn.addEventListener('click',()=>{editingOutboundId=btn.dataset.id;renderOutboundTbody();});
+  });
+  tbody.querySelectorAll('.ob-cancel').forEach(btn=>{
+    btn.addEventListener('click',()=>{editingOutboundId=null;renderOutboundTbody();});
+  });
+  tbody.querySelectorAll('.ob-save').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const tr=btn.closest('tr');
+      const herb=tr.querySelector('.eo-herb').value;
+      const qty=parseFloat(tr.querySelector('.eo-qty').value);
+      const date=tr.querySelector('.eo-date').value;
+      const purpose=tr.querySelector('.eo-purpose').value.trim();
+      const note=tr.querySelector('.eo-note').value.trim();
+      if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
+      outboundData=outboundData.map(r=>r.id===btn.dataset.id?{...r,herb,qty,date,purpose,note}:r);
+      await save(KEYS.outbound,outboundData);
+      editingOutboundId=null;renderOutbound();
+    });
+  });
+
+  const obEditTr=tbody.querySelector('.ob-save')?.closest('tr');
+  if(obEditTr){
+    let obAutoTimer=null;
+    obEditTr.querySelectorAll('input,select').forEach(i=>{
+      i.addEventListener('input',()=>{
+        clearTimeout(obAutoTimer);
+        obAutoTimer=setTimeout(async()=>{
+          const herb=obEditTr.querySelector('.eo-herb').value;
+          const qty=parseFloat(obEditTr.querySelector('.eo-qty').value);
+          const date=obEditTr.querySelector('.eo-date').value;
+          if(!herb||!qty||isNaN(qty)||!date)return;
+          const purpose=obEditTr.querySelector('.eo-purpose')?.value.trim()||'';
+          const note=obEditTr.querySelector('.eo-note')?.value.trim()||'';
+          const id=obEditTr.querySelector('.ob-save').dataset.id;
+          outboundData=outboundData.map(r=>r.id===id?{...r,herb,qty,date,purpose,note}:r);
+          await save(KEYS.outbound,outboundData);
+        },1000);
+      });
+    });
+  }
+
+  tbody.querySelectorAll('.btn-del[data-type="ob"]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      if(!confirm('삭제하시겠습니까?'))return;
+      outboundData=outboundData.filter(r=>r.id!==btn.dataset.id);
+      await save(KEYS.outbound,outboundData);
+      renderOutbound();
+    });
+  });
+}
+
+function renderOutbound(){
+  const el=document.getElementById('view-outbound');
+  const allSorted=[...outboundData].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  const obMonths=[...new Set(allSorted.map(r=>r.date.slice(0,7)))];
+  if(outboundMonth&&!obMonths.includes(outboundMonth))outboundMonth='';
   const monthOpts=`<option value="">전체 (최근 50건)</option>${obMonths.map(m=>`<option value="${m}"${outboundMonth===m?' selected':''}>${m}</option>`).join('')}`;
   const herbOpts=`<option value="">약재 선택</option>${herbsData.map(h=>`<option>${h}</option>`).join('')}`;
   el.innerHTML=`
@@ -872,48 +965,17 @@ function renderOutbound(){
     </div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>날짜</th><th>약재명</th><th class="num">수량 (g)</th><th>용도</th><th>메모</th><th></th></tr></thead>
-      <tbody>${filtered.length===0?'<tr><td colspan="6" class="empty">출고 이력이 없습니다</td></tr>':filtered.map(r=>{
-        if(editingOutboundId===r.id){
-          return`<tr style="background:var(--violet-light)">
-            <td><input class="settings-inp eo-date" type="date" value="${r.date}" style="width:116px"></td>
-            <td><div class="herb-ac-wrap" style="width:120px"><input type="text" class="settings-inp eo-herb" value="${r.herb}" style="width:100%" autocomplete="off" placeholder="약재 검색"><ul class="herb-dropdown eo-herb-dd"></ul></div></td>
-            <td><input class="settings-inp eo-qty" type="number" step="0.1" value="${r.qty}" style="width:70px;text-align:right"></td>
-            <td><input class="settings-inp eo-purpose" type="text" value="${r.purpose||''}" style="width:90px"></td>
-            <td><input class="settings-inp eo-note" type="text" value="${r.note||''}" style="min-width:80px;width:100%"></td>
-            <td style="white-space:nowrap">
-              <button class="btn btn-primary btn-sm ob-save" data-id="${r.id}">✓</button>
-              <button class="btn btn-secondary btn-sm ob-cancel" style="margin-left:2px">✕</button>
-            </td>
-          </tr>`;
-        }
-        return`<tr>
-          <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
-          <td>${r.purpose||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
-          <td style="white-space:nowrap">
-            <button class="btn-edit ob-edit" data-id="${r.id}">✎</button>
-            <button class="btn-del" data-id="${r.id}" data-type="ob">×</button>
-          </td>
-        </tr>`;
-      }).join('')}</tbody>
+      <tbody id="ob-tbody"></tbody>
     </table></div>
   </div>`;
 
-  document.getElementById('ob-month-sel').addEventListener('change',e=>{outboundMonth=e.target.value;renderOutbound();});
+  document.getElementById('ob-month-sel').addEventListener('change',e=>{outboundMonth=e.target.value;renderOutboundTbody();});
 
   const obSearchEl=document.getElementById('ob-search');
   obSearchEl.value=outboundSearch;
-  obSearchEl.addEventListener('input',e=>{
-    const caret=e.target.selectionStart;
-    outboundSearch=e.target.value;
-    renderOutbound();
-    const next=document.getElementById('ob-search');
-    if(next){next.focus();next.setSelectionRange(caret,caret);}
-  });
+  obSearchEl.addEventListener('input',e=>{outboundSearch=e.target.value;renderOutboundTbody();});
 
   setupHerbDropdown(document.getElementById('out-herb'),document.getElementById('out-herb-dd'));
-
-  const eoHerbInp=el.querySelector('.eo-herb');const eoHerbDd=el.querySelector('.eo-herb-dd');
-  if(eoHerbInp&&eoHerbDd)setupHerbDropdown(eoHerbInp,eoHerbDd);
 
   document.getElementById('out-submit').addEventListener('click',async()=>{
     const herb=document.getElementById('out-herb').value;
@@ -930,56 +992,7 @@ function renderOutbound(){
     renderOutbound();
   });
 
-  el.querySelectorAll('.ob-edit').forEach(btn=>{
-    btn.addEventListener('click',()=>{editingOutboundId=btn.dataset.id;renderOutbound();});
-  });
-  el.querySelectorAll('.ob-cancel').forEach(btn=>{
-    btn.addEventListener('click',()=>{editingOutboundId=null;renderOutbound();});
-  });
-  el.querySelectorAll('.ob-save').forEach(btn=>{
-    btn.addEventListener('click',async()=>{
-      const tr=btn.closest('tr');
-      const herb=tr.querySelector('.eo-herb').value;
-      const qty=parseFloat(tr.querySelector('.eo-qty').value);
-      const date=tr.querySelector('.eo-date').value;
-      const purpose=tr.querySelector('.eo-purpose').value.trim();
-      const note=tr.querySelector('.eo-note').value.trim();
-      if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
-      outboundData=outboundData.map(r=>r.id===btn.dataset.id?{...r,herb,qty,date,purpose,note}:r);
-      await save(KEYS.outbound,outboundData);
-      editingOutboundId=null;renderOutbound();
-    });
-  });
-
-  const obEditTr=el.querySelector('.ob-save')?.closest('tr');
-  if(obEditTr){
-    let obAutoTimer=null;
-    obEditTr.querySelectorAll('input,select').forEach(i=>{
-      i.addEventListener('input',()=>{
-        clearTimeout(obAutoTimer);
-        obAutoTimer=setTimeout(async()=>{
-          const herb=obEditTr.querySelector('.eo-herb').value;
-          const qty=parseFloat(obEditTr.querySelector('.eo-qty').value);
-          const date=obEditTr.querySelector('.eo-date').value;
-          if(!herb||!qty||isNaN(qty)||!date)return;
-          const purpose=obEditTr.querySelector('.eo-purpose')?.value.trim()||'';
-          const note=obEditTr.querySelector('.eo-note')?.value.trim()||'';
-          const id=obEditTr.querySelector('.ob-save').dataset.id;
-          outboundData=outboundData.map(r=>r.id===id?{...r,herb,qty,date,purpose,note}:r);
-          await save(KEYS.outbound,outboundData);
-        },1000);
-      });
-    });
-  }
-
-  el.querySelectorAll('.btn-del[data-type="ob"]').forEach(btn=>{
-    btn.addEventListener('click',async()=>{
-      if(!confirm('삭제하시겠습니까?'))return;
-      outboundData=outboundData.filter(r=>r.id!==btn.dataset.id);
-      await save(KEYS.outbound,outboundData);
-      renderOutbound();
-    });
-  });
+  renderOutboundTbody();
 }
 
 /* ── 설정 ── */
@@ -1650,13 +1663,16 @@ document.querySelector('.tabs').addEventListener('drop',e=>{
 /* ── 상비약관리 ── */
 function renderMeds(){
   const el=document.getElementById('view-meds');
-  const lowItems=medsData.filter(m=>m.qty<=0||m.qty<=m.minQty);
+  const lowItems=medsData.filter(m=>!m.hidden&&(m.qty<=0||m.qty<=m.minQty));
+  const hiddenCount=medsData.filter(m=>m.hidden).length;
+  if(!hiddenCount)medShowHidden=false;
 
   /* 품목 목록 행 */
   function itemRows(){
-    if(!medsData.length)return`<tr><td colspan="7" class="empty">등록된 품목이 없습니다</td></tr>`;
-    return medsData.map(m=>{
-      const low=m.qty<=0||m.qty<=m.minQty;
+    const list=medsData.filter(m=>medShowHidden?m.hidden:!m.hidden);
+    if(!list.length)return`<tr><td colspan="7" class="empty">${medShowHidden?'숨긴 품목이 없습니다':'등록된 품목이 없습니다'}</td></tr>`;
+    return list.map(m=>{
+      const low=!m.hidden&&(m.qty<=0||m.qty<=m.minQty);
       return`<tr data-med-id="${m.id}" draggable="true" style="${low?'background:#FEF2F2;':''}">
         <td class="med-drag-handle">⠿</td>
         <td>${m.name}${low?'<span class="badge badge-low" style="margin-left:6px">부족</span>':''}</td>
@@ -1665,8 +1681,9 @@ function renderMeds(){
         <td style="width:90px"><input type="text" value="${(m.supplier||'').replace(/"/g,'&quot;')}" placeholder="-" onchange="saveMedSupplier('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:100%;font-size:13px;font-family:inherit;color:var(--text-2);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
         <td style="max-width:160px"><input type="text" value="${(m.note||'').replace(/"/g,'&quot;')}" onchange="saveMedNote('${m.id}',this.value)" draggable="false" style="border:none;background:transparent;width:100%;font-size:12px;font-family:inherit;color:var(--text-3);outline:none;padding:0;" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'"></td>
         <td style="white-space:nowrap">
-          <button class="btn btn-sm" style="background:#DCFCE7;color:#166534;margin:0" onclick="medInOut('${m.id}','in')">입고▲</button>
+          ${m.hidden?`<button class="btn btn-sm" style="background:var(--violet-light);color:var(--violet-d);margin:0" onclick="toggleMedHidden('${m.id}')">복원</button>`:`<button class="btn btn-sm" style="background:#DCFCE7;color:#166534;margin:0" onclick="medInOut('${m.id}','in')">입고▲</button>
           <button class="btn btn-sm" style="background:#FEE2E2;color:#991B1B;margin-left:4px" onclick="medInOut('${m.id}','out')">출고▼</button>
+          <button class="btn btn-sm" style="background:var(--surface-2);color:var(--text-3);margin-left:4px" onclick="toggleMedHidden('${m.id}')">숨김</button>`}
           <button class="btn-del" style="margin-left:4px" onclick="delMed('${m.id}')">삭제</button>
         </td>
       </tr>`;
@@ -1703,6 +1720,7 @@ function renderMeds(){
     <div class="toolbar" style="margin-top:.875rem">
       <button class="btn btn-primary btn-sm" onclick="openAddMed()">+ 품목 추가</button>
       <div style="margin-left:auto;display:flex;gap:6px">
+        ${hiddenCount?`<button class="btn btn-sm" style="${medShowHidden?'background:var(--violet-d);color:#fff;border:1px solid var(--violet-d);':'background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);'}" onclick="medShowHidden=!medShowHidden;renderMeds();">${medShowHidden?'활성 품목 보기':`숨긴 품목 ${hiddenCount}개 보기`}</button>`:''}
         <button class="btn btn-secondary btn-sm" onclick="resetMedOrder('name')">ㄱㄴㄷ 정렬</button>
         <button class="btn btn-secondary btn-sm" onclick="resetMedOrder('supplier')">구입처별 정렬</button>
       </div>
@@ -1843,6 +1861,13 @@ function saveMed(){
     note:document.getElementById('mf-note').value.trim()
   };
   medsData.push(item);
+  save(KEYS.meds,medsData);
+  renderMeds();
+}
+
+function toggleMedHidden(id){
+  const med=medsData.find(m=>m.id===id);if(!med)return;
+  med.hidden=!med.hidden;
   save(KEYS.meds,medsData);
   renderMeds();
 }
