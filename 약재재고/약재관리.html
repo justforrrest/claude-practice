@@ -1996,7 +1996,7 @@ function purchaseRows(){
     <td style="white-space:nowrap">${cell(r.id,'date',r.date||'',{type:'date',width:'118px'})}</td>
     <td>${cell(r.id,'name',r.name||'',{color:'var(--text-1)',ph:'품목명'})}</td>
     <td class="num" style="white-space:nowrap">${cell(r.id,'qty',r.qty??'',{type:'number',align:'right',width:'52px',ph:'-'})}<span style="color:var(--text-3)">${(r.unit||'').replace(/"/g,'&quot;')}</span></td>
-    <td class="num">${cell(r.id,'amount',r.amount??'',{type:'number',align:'right',width:'80px',ph:'-'})}</td>
+    <td class="num"><input type="text" inputmode="numeric" value="${(r.amount||r.amount===0)&&r.amount!==''?fmt(r.amount):''}" placeholder="-" onchange="savePurchaseField('${r.id}','amount',this.value)" onfocus="this.style.background='var(--surface-2)';this.value=String(this.value).replace(/,/g,'')" onblur="this.style.background='transparent';this.value=this.value!==''?Number(String(this.value).replace(/,/g,'')||0).toLocaleString('ko-KR'):''" style="border:none;background:transparent;width:80px;font-size:13px;font-family:inherit;color:var(--text-2);text-align:right;outline:none;padding:0;"></td>
     <td>${cell(r.id,'supplier',r.supplier||'',{ph:'-'})}</td>
     <td style="max-width:160px">${cell(r.id,'note',r.note||'',{color:'var(--text-3)',size:'12px'})}</td>
     <td style="white-space:nowrap;text-align:right"><button class="btn-del" onclick="delPurchase('${r.id}')">삭제</button></td>
@@ -2105,7 +2105,7 @@ function renderSupplies(){
 function savePurchaseField(id,field,value){
   const r=suppliesData.find(m=>m.id===id);if(!r)return;
   if(field==='qty'||field==='amount'){
-    r[field]=parseFloat(value)||0;
+    r[field]=parseFloat(String(value).replace(/,/g,''))||0;
   }else if(field==='name'||field==='supplier'||field==='note'||field==='unit'){
     r[field]=value.trim();
   }else{
