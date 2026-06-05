@@ -2044,16 +2044,16 @@ function renderSupplies(){
         <div class="section-title" style="margin:0">구매 내역</div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto;">
           <span style="font-size:13px;color:var(--text-3);white-space:nowrap;padding-right:6px;border-right:1px solid var(--border-2)">${totalCount}건 · ${fmt(totalAmount)}원</span>
-          <div style="display:flex;align-items:center;gap:6px;width:160px;">
-            <button class="btn-sm" id="pc-prev" style="flex:none;padding:5px 9px;font-size:14px;line-height:1">‹</button>
-            <div style="flex:1;font-size:13px;font-weight:500;color:var(--text-2);text-align:center;min-width:48px">${monthLabel}</div>
-            <button class="btn-sm" id="pc-next" style="flex:none;padding:5px 10px;font-size:14px;line-height:1">›</button>
-            <button class="btn-sm" id="pc-all" style="flex:none;${!purchaseMonth?'background:var(--violet-light);color:var(--violet-d);border-color:var(--violet-light);':''}">전체</button>
+          <div style="display:flex;align-items:center;gap:5px;width:176px;">
+            <button class="btn-sm" id="pc-prev" style="flex:none;padding:5px 8px;font-size:13px;line-height:1">‹</button>
+            <div style="flex:1;font-size:12px;font-weight:500;color:var(--text-2);text-align:center;white-space:nowrap">${monthLabel}</div>
+            <button class="btn-sm" id="pc-next" style="flex:none;padding:5px 8px;font-size:13px;line-height:1">›</button>
+            <button class="btn-sm" id="pc-all" style="flex:none;font-size:12px;padding:5px 9px;${!purchaseMonth?'background:var(--violet-light);color:var(--violet-d);border-color:var(--violet-light);':''}">전체</button>
           </div>
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-        <input type="text" id="pc-search" placeholder="품목명 검색" style="width:160px;border:1px solid var(--border-2);border-radius:8px;padding:5px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">
+        <input type="text" id="pc-search" placeholder="품목명 검색" style="width:176px;border:1px solid var(--border-2);border-radius:8px;padding:5px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">
       </div>
     </div>
     <div class="tbl-wrap"><table>
