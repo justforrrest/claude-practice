@@ -2165,16 +2165,18 @@ function completeWaitlist(id){
   const w=waitlistData.find(x=>x.id===id);if(!w)return;
   w.done=!w.done;
   save(KEYS.waitlist,waitlistData);
-  if(w.done){
+  const fill=w.done;
+  const fillName=w.name,fillNote=w.note||'';
+  renderSupplies();
+  if(fill){
     const nameEl=document.getElementById('pc-name');
     const noteEl=document.getElementById('pc-note');
-    if(nameEl)nameEl.value=w.name;
-    if(noteEl)noteEl.value=w.note||'';
+    if(nameEl)nameEl.value=fillName;
+    if(noteEl)noteEl.value=fillNote;
     const qtyEl=document.getElementById('pc-qty');
     if(qtyEl)qtyEl.focus();
     document.getElementById('pc-submit')?.scrollIntoView({behavior:'smooth',block:'center'});
   }
-  renderSupplies();
 }
 
 /* ── 동기화 코드 변경 모달 ── */
