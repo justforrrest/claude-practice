@@ -1980,7 +1980,7 @@ document.getElementById('med-inout-confirm').addEventListener('click',async()=>{
   });
 });
 
-/* ── 비품 구매내역 ── */
+/* ── 비품 구매 내역 ── */
 function purchaseRows(){
   const tbody=document.getElementById('purchase-tbody');
   if(!tbody)return'';
@@ -1988,7 +1988,7 @@ function purchaseRows(){
   let list=purchaseMonth?allSorted.filter(r=>(r.date||'').startsWith(purchaseMonth)):allSorted;
   const q=purchaseSearch.trim();
   if(q)list=list.filter(r=>(r.name||'').includes(q));
-  if(!list.length)return`<tr><td colspan="7" class="empty">${suppliesData.length?'검색 결과 없음':'구매내역이 없습니다'}</td></tr>`;
+  if(!list.length)return`<tr><td colspan="7" class="empty">${suppliesData.length?'검색 결과 없음':'구매 내역이 없습니다'}</td></tr>`;
   const cell=(id,field,value,opts={})=>{
     const{type='text',align='left',width='100%',color='var(--text-2)',ph='',size='13px'}=opts;
     return`<input type="${type}" value="${String(value??'').replace(/"/g,'&quot;')}" placeholder="${ph}" onchange="savePurchaseField('${id}','${field}',this.value)" style="border:none;background:transparent;width:${width};font-size:${size};font-family:inherit;color:${color};text-align:${align};outline:none;padding:0;${type==='number'?'-moz-appearance:textfield;':''}" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'">`;
@@ -2019,7 +2019,7 @@ function renderSupplies(){
 
   el.innerHTML=`
   <div class="card">
-    <div class="section-title">구매대기${waitlistData.length?` <span style="display:inline-block;background:var(--violet-light);color:var(--violet-d);font-size:12px;font-weight:700;padding:1px 8px;border-radius:20px;margin-left:4px">${waitlistData.length}</span>`:''}</div>
+    <div class="section-title">구매 대기${waitlistData.length?` <span style="display:inline-block;background:var(--violet-light);color:var(--violet-d);font-size:12px;font-weight:700;padding:1px 8px;border-radius:20px;margin-left:4px">${waitlistData.length}</span>`:''}</div>
     <div class="form-row" style="gap:8px;align-items:flex-end">
       <div class="form-group grow" style="flex:1;min-width:120px"><label>구매 필요 품목</label><input type="text" id="wl-name" placeholder="예) 토너, 장갑..."></div>
       <div class="form-group grow" style="flex:2;min-width:120px"><label>메모 (선택)</label><input type="text" id="wl-note" placeholder="규격·수량 등 메모"></div>
@@ -2043,7 +2043,7 @@ function renderSupplies(){
   <div class="card">
     <div style="margin-bottom:.75rem;">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        <div class="section-title" style="margin:0">구매내역</div>
+        <div class="section-title" style="margin:0">구매 내역</div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto;">
           <span style="font-size:13px;color:var(--text-3);white-space:nowrap;padding-right:6px;border-right:1px solid var(--border-2)">${totalCount}건 · ${fmt(totalAmount)}원</span>
           <button class="btn-sm" id="pc-prev" style="padding:4px 9px;font-size:14px;line-height:1">‹</button>
@@ -2067,7 +2067,7 @@ function renderSupplies(){
   document.getElementById('pc-next').addEventListener('click',()=>shiftPurchaseMonth(1));
   document.getElementById('pc-all').addEventListener('click',()=>{purchaseMonth='';renderSupplies();});
 
-  // 구매대기 추가
+  // 구매 대기 추가
   document.getElementById('wl-add').addEventListener('click',addWaitlist);
   ['wl-name','wl-note'].forEach(id=>{
     document.getElementById(id).addEventListener('keydown',e=>{
@@ -2120,7 +2120,7 @@ function savePurchaseField(id,field,value){
 }
 
 function delPurchase(id){
-  if(!confirm('이 구매내역을 삭제하시겠습니까?'))return;
+  if(!confirm('이 구매 내역을 삭제하시겠습니까?'))return;
   suppliesData=suppliesData.filter(m=>m.id!==id);
   save(KEYS.supplies,suppliesData);
   renderSupplies();
@@ -2134,9 +2134,9 @@ function shiftPurchaseMonth(delta){
   renderSupplies();
 }
 
-/* ── 구매대기 ── */
+/* ── 구매 대기 ── */
 function waitlistRows(){
-  if(!waitlistData.length)return`<div class="empty" style="padding:1rem;text-align:center">구매대기 품목이 없습니다</div>`;
+  if(!waitlistData.length)return`<div class="empty" style="padding:1rem;text-align:center">구매 대기 품목이 없습니다</div>`;
   return`<div style="display:flex;flex-direction:column;gap:6px;margin-top:.875rem">${waitlistData.map(w=>`
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;">
       <div style="flex:1;min-width:0">
