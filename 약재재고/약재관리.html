@@ -506,7 +506,6 @@ let medLogsData=[];
 let suppliesData=[];
 let purchaseSearch='',purchaseMonth='';
 let waitlistData=[];
-let pendingWaitId=null;
 let editingInboundId=null,editingOutboundId=null,editingHerbName=null,editingSupplierName=null;
 let inboundMonth='',outboundMonth='';
 let inboundSearch='',outboundSearch='';
@@ -2010,7 +2009,6 @@ function renderPurchaseTbody(){
 }
 
 function renderSupplies(){
-  pendingWaitId=null;
   const el=document.getElementById('view-supplies');
   const shown=purchaseMonth?suppliesData.filter(r=>(r.date||'').startsWith(purchaseMonth)):suppliesData;
   const totalCount=shown.length;
@@ -2046,16 +2044,16 @@ function renderSupplies(){
         <div class="section-title" style="margin:0">구매 내역</div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto;">
           <span style="font-size:13px;color:var(--text-3);white-space:nowrap;padding-right:6px;border-right:1px solid var(--border-2)">${totalCount}건 · ${fmt(totalAmount)}원</span>
-          <div style="display:flex;align-items:center;gap:6px;width:200px;">
-            <button class="btn-sm" id="pc-prev" style="flex:none;padding:5px 10px;font-size:14px;line-height:1">‹</button>
-            <div style="flex:1;font-size:13px;font-weight:500;color:var(--text-2);text-align:center">${monthLabel}</div>
+          <div style="display:flex;align-items:center;gap:6px;width:160px;">
+            <button class="btn-sm" id="pc-prev" style="flex:none;padding:5px 9px;font-size:14px;line-height:1">‹</button>
+            <div style="flex:1;font-size:13px;font-weight:500;color:var(--text-2);text-align:center;min-width:48px">${monthLabel}</div>
             <button class="btn-sm" id="pc-next" style="flex:none;padding:5px 10px;font-size:14px;line-height:1">›</button>
             <button class="btn-sm" id="pc-all" style="flex:none;${!purchaseMonth?'background:var(--violet-light);color:var(--violet-d);border-color:var(--violet-light);':''}">전체</button>
           </div>
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-        <input type="text" id="pc-search" placeholder="품목명 검색" style="width:200px;border:1px solid var(--border-2);border-radius:8px;padding:5px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">
+        <input type="text" id="pc-search" placeholder="품목명 검색" style="width:160px;border:1px solid var(--border-2);border-radius:8px;padding:5px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">
       </div>
     </div>
     <div class="tbl-wrap"><table>
@@ -2093,11 +2091,6 @@ function renderSupplies(){
     const note=document.getElementById('pc-note').value.trim();
     suppliesData.push({id:uid(),date,name,qty,unit,amount,supplier,note});
     await save(KEYS.supplies,suppliesData);
-    if(pendingWaitId){
-      waitlistData=waitlistData.filter(w=>w.id!==pendingWaitId);
-      pendingWaitId=null;
-      await save(KEYS.waitlist,waitlistData);
-    }
     renderSupplies();
   });
   ['pc-name','pc-qty','pc-amount','pc-supplier','pc-note'].forEach(id=>{
@@ -2139,15 +2132,18 @@ function shiftPurchaseMonth(delta){
 /* ── 구매 대기 ── */
 function waitlistRows(){
   if(!waitlistData.length)return`<div class="empty" style="padding:1rem;text-align:center">구매 대기 품목이 없습니다</div>`;
-  return`<div style="display:flex;flex-direction:column;gap:6px;margin-top:.875rem">${waitlistData.map(w=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;">
+  return`<div style="display:flex;flex-direction:column;gap:6px;margin-top:.875rem">${waitlistData.map(w=>{
+    const done=!!w.done;
+    return`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${done?'var(--bg)':'var(--surface-2)'};border:1px solid var(--border);border-radius:8px;">
+      <button title="${done?'완료 취소':'구매완료'}" onclick="completeWaitlist('${w.id}')" style="flex:none;width:20px;height:20px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;padding:0;${done?'background:var(--green);border:1px solid var(--green);color:#fff':'background:var(--surface);border:1px solid var(--border-2);color:transparent'}">✓</button>
       <div style="flex:1;min-width:0">
-        <span style="font-weight:600;color:var(--text-1)">${w.name}</span>
-        ${w.note?`<span style="color:var(--text-3);font-size:12px;margin-left:8px">${w.note}</span>`:''}
+        <span style="font-weight:600;color:${done?'var(--text-3)':'var(--text-1)'};${done?'text-decoration:line-through':''}">${w.name}</span>
+        ${w.note?`<span style="color:var(--text-3);font-size:12px;margin-left:8px;${done?'text-decoration:line-through':''}">${w.note}</span>`:''}
       </div>
-      <button class="btn btn-sm" style="background:#DCFCE7;color:#166534;white-space:nowrap" onclick="completeWaitlist('${w.id}')">구매완료 ▾</button>
+      ${done?`<span style="font-size:12px;color:var(--green);font-weight:600;white-space:nowrap">완료</span>`:`<button class="btn btn-sm" style="background:#DCFCE7;color:#166534;white-space:nowrap" onclick="completeWaitlist('${w.id}')">구매완료 ▾</button>`}
       <button class="btn-del" onclick="delWaitlist('${w.id}')">삭제</button>
-    </div>`).join('')}</div>`;
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function addWaitlist(){
@@ -2168,14 +2164,18 @@ function delWaitlist(id){
 
 function completeWaitlist(id){
   const w=waitlistData.find(x=>x.id===id);if(!w)return;
-  pendingWaitId=id;
-  const nameEl=document.getElementById('pc-name');
-  const noteEl=document.getElementById('pc-note');
-  if(nameEl)nameEl.value=w.name;
-  if(noteEl)noteEl.value=w.note||'';
-  const qtyEl=document.getElementById('pc-qty');
-  if(qtyEl)qtyEl.focus();
-  document.getElementById('pc-submit')?.scrollIntoView({behavior:'smooth',block:'center'});
+  w.done=!w.done;
+  save(KEYS.waitlist,waitlistData);
+  if(w.done){
+    const nameEl=document.getElementById('pc-name');
+    const noteEl=document.getElementById('pc-note');
+    if(nameEl)nameEl.value=w.name;
+    if(noteEl)noteEl.value=w.note||'';
+    const qtyEl=document.getElementById('pc-qty');
+    if(qtyEl)qtyEl.focus();
+    document.getElementById('pc-submit')?.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  renderSupplies();
 }
 
 /* ── 동기화 코드 변경 모달 ── */
