@@ -1988,7 +1988,7 @@ function purchaseRows(){
   let list=purchaseMonth?allSorted.filter(r=>(r.date||'').startsWith(purchaseMonth)):allSorted;
   const q=purchaseSearch.trim();
   if(q)list=list.filter(r=>(r.name||'').includes(q));
-  if(!list.length)return`<tr><td colspan="8" class="empty">${suppliesData.length?'검색 결과 없음':'구매내역이 없습니다'}</td></tr>`;
+  if(!list.length)return`<tr><td colspan="7" class="empty">${suppliesData.length?'검색 결과 없음':'구매내역이 없습니다'}</td></tr>`;
   const cell=(id,field,value,opts={})=>{
     const{type='text',align='left',width='100%',color='var(--text-2)',ph='',size='13px'}=opts;
     return`<input type="${type}" value="${String(value??'').replace(/"/g,'&quot;')}" placeholder="${ph}" onchange="savePurchaseField('${id}','${field}',this.value)" style="border:none;background:transparent;width:${width};font-size:${size};font-family:inherit;color:${color};text-align:${align};outline:none;padding:0;${type==='number'?'-moz-appearance:textfield;':''}" onfocus="this.style.background='var(--surface-2)'" onblur="this.style.background='transparent'">`;
@@ -1997,7 +1997,6 @@ function purchaseRows(){
     <td style="white-space:nowrap">${cell(r.id,'date',r.date||'',{type:'date',width:'118px'})}</td>
     <td>${cell(r.id,'name',r.name||'',{color:'var(--text-1)',ph:'품목명'})}</td>
     <td class="num" style="white-space:nowrap">${cell(r.id,'qty',r.qty??'',{type:'number',align:'right',width:'52px',ph:'-'})}<span style="color:var(--text-3)">${(r.unit||'').replace(/"/g,'&quot;')}</span></td>
-    <td class="num">${cell(r.id,'price',r.price??'',{type:'number',align:'right',width:'64px',ph:'-'})}</td>
     <td class="num">${cell(r.id,'amount',r.amount??'',{type:'number',align:'right',width:'80px',ph:'-'})}</td>
     <td>${cell(r.id,'supplier',r.supplier||'',{ph:'-'})}</td>
     <td style="max-width:160px">${cell(r.id,'note',r.note||'',{color:'var(--text-3)',size:'12px'})}</td>
@@ -2019,19 +2018,9 @@ function renderSupplies(){
   const monthLabel=purchaseMonth||'전체';
 
   el.innerHTML=`
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
-    <button class="btn-sm" id="pc-prev" style="font-size:13px;padding:5px 11px">◀</button>
-    <div style="font-size:15px;font-weight:700;color:var(--text-1);min-width:104px;text-align:center;letter-spacing:.5px">${monthLabel}</div>
-    <button class="btn-sm" id="pc-next" style="font-size:13px;padding:5px 11px">▶</button>
-    <button class="btn-sm" id="pc-all" style="${!purchaseMonth?'background:var(--violet-d);color:#fff;border-color:var(--violet-d);':''}">전체보기</button>
-  </div>
-  <div class="stats">
-    <div class="stat-card"><div class="stat-num">${totalCount}</div><div class="stat-label">구매 건수 (${monthLabel})</div></div>
-    <div class="stat-card"><div class="stat-num">${fmt(totalAmount)}</div><div class="stat-label">총 구매금액 · 원 (${monthLabel})</div></div>
-  </div>
   <div class="card">
     <div class="section-title">구매대기${waitlistData.length?` <span style="display:inline-block;background:var(--violet-light);color:var(--violet-d);font-size:12px;font-weight:700;padding:1px 8px;border-radius:20px;margin-left:4px">${waitlistData.length}</span>`:''}</div>
-    <div class="form-row" style="gap:7px;align-items:flex-end">
+    <div class="form-row" style="gap:8px;align-items:flex-end">
       <div class="form-group grow" style="flex:1;min-width:120px"><label>구매 필요 품목</label><input type="text" id="wl-name" placeholder="예) 토너, 장갑..."></div>
       <div class="form-group grow" style="flex:2;min-width:120px"><label>메모 (선택)</label><input type="text" id="wl-note" placeholder="규격·수량 등 메모"></div>
       <div class="form-group" style="min-width:0;flex:none"><button class="btn btn-primary" id="wl-add" style="white-space:nowrap">추가</button></div>
@@ -2040,27 +2029,31 @@ function renderSupplies(){
   </div>
   <div class="card">
     <div class="section-title">구매 등록</div>
-    <div class="form-row" style="flex-wrap:nowrap;gap:7px;">
-      <div class="form-group" style="min-width:0"><label>날짜</label><input type="date" id="pc-date" value="${todayStr()}" style="width:128px"></div>
-      <div class="form-group grow" style="min-width:90px"><label>품목명</label><input type="text" id="pc-name" placeholder="예) A4용지" style="width:100%"></div>
-      <div class="form-group" style="min-width:0"><label>수량</label><input type="number" id="pc-qty" min="0" step="1" placeholder="0" style="width:60px"></div>
-      <div class="form-group" style="min-width:0"><label>단위</label><input type="text" id="pc-unit" value="개" style="width:48px"></div>
-      <div class="form-group" style="min-width:0"><label>단가 (원)</label><input type="number" id="pc-price" min="0" step="1" placeholder="0" style="width:72px"></div>
-      <div class="form-group" style="min-width:0"><label>금액 (원)</label><input type="number" id="pc-amount" min="0" step="1" placeholder="0" style="width:84px"></div>
-      <div class="form-group" style="min-width:0"><label>구입처</label><input type="text" id="pc-supplier" placeholder="-" style="width:88px"></div>
-      <div class="form-group" style="flex:1;min-width:0"><label>메모</label><input type="text" id="pc-note" placeholder="메모 (선택)" style="width:100%"></div>
-      <div class="form-group" style="min-width:0;justify-content:flex-end;flex-shrink:0"><button class="btn btn-primary" id="pc-submit" style="margin-top:auto;white-space:nowrap">등록</button></div>
+    <div class="form-row" style="gap:8px;">
+      <div class="form-group" style="min-width:120px"><label>날짜</label><input type="date" id="pc-date" value="${todayStr()}" style="width:100%"></div>
+      <div class="form-group grow" style="min-width:120px"><label>품목명</label><input type="text" id="pc-name" placeholder="예) A4용지" style="width:100%"></div>
+      <div class="form-group" style="width:72px;min-width:64px"><label>수량</label><input type="number" id="pc-qty" min="0" step="1" placeholder="0" style="width:100%"></div>
+      <div class="form-group" style="width:60px;min-width:52px"><label>단위</label><input type="text" id="pc-unit" value="개" style="width:100%"></div>
+      <div class="form-group" style="width:104px;min-width:88px"><label>금액 (원)</label><input type="number" id="pc-amount" min="0" step="1" placeholder="0" style="width:100%"></div>
+      <div class="form-group" style="width:110px;min-width:90px"><label>구입처</label><input type="text" id="pc-supplier" placeholder="-" style="width:100%"></div>
+      <div class="form-group grow" style="min-width:120px"><label>메모</label><input type="text" id="pc-note" placeholder="메모 (선택)" style="width:100%"></div>
+      <div class="form-group" style="min-width:0;justify-content:flex-end;flex:none"><label style="opacity:0">등록</label><button class="btn btn-primary" id="pc-submit" style="white-space:nowrap">등록</button></div>
     </div>
   </div>
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
-      <div class="section-title" style="margin:0">구매내역</div>
-      <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0;">
-        <input type="text" id="pc-search" placeholder="품목명 검색" style="width:140px;border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;gap:10px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="section-title" style="margin:0">구매내역</div>
+        <button class="btn-sm" id="pc-prev" style="font-size:13px;padding:4px 10px">◀</button>
+        <div style="font-size:14px;font-weight:700;color:var(--text-1);min-width:84px;text-align:center;letter-spacing:.5px">${monthLabel}</div>
+        <button class="btn-sm" id="pc-next" style="font-size:13px;padding:4px 10px">▶</button>
+        <button class="btn-sm" id="pc-all" style="${!purchaseMonth?'background:var(--violet-d);color:#fff;border-color:var(--violet-d);':''}">전체보기</button>
+        <span style="font-size:13px;color:var(--text-3);white-space:nowrap;padding-left:4px;border-left:1px solid var(--border-2);margin-left:2px"><strong style="color:var(--violet-d)">${totalCount}</strong>건 · <strong style="color:var(--violet-d)">${fmt(totalAmount)}</strong>원</span>
       </div>
+      <input type="text" id="pc-search" placeholder="품목명 검색" style="width:140px;flex-shrink:0;border:1px solid var(--border-2);border-radius:8px;padding:4px 10px;font-size:13px;font-family:var(--font-sans);outline:none;color:var(--text-1);background:var(--surface);">
     </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th style="width:120px">날짜</th><th>품목명</th><th class="num" style="width:80px">수량</th><th class="num" style="width:72px">단가 (원)</th><th class="num" style="width:88px">금액 (원)</th><th style="width:96px">구입처</th><th>메모</th><th style="width:44px;text-align:right"></th></tr></thead>
+      <thead><tr><th style="width:120px">날짜</th><th>품목명</th><th class="num" style="width:80px">수량</th><th class="num" style="width:88px">금액 (원)</th><th style="width:96px">구입처</th><th>메모</th><th style="width:44px;text-align:right"></th></tr></thead>
       <tbody id="purchase-tbody"></tbody>
     </table></div>
   </div>`;
@@ -2083,27 +2076,16 @@ function renderSupplies(){
   searchEl.value=purchaseSearch;
   searchEl.addEventListener('input',e=>{purchaseSearch=e.target.value;renderPurchaseTbody();});
 
-  // 수량·단가·금액 자동계산
-  const qtyEl=document.getElementById('pc-qty');
-  const priceEl=document.getElementById('pc-price');
-  const amountEl=document.getElementById('pc-amount');
-  const calcAmt=()=>{const q=parseFloat(qtyEl.value)||0,p=parseFloat(priceEl.value);if(q>0&&p>0)amountEl.value=Math.round(q*p);};
-  const calcPrc=()=>{const q=parseFloat(qtyEl.value)||0,a=parseFloat(amountEl.value);if(q>0&&a>0)priceEl.value=+(a/q).toFixed(2);};
-  priceEl.addEventListener('input',calcAmt);
-  amountEl.addEventListener('input',calcPrc);
-  qtyEl.addEventListener('input',()=>{if(priceEl.value)calcAmt();else if(amountEl.value)calcPrc();});
-
   document.getElementById('pc-submit').addEventListener('click',async()=>{
     const name=document.getElementById('pc-name').value.trim();
     const date=document.getElementById('pc-date').value;
     if(!name||!date){alert('품목명과 날짜를 입력해주세요.');return;}
-    const qty=parseFloat(qtyEl.value)||0;
-    const price=parseFloat(priceEl.value)||0;
-    const amount=parseFloat(amountEl.value)||0;
+    const qty=parseFloat(document.getElementById('pc-qty').value)||0;
+    const amount=parseFloat(document.getElementById('pc-amount').value)||0;
     const unit=document.getElementById('pc-unit').value.trim()||'개';
     const supplier=document.getElementById('pc-supplier').value.trim();
     const note=document.getElementById('pc-note').value.trim();
-    suppliesData.push({id:uid(),date,name,qty,unit,price,amount,supplier,note});
+    suppliesData.push({id:uid(),date,name,qty,unit,amount,supplier,note});
     await save(KEYS.supplies,suppliesData);
     if(pendingWaitId){
       waitlistData=waitlistData.filter(w=>w.id!==pendingWaitId);
@@ -2112,7 +2094,7 @@ function renderSupplies(){
     }
     renderSupplies();
   });
-  ['pc-name','pc-qty','pc-price','pc-amount','pc-supplier','pc-note'].forEach(id=>{
+  ['pc-name','pc-qty','pc-amount','pc-supplier','pc-note'].forEach(id=>{
     document.getElementById(id).addEventListener('keydown',e=>{
       if(e.key==='Enter'&&!e.isComposing)document.getElementById('pc-submit').click();
     });
@@ -2123,7 +2105,7 @@ function renderSupplies(){
 
 function savePurchaseField(id,field,value){
   const r=suppliesData.find(m=>m.id===id);if(!r)return;
-  if(field==='qty'||field==='price'||field==='amount'){
+  if(field==='qty'||field==='amount'){
     r[field]=parseFloat(value)||0;
   }else if(field==='name'||field==='supplier'||field==='note'||field==='unit'){
     r[field]=value.trim();
