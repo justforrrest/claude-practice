@@ -2045,11 +2045,11 @@ function renderSupplies(){
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
         <div class="section-title" style="margin:0">구매내역</div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto;">
+          <span style="font-size:13px;color:var(--text-3);white-space:nowrap;padding-right:6px;border-right:1px solid var(--border-2)">${totalCount}건 · ${fmt(totalAmount)}원</span>
           <button class="btn-sm" id="pc-prev" style="padding:4px 9px;font-size:14px;line-height:1">‹</button>
           <div style="font-size:13px;font-weight:500;color:var(--text-2);min-width:64px;text-align:center">${monthLabel}</div>
           <button class="btn-sm" id="pc-next" style="padding:4px 9px;font-size:14px;line-height:1">›</button>
           <button class="btn-sm" id="pc-all" style="${!purchaseMonth?'background:var(--violet-light);color:var(--violet-d);border-color:var(--violet-light);':''}">전체</button>
-          <span style="font-size:13px;color:var(--text-3);white-space:nowrap;padding-left:6px;border-left:1px solid var(--border-2)">${totalCount}건 · ${fmt(totalAmount)}원</span>
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;margin-top:8px;">
