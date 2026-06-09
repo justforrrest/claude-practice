@@ -569,7 +569,7 @@ function renderStock(){
       if(s<=0){badge='없음';bs='badge-zero';}
       else if(m>0&&s<m){badge='부족';bs='badge-low';}
       else{badge='정상';bs='badge-ok';}
-      return`<tr><td style="border-right:2px solid var(--border);font-weight:600;color:var(--text-1);white-space:nowrap">${h}</td><td class="num"${s<0?' style="color:var(--coral)"':''}>${fmt(s)}</td><td class="num"><input class="st-min-inp" data-herb="${h}" type="number" min="0" step="1" value="${m>0?m:''}" placeholder="-" style="text-align:right;width:60px;border:none;background:transparent;font-size:13px;font-family:inherit;color:inherit;outline:none;padding:0;-moz-appearance:textfield;"></td><td class="num">${p>0?fmt(p):'-'}</td><td><span class="badge ${bs}">${badge}</span></td></tr>`;
+      return`<tr><td class="pl-herb-name" data-herb="${h}" style="border-right:2px solid var(--border);font-weight:600;color:var(--text-1);white-space:nowrap;cursor:pointer" title="클릭하여 메모">${h}<span class="pl-memo-dot" style="color:var(--violet-d);font-weight:700">${settingsData.memos[h]?' ·':''}</span></td><td class="num"${s<0?' style="color:var(--coral)"':''}>${fmt(s)}</td><td class="num"><input class="st-min-inp" data-herb="${h}" type="number" min="0" step="1" value="${m>0?m:''}" placeholder="-" style="text-align:right;width:60px;border:none;background:transparent;font-size:13px;font-family:inherit;color:inherit;outline:none;padding:0;-moz-appearance:textfield;"></td><td class="num">${p>0?fmt(p):'-'}</td><td><span class="badge ${bs}">${badge}</span></td></tr>`;
     }).join('');
     const half=Math.ceil(herbs.length/2);
     return`<div style="display:flex;gap:2.5rem;align-items:flex-start;">
@@ -592,6 +592,10 @@ function renderStock(){
   });
   el.querySelectorAll('[data-st-cho]').forEach(btn=>{
     btn.addEventListener('click',()=>{stockConsonant=btn.dataset.stCho;renderStock();});
+  });
+
+  el.querySelectorAll('.pl-herb-name').forEach(td=>{
+    td.addEventListener('click',e=>{e.stopPropagation();window._plMemoPop.show(td.dataset.herb,td);});
   });
 
   let stMinSaveTimer=null;
