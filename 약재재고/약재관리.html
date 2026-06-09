@@ -176,7 +176,10 @@ textarea,[contenteditable]{cursor:url('data:image/svg+xml,<svg xmlns="http://www
 
 <!-- 약재 메모 팝오버 -->
 <div id="pl-memo-pop" style="display:none;position:fixed;z-index:400;background:var(--surface);border:1px solid var(--border-2);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.14);padding:.625rem .75rem;width:220px;">
-  <div id="pl-memo-title" style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:.5rem"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:.5rem">
+    <div id="pl-memo-title" style="font-size:13px;font-weight:600;color:var(--text-1)"></div>
+    <button id="pl-memo-close" title="닫기" style="background:none;border:none;cursor:pointer;font-size:15px;line-height:1;color:var(--text-3);padding:0 2px;">×</button>
+  </div>
   <textarea id="pl-memo-text" rows="3" placeholder="메모 입력" style="width:100%;border:1px solid var(--border-2);border-radius:6px;padding:6px 8px;font-size:13px;font-family:var(--font-sans);outline:none;resize:none;color:var(--text-1)"></textarea>
 </div>
 
@@ -1619,6 +1622,7 @@ function renderPricelist(){
   textEl.addEventListener('input',()=>{clearTimeout(saveTimer);saveTimer=setTimeout(commit,800);});
   textEl.addEventListener('blur',()=>{clearTimeout(saveTimer);commit();});
   textEl.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();hide();}});
+  document.getElementById('pl-memo-close').addEventListener('click',e=>{e.stopPropagation();hide();});
   document.addEventListener('click',e=>{if(pop.style.display!=='none'&&!pop.contains(e.target)&&e.target!==_anchor&&!(_anchor&&_anchor.contains(e.target)))hide();});
   window._plMemoPop={show};
 })();
