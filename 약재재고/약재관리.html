@@ -174,6 +174,12 @@ textarea,[contenteditable]{cursor:url('data:image/svg+xml,<svg xmlns="http://www
   </div>
 </div>
 
+<!-- 약재 메모 팝오버 -->
+<div id="pl-memo-pop" style="display:none;position:fixed;z-index:400;background:var(--surface);border:1px solid var(--border-2);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.14);padding:.625rem .75rem;width:220px;">
+  <div id="pl-memo-title" style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:.5rem"></div>
+  <textarea id="pl-memo-text" rows="3" placeholder="메모 입력" style="width:100%;border:1px solid var(--border-2);border-radius:6px;padding:6px 8px;font-size:13px;font-family:var(--font-sans);outline:none;resize:none;color:var(--text-1)"></textarea>
+</div>
+
 <div class="sync-modal-overlay" id="med-inout-overlay">
   <div class="sync-modal" style="width:300px">
     <h3 id="med-inout-title"></h3>
@@ -1115,7 +1121,7 @@ function renderSettings(){
   let herbs=herbsData;
   if(settingsConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===settingsConsonant);
   if(settingsSearch)herbs=herbs.filter(h=>h.includes(settingsSearch));
-  if(settingsSort==='inbound'){const ibCnt=h=>inboundData.filter(r=>r.herb===h).length;herbs=[...herbs].sort((a,b)=>ibCnt(b)-ibCnt(a));}
+  if(settingsSort==='inbound'){const ibQty=h=>inboundData.filter(r=>r.herb===h).reduce((s,r)=>s+Number(r.qty||0),0);herbs=[...herbs].sort((a,b)=>ibQty(b)-ibQty(a));}
   else if(settingsSort==='price'){herbs=[...herbs].sort((a,b)=>getPrice(b)-getPrice(a));}
   el.innerHTML=`
   <div class="card mt">
@@ -1135,14 +1141,14 @@ function renderSettings(){
       </div>
       <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">
         <span style="font-size:12px;color:var(--text-3)">정렬</span>
-        <button class="btn btn-sm ${settingsSort==='inbound'?'btn-filter':'btn-ghost'}" data-st-sort="inbound">입고횟수</button>
+        <button class="btn btn-sm ${settingsSort==='inbound'?'btn-filter':'btn-ghost'}" data-st-sort="inbound">입고수량</button>
         <button class="btn btn-sm ${settingsSort==='price'?'btn-filter':'btn-ghost'}" data-st-sort="price">단가</button>
       </div>
     </div>
   ${(()=>{
-    const ibCount=h=>inboundData.filter(r=>r.herb===h).length;
+    const ibCount=h=>inboundData.filter(r=>r.herb===h).reduce((s,r)=>s+Number(r.qty||0),0);
     const SEP='border-right:1px solid rgba(0,0,0,0.10)';
-    const stHead=`<thead><tr><th style="text-align:center;${SEP};width:85px">약재명</th><th style="text-align:center;${SEP}">메모</th><th class="num" style="${SEP}">입고 횟수</th><th class="num" style="width:80px;${SEP}">단가 (원/g)</th><th class="num" style="width:80px">최소재고 (g)</th></tr></thead>`;
+    const stHead=`<thead><tr><th style="text-align:center;${SEP};width:85px">약재명</th><th style="text-align:center;${SEP}">메모</th><th class="num" style="${SEP}">입고 수량 (g)</th><th class="num" style="width:80px;${SEP}">단가 (원/g)</th><th class="num" style="width:80px">최소재고 (g)</th></tr></thead>`;
     const stRows=list=>list.map(h=>{
       if(editingHerbName===h)return`<tr style="background:var(--violet-light)">
         <td style="text-align:center;border-right:1px solid rgba(0,0,0,0.10);white-space:nowrap">
@@ -1151,7 +1157,7 @@ function renderSettings(){
           <button class="btn btn-secondary btn-sm herb-rename-cancel" style="margin-left:2px">✕</button>
         </td>
         <td style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;text-align:left;"></td>
-        <td class="num" style="color:var(--text-3);border-right:1px solid rgba(0,0,0,0.10)">${ibCount(h)}</td>
+        <td class="num" style="color:var(--text-3);border-right:1px solid rgba(0,0,0,0.10)">${fmt(ibCount(h))}</td>
         <td class="num" style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}" style="width:64px"></td>
         <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}" style="width:64px"></td>
       </tr>`;
@@ -1163,7 +1169,7 @@ function renderSettings(){
           </div>
         </td>
         <td style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;text-align:left;"></td>
-        <td class="num" style="color:var(--text-3);border-right:1px solid rgba(0,0,0,0.10)">${ibCount(h)}</td>
+        <td class="num" style="color:var(--text-3);border-right:1px solid rgba(0,0,0,0.10)">${fmt(ibCount(h))}</td>
         <td class="num" style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}" style="width:64px"></td>
         <td class="num"><input class="settings-inp" data-herb="${h}" data-field="min" type="number" min="0" step="0.1" value="${getMinStock(h)}" style="width:64px"></td>
       </tr>`;
@@ -1371,7 +1377,7 @@ function renderPricelist(){
     const entries=suppliersData.map(s=>ep(h,s));
     const nums=entries.map(e=>e.val).filter(v=>v!=='');
     const minVal=nums.length>=1?Math.min(...nums):null;
-    return`<tr><td style="text-align:center;border-right:2px solid var(--border);font-weight:600;color:var(--text-1);white-space:nowrap">${h}</td>${suppliersData.map((s,i)=>{
+    return`<tr><td class="pl-herb-name" data-herb="${h}" style="text-align:center;border-right:2px solid var(--border);font-weight:600;color:var(--text-1);white-space:nowrap;cursor:pointer" title="클릭하여 메모">${h}<span class="pl-memo-dot" style="color:var(--violet-d);font-weight:700">${settingsData.memos[h]?' ·':''}</span></td>${suppliersData.map((s,i)=>{
       const e=entries[i];
       const isMin=minVal!==null&&e.val!==''&&e.val===minVal;
       const tdStyle=isMin?'background:var(--green-light)':'';
@@ -1438,6 +1444,10 @@ function renderPricelist(){
 
   el.querySelectorAll('.pl-inp').forEach(inp=>{
     inp.addEventListener('click',e=>{e.stopPropagation();window._plCalcPop.show(inp);});
+  });
+
+  el.querySelectorAll('.pl-herb-name').forEach(td=>{
+    td.addEventListener('click',e=>{e.stopPropagation();window._plMemoPop.show(td.dataset.herb,td);});
   });
 
   let plAutoTimer=null;
@@ -1577,6 +1587,40 @@ function renderPricelist(){
   memoEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apply();}if(e.key==='Escape')hide();});
   document.addEventListener('click',e=>{if(pop.style.display!=='none'&&!pop.contains(e.target)&&e.target!==_inp)hide();});
   window._plCalcPop={show};
+})();
+
+/* ── 약재 메모 팝오버 ── */
+(function(){
+  const pop=document.getElementById('pl-memo-pop');
+  const titleEl=document.getElementById('pl-memo-title');
+  const textEl=document.getElementById('pl-memo-text');
+  let _herb=null,_anchor=null,saveTimer=null;
+
+  function commit(){
+    if(!_herb)return;
+    const v=textEl.value.trim();
+    if(v)settingsData.memos[_herb]=v;else delete settingsData.memos[_herb];
+    // 약재명 옆 점 표시 갱신 (재렌더 없이 DOM만)
+    if(_anchor){const dot=_anchor.querySelector('.pl-memo-dot');if(dot)dot.textContent=v?' ·':'';}
+    save(KEYS.settings,settingsData);
+  }
+  function show(herb,anchor){
+    _herb=herb;_anchor=anchor;
+    titleEl.textContent=herb;
+    textEl.value=settingsData.memos[herb]||'';
+    const r=anchor.getBoundingClientRect();
+    pop.style.left=Math.min(r.left,window.innerWidth-232)+'px';
+    pop.style.top=(r.bottom+4)+'px';
+    pop.style.display='block';
+    setTimeout(()=>textEl.focus(),0);
+  }
+  function hide(){if(_herb){clearTimeout(saveTimer);commit();}pop.style.display='none';_herb=null;_anchor=null;}
+
+  textEl.addEventListener('input',()=>{clearTimeout(saveTimer);saveTimer=setTimeout(commit,800);});
+  textEl.addEventListener('blur',()=>{clearTimeout(saveTimer);commit();});
+  textEl.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();hide();}});
+  document.addEventListener('click',e=>{if(pop.style.display!=='none'&&!pop.contains(e.target)&&e.target!==_anchor&&!(_anchor&&_anchor.contains(e.target)))hide();});
+  window._plMemoPop={show};
 })();
 
 /* ── 내보내기 폴더 기억 ── */
