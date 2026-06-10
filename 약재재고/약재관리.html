@@ -535,7 +535,7 @@ function calcStock(){
 }
 
 /* ── 재고현황 ── */
-let stockSearch='',showLowOnly=false,showZeroOnly=false,stockConsonant='';
+let stockSearch='',showLowOnly=false,showZeroOnly=false,stockConsonant='',showUnder600=false;
 function renderStock(){
   const el=document.getElementById('view-stock');
   const stock=calcStock();
@@ -546,6 +546,7 @@ function renderStock(){
   if(stockSearch)herbs=herbs.filter(h=>h.includes(stockSearch));
   if(showLowOnly)herbs=herbs.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]>0&&stock[h]<m;});
   if(showZeroOnly)herbs=herbs.filter(h=>stock[h]<=0);
+  if(showUnder600)herbs=herbs.filter(h=>stock[h]<600);
   el.innerHTML=`
   <div class="stats">
     <div class="stat-card${!showLowOnly&&!showZeroOnly?' active':''}" data-st-filter="all" style="cursor:pointer"><div class="stat-num">${herbsData.length}</div><div class="stat-label">전체 약재</div></div>
@@ -558,6 +559,7 @@ function renderStock(){
         <button class="pl-cho-btn${!stockConsonant?' active':''}" data-st-cho="">전체</button>
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${stockConsonant===c?' active':''}" data-st-cho="${c}">${c}</button>`).join('')}
       </div>
+      <button class="pl-cho-btn${showUnder600?' active':''}" data-st-under600 style="flex:none;white-space:nowrap;">600g 미만</button>
       <input class="search-input" id="stock-search" placeholder="약재명 검색..." value="${stockSearch}" style="width:150px;min-width:0;flex:none;">
     </div>
   ${(()=>{
@@ -593,6 +595,8 @@ function renderStock(){
   el.querySelectorAll('[data-st-cho]').forEach(btn=>{
     btn.addEventListener('click',()=>{stockConsonant=btn.dataset.stCho;renderStock();});
   });
+  const u6=el.querySelector('[data-st-under600]');
+  if(u6)u6.addEventListener('click',()=>{showUnder600=!showUnder600;renderStock();});
 
   el.querySelectorAll('.pl-herb-name').forEach(td=>{
     td.addEventListener('click',e=>{e.stopPropagation();window._plMemoPop.show(td.dataset.herb,td);});
