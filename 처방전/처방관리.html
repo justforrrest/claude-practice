@@ -135,6 +135,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 .sync-modal input:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
 .sync-modal-actions{display:flex;gap:8px;margin-top:1rem;}
 .sync-modal-actions .btn{flex:1;}
+textarea,[contenteditable]{cursor:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="20"><line x1="8" y1="1" x2="8" y2="19" stroke="%23111" stroke-width="1.2"/><line x1="4" y1="1" x2="12" y2="1" stroke="%23111" stroke-width="1.2"/><line x1="4" y1="19" x2="12" y2="19" stroke="%23111" stroke-width="1.2"/></svg>') 8 10,text;}
 </style>
 </head>
 <body>
@@ -2144,6 +2145,8 @@ document.getElementById('import-file').addEventListener('change',async e=>{
   setStatus(herbsData.length?'불러옴 ✓':'⚠ 약재 목록 없음 — 약재관리 페이지를 먼저 열어주세요');
   renderRegister();
 })();
+
+document.addEventListener('input',function(e){const el=e.target,subs=[['<->','↔'],['->','→'],['=>','⇒']];if(el.isContentEditable){const sel=window.getSelection();if(!sel.rangeCount)return;const range=sel.getRangeAt(0),node=range.startContainer;if(node.nodeType!==Node.TEXT_NODE)return;const offset=range.startOffset;for(const[from,to]of subs){if(offset>=from.length&&node.textContent.slice(offset-from.length,offset)===from){node.textContent=node.textContent.slice(0,offset-from.length)+to+node.textContent.slice(offset);range.setStart(node,offset-from.length+to.length);range.collapse(true);sel.removeAllRanges();sel.addRange(range);break;}}}else if(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&el.type==='text')){const pos=el.selectionStart;for(const[from,to]of subs){if(pos>=from.length&&el.value.slice(pos-from.length,pos)===from){el.value=el.value.slice(0,pos-from.length)+to+el.value.slice(pos);const np=pos-from.length+to.length;el.setSelectionRange(np,np);break;}}}});
 </script>
 </body>
 </html>
