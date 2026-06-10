@@ -1258,6 +1258,7 @@ function renderSettings(){
     if(!name){inp.focus();return;}
     if(herbsData.includes(name)){alert('이미 존재하는 약재명입니다.');return;}
     herbsData.push(name);
+    herbsData.sort((a,b)=>a.localeCompare(b,'ko'));
     await save(KEYS.herbs,herbsData);
     inp.value='';
     renderSettings();
