@@ -351,6 +351,7 @@ let saveTimer=null;
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const won=n=>(Number(n)||0).toLocaleString('ko-KR');
 const onlyNum=s=>String(s).replace(/[^\d]/g,'');
+const isoLocal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 function fmtDate(s){if(!s)return'';const d=new Date(s+'T00:00:00');if(isNaN(d))return s;return `${d.getMonth()+1}/${d.getDate()} (${WD[d.getDay()]})`;}
 function setStatus(t){const e=document.getElementById('sync-status');if(e)e.textContent=t;}
 
@@ -361,7 +362,7 @@ function buildDays(){
     const s=new Date(trip.start+'T00:00:00'), e=new Date(trip.end+'T00:00:00');
     if(!isNaN(s)&&!isNaN(e)&&e>=s){
       for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)){
-        const iso=d.toISOString().slice(0,10);
+        const iso=isoLocal(d);
         const prev=trip.days.find(x=>x.date===iso);
         out.push(prev?prev:{date:iso,items:[]});
         if(out.length>60)break;
@@ -427,7 +428,7 @@ function renderExpDateOptions(){
   if(trip.days.length){
     opts=trip.days.map((d,i)=>`<option value="${d.date}">Day ${i+1} · ${fmtDate(d.date)}</option>`).join('');
   }else{
-    const today=new Date().toISOString().slice(0,10);
+    const today=isoLocal(new Date());
     opts=`<option value="${today}">오늘 (${fmtDate(today)})</option>`;
   }
   sel.innerHTML=opts;
@@ -584,7 +585,7 @@ function addExpense(){
   const amount=Number(onlyNum(document.getElementById('exp-amount').value))||0;
   const payer=document.getElementById('exp-payer').value.trim();
   if(!amount&&!desc){document.getElementById('exp-desc').focus();return;}
-  expenses.push({id:uid(),date:date||new Date().toISOString().slice(0,10),category,desc,amount,payer});
+  expenses.push({id:uid(),date:date||isoLocal(new Date()),category,desc,amount,payer});
   document.getElementById('exp-desc').value='';
   document.getElementById('exp-amount').value='';
   renderExpenses();renderSummary();scheduleSave('expenses');
