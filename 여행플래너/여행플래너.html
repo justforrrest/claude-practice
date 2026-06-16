@@ -135,8 +135,8 @@ select.inp{cursor:pointer;}
 .item-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding-top:2px;}
 .it-place{font-size:14px;font-weight:500;}
 .it-memo{font-size:12px;color:var(--text-2);resize:none;overflow:hidden;line-height:1.45;}
-.it-cost{flex:0 0 86px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 7px;font-size:12px;font-family:var(--font-sans);color:var(--coral);font-weight:600;text-align:right;}
-.it-cost:focus{outline:none;border-color:var(--violet-2);}
+.it-cost{flex:0 0 86px;background:transparent;border:none;border-radius:0;padding:6px 0;font-size:12px;font-family:var(--font-sans);color:var(--coral);font-weight:600;text-align:right;}
+.it-cost:focus{outline:none;}
 .item-del{flex:0 0 auto;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:2px;line-height:1;transition:color .15s;}
 .item-del:hover{color:var(--red);}
 
@@ -146,7 +146,8 @@ select.inp{cursor:pointer;}
 .add-row .t-time:focus{box-shadow:none;border:none;}
 .add-row .t-place{flex:1 1 130px;}
 .add-row .t-memo{flex:1 1 100%;}
-.add-row .t-cost{flex:0 0 110px;}
+.add-row .t-cost{flex:0 0 110px;background:transparent;border:none;border-radius:0;padding:7px 0;color:var(--coral);font-weight:600;}
+.add-row .t-cost:focus{box-shadow:none;border:none;}
 .btn{
   background:var(--violet);color:#fff;border:none;border-radius:8px;
   padding:8px 13px;font-size:13px;font-weight:600;font-family:var(--font-sans);
