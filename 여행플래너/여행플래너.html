@@ -57,14 +57,21 @@ body{
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
 .app-header h1 i{-webkit-text-fill-color:var(--violet);font-size:20px;}
-.sync-box{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3);}
-.sync-box #sync-status{white-space:nowrap;}
-.sync-code-btn{
-  background:var(--surface);border:1px solid var(--border);border-radius:8px;
-  padding:5px 9px;font-size:11px;font-family:var(--font-sans);color:var(--text-2);
-  cursor:pointer;display:flex;align-items:center;gap:4px;transition:background .15s;
+.app-header-date{font-size:12px;color:var(--text-3);text-align:right;line-height:1.6;white-space:nowrap;}
+
+/* ── Sync bar (표준 헤더 툴바) ── */
+.hdr-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+  margin-bottom:14px;padding:6px 10px;font-size:12px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 2px 8px rgba(100,60,220,.06);
 }
-.sync-code-btn:hover{background:var(--violet-light);}
+.hdr-left{display:flex;align-items:center;gap:8px;color:var(--text-2);flex-wrap:wrap;}
+.hdr-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.hdr-bar .sync-label{color:var(--text-3);}
+.hdr-bar #sync-code-label{color:var(--violet);letter-spacing:3px;font-size:13px;font-weight:700;}
+.hdr-bar #sync-status{color:var(--text-3);font-size:11px;white-space:nowrap;}
+.hdr-bar #status-bar{font-size:11px;color:var(--text-3);padding-left:6px;border-left:1px solid var(--border-2);white-space:nowrap;}
 
 .app-card{
   background:var(--surface);border-radius:20px;padding:18px 18px 14px;
@@ -227,9 +234,22 @@ select.inp{cursor:pointer;}
 <div class="page-wrap">
   <div class="app-header">
     <h1><i class="ti ti-plane-tilt"></i>여행 플래너</h1>
-    <div class="sync-box">
+    <div class="app-header-date" id="hdr-date"></div>
+  </div>
+
+  <div class="hdr-bar">
+    <div class="hdr-left">
+      <span class="sync-label">☁ 동기화 코드</span>
+      <strong id="sync-code-label">----</strong>
+      <button class="btn btn-ghost btn-sm" id="sync-code-btn">다른 기기 연결</button>
       <span id="sync-status">오프라인</span>
-      <button class="sync-code-btn" id="sync-code-btn"><i class="ti ti-cloud"></i><span id="sync-code-label">----</span></button>
+    </div>
+    <div class="hdr-right">
+      <button class="btn btn-ghost btn-sm" id="btn-export">⬆ 내보내기</button>
+      <button class="btn btn-ghost btn-sm" id="btn-import">⬇ 가져오기</button>
+      <input type="file" id="import-file" accept="application/json" style="display:none">
+      <button class="btn btn-sm" id="btn-save">저장</button>
+      <span id="status-bar">불러오는 중...</span>
     </div>
   </div>
 
@@ -306,12 +326,6 @@ select.inp{cursor:pointer;}
       <div class="section-title" style="margin-top:16px;"><i class="ti ti-users"></i>결제자별 지출</div>
       <div id="s-payers"></div>
     </section>
-
-    <div class="toolbar">
-      <button class="btn btn-ghost btn-sm" id="btn-export"><i class="ti ti-download"></i>내보내기</button>
-      <button class="btn btn-ghost btn-sm" id="btn-import"><i class="ti ti-upload"></i>가져오기</button>
-      <input type="file" id="import-file" accept="application/json" style="display:none">
-    </div>
   </div>
 </div>
 
@@ -353,7 +367,7 @@ const won=n=>(Number(n)||0).toLocaleString('ko-KR');
 const onlyNum=s=>String(s).replace(/[^\d]/g,'');
 const isoLocal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 function fmtDate(s){if(!s)return'';const d=new Date(s+'T00:00:00');if(isNaN(d))return s;return `${d.getMonth()+1}/${d.getDate()} (${WD[d.getDay()]})`;}
-function setStatus(t){const e=document.getElementById('sync-status');if(e)e.textContent=t;}
+function setStatus(t){const e=document.getElementById('status-bar');if(e)e.textContent=t;}
 
 /* 날짜 범위 → days 배열 (기존 일정 항목 보존) */
 function buildDays(){
@@ -600,7 +614,7 @@ try{
 }catch(e){db={collection:()=>({doc:()=>({collection:()=>({doc:()=>({get:async()=>({exists:false}),set:async()=>{}})})})})};}
 
 function getSyncCode(){let c=localStorage.getItem('travel_sync');if(!c){c=(Math.random().toString(36).slice(2,5)+Math.random().toString(36).slice(2,5)).toUpperCase();localStorage.setItem('travel_sync',c);}return c;}
-function setSyncStatus(t){setStatus(t);}
+function setSyncStatus(t){const e=document.getElementById('sync-status');if(e)e.textContent=t;}
 function docRef(key){return db.collection('travel').doc(getSyncCode()).collection('data').doc(key);}
 function wrapVal(val){return {__json:JSON.stringify(val)};}
 function unwrapVal(v){return(v&&v.__json)?JSON.parse(v.__json):v;}
@@ -710,14 +724,31 @@ async function boot(reload){
   renderCatOptions();
   renderAll();
   setSyncStatus(navigator.onLine?'☁ 동기화됨':'오프라인');
+  setStatus('불러옴 ✓');
+}
+
+/* 오늘 날짜 헤더 */
+function renderHeaderDate(){
+  const d=new Date();
+  const el=document.getElementById('hdr-date');
+  if(el)el.textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${WD[d.getDay()]})`;
+}
+
+/* 수동 저장 */
+function saveNow(){
+  saveKey(KEYS.trip,trip);
+  saveKey(KEYS.expenses,expenses);
+  setStatus('저장됨 ✓');
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
   injectPWA();
+  renderHeaderDate();
   bindTabs();
   bindTripFields();
   bindDelegates();
   bindSyncModal();
+  document.getElementById('btn-save').addEventListener('click',saveNow);
   document.getElementById('btn-export').addEventListener('click',exportData);
   document.getElementById('btn-import').addEventListener('click',()=>document.getElementById('import-file').click());
   document.getElementById('import-file').addEventListener('change',e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value='';});
