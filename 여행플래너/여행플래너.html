@@ -118,16 +118,25 @@ select.inp{cursor:pointer;}
 .day-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 14px 10px;margin-bottom:12px;box-shadow:0 1px 4px rgba(100,60,220,.05);}
 .day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
 .day-badge{display:inline-flex;align-items:center;gap:6px;background:var(--violet-light);color:var(--violet);font-weight:700;font-size:13px;padding:5px 11px;border-radius:999px;}
-.day-date{font-size:12px;color:var(--text-3);}
-.day-cost{font-size:12px;color:var(--text-2);font-weight:600;}
+.day-date{font-size:12px;color:var(--text-3);white-space:nowrap;}
+.day-cost{font-size:12px;color:var(--text-2);font-weight:600;white-space:nowrap;}
 
-.item{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px dashed var(--border);}
+/* 투명 인라인 입력 (테두리·글로우 없음) */
+.inline-inp{background:transparent;border:none;border-radius:0;padding:0;font-family:var(--font-sans);color:var(--text-1);width:100%;}
+.inline-inp:focus{outline:none;}
+.inline-inp::placeholder{color:var(--text-3);font-weight:400;}
+.day-theme{flex:1 1 90px;min-width:60px;font-size:13px;font-weight:500;color:var(--text-2);}
+
+/* 편집 가능한 일정 항목 행 */
+.item{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--border);}
 .item:first-of-type{border-top:none;}
-.item-time{flex:0 0 50px;font-size:13px;font-weight:600;color:var(--violet);padding-top:1px;}
-.item-body{flex:1;min-width:0;}
-.item-place{font-size:14px;font-weight:500;color:var(--text-1);word-break:break-word;}
-.item-memo{font-size:12px;color:var(--text-2);margin-top:2px;white-space:pre-wrap;word-break:break-word;}
-.item-cost{font-size:12px;color:var(--coral);font-weight:600;margin-top:3px;}
+.it-time{flex:0 0 76px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 6px;font-size:12px;font-family:var(--font-sans);color:var(--violet);font-weight:600;}
+.it-time:focus{outline:none;border-color:var(--violet-2);}
+.item-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding-top:2px;}
+.it-place{font-size:14px;font-weight:500;}
+.it-memo{font-size:12px;color:var(--text-2);resize:none;overflow:hidden;line-height:1.45;}
+.it-cost{flex:0 0 86px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 7px;font-size:12px;font-family:var(--font-sans);color:var(--coral);font-weight:600;text-align:right;}
+.it-cost:focus{outline:none;border-color:var(--violet-2);}
 .item-del{flex:0 0 auto;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:2px;line-height:1;transition:color .15s;}
 .item-del:hover{color:var(--red);}
 
@@ -402,17 +411,18 @@ function renderDays(){
     let html=`<div class="day-head">
         <span class="day-badge"><i class="ti ti-map-pin"></i>Day ${di+1}</span>
         <span class="day-date">${fmtDate(day.date)}</span>
-        ${dayCost?`<span class="day-cost">예상 ${won(dayCost)}원</span>`:'<span class="day-cost"></span>'}
+        <input class="inline-inp day-theme" data-day="${di}" data-f="theme" value="${esc(day.theme||'')}" placeholder="이 날의 테마 (예: 시내 관광)">
+        <span class="day-cost">${dayCost?'예상 '+won(dayCost)+'원':''}</span>
       </div>`;
     if(items.length){
       html+=items.map(it=>`
         <div class="item" data-id="${it.id}">
-          <div class="item-time">${it.time||'--:--'}</div>
+          <input class="it-time" type="time" value="${it.time||''}" data-id="${it.id}" data-day="${di}" data-f="time">
           <div class="item-body">
-            <div class="item-place">${esc(it.place)||'(제목 없음)'}</div>
-            ${it.memo?`<div class="item-memo">${esc(it.memo)}</div>`:''}
-            ${it.cost?`<div class="item-cost">예상 ${won(it.cost)}원</div>`:''}
+            <input class="inline-inp it-place" value="${esc(it.place||'')}" placeholder="장소 / 활동" data-id="${it.id}" data-day="${di}" data-f="place">
+            <textarea class="inline-inp it-memo" rows="1" placeholder="메모 (선택)" data-id="${it.id}" data-day="${di}" data-f="memo">${esc(it.memo||'')}</textarea>
           </div>
+          <input class="it-cost" type="text" inputmode="numeric" value="${it.cost?won(it.cost):''}" placeholder="비용" data-id="${it.id}" data-day="${di}" data-f="cost">
           <button class="item-del" data-del="${it.id}" data-day="${di}"><i class="ti ti-x"></i></button>
         </div>`).join('');
     }else{
@@ -428,8 +438,15 @@ function renderDays(){
     card.innerHTML=html;
     wrap.appendChild(card);
   });
+  wrap.querySelectorAll('.it-memo').forEach(growTA);
 }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+/* 해당 Day 카드의 예상비용 합계만 즉시 갱신 */
+function updateDayCost(di){
+  const card=document.querySelectorAll('.day-card')[di];if(!card||!trip.days[di])return;
+  const sum=trip.days[di].items.reduce((s,i)=>s+(Number(i.cost)||0),0);
+  const el=card.querySelector('.day-cost');if(el)el.textContent=sum?'예상 '+won(sum)+'원':'';
+}
 
 /* grow-only textarea */
 function growTA(ta){if(ta.scrollHeight>ta.offsetHeight)ta.style.height=ta.scrollHeight+'px';}
@@ -540,9 +557,30 @@ function bindTripFields(){
 function bindDelegates(){
   const wrap=document.getElementById('days-wrap');
   wrap.addEventListener('input',e=>{
-    const ta=e.target;
-    if(ta.classList.contains('t-memo'))growTA(ta);
-    if(ta.dataset.f==='cost'){const v=onlyNum(ta.value);ta.value=v?won(v):'';}
+    const el=e.target,f=el.dataset.f;if(!f)return;
+    const di=Number(el.dataset.day),id=el.dataset.id;
+    // 날짜별 테마 (재렌더 없이 모델만 — 한글 IME 보호)
+    if(f==='theme'){if(trip.days[di]){trip.days[di].theme=el.value;scheduleSave('trip');}return;}
+    // 신규 추가 행 (data-id 없음)
+    if(!id){
+      if(el.classList.contains('t-memo'))growTA(el);
+      if(f==='cost'){const v=onlyNum(el.value);el.value=v?won(v):'';}
+      return;
+    }
+    // 기존 항목 인라인 편집 (재렌더 없이 모델만)
+    const it=trip.days[di]&&trip.days[di].items.find(x=>x.id===id);
+    if(!it)return;
+    if(f==='place'){it.place=el.value;}
+    else if(f==='memo'){it.memo=el.value;growTA(el);}
+    else if(f==='cost'){const v=onlyNum(el.value);el.value=v?won(v):'';it.cost=Number(v)||0;updateDayCost(di);renderSummary();}
+    scheduleSave('trip');
+  });
+  // 시간 변경 시에만 재렌더(시간순 재정렬) — time 입력은 IME 무관
+  wrap.addEventListener('change',e=>{
+    const el=e.target;if(el.dataset.f!=='time'||!el.dataset.id)return;
+    const di=Number(el.dataset.day),id=el.dataset.id;
+    const it=trip.days[di]&&trip.days[di].items.find(x=>x.id===id);
+    if(it){it.time=el.value;renderDays();renderSummary();scheduleSave('trip');}
   });
   wrap.addEventListener('click',e=>{
     const add=e.target.closest('[data-add]');
@@ -584,7 +622,7 @@ function bindDelegates(){
 
 function addItem(di){
   const card=document.querySelectorAll('.day-card')[di];if(!card)return;
-  const q=f=>card.querySelector(`[data-f="${f}"][data-day="${di}"]`);
+  const q=f=>card.querySelector(`.add-row [data-f="${f}"]`);
   const time=q('time').value, place=q('place').value.trim();
   const cost=Number(onlyNum(q('cost').value))||0, memo=q('memo').value.trim();
   if(!place&&!time){q('place').focus();return;}
