@@ -130,8 +130,8 @@ select.inp{cursor:pointer;}
 /* 편집 가능한 일정 항목 행 */
 .item{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--border);}
 .item:first-of-type{border-top:none;}
-.it-time{flex:0 0 76px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 6px;font-size:12px;font-family:var(--font-sans);color:var(--violet);font-weight:600;}
-.it-time:focus{outline:none;border-color:var(--violet-2);}
+.it-time{flex:0 0 72px;background:transparent;border:none;border-radius:0;padding:6px 0;font-size:12px;font-family:var(--font-sans);color:var(--violet);font-weight:600;}
+.it-time:focus{outline:none;}
 .item-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding-top:2px;}
 .it-place{font-size:14px;font-weight:500;}
 .it-memo{font-size:12px;color:var(--text-2);resize:none;overflow:hidden;line-height:1.45;}
@@ -142,7 +142,8 @@ select.inp{cursor:pointer;}
 
 .add-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
 .add-row .inp{padding:7px 9px;font-size:13px;border-radius:8px;}
-.add-row .t-time{flex:0 0 86px;}
+.add-row .t-time{flex:0 0 72px;background:transparent;border:none;border-radius:0;padding:7px 0;color:var(--violet);font-weight:600;}
+.add-row .t-time:focus{box-shadow:none;border:none;}
 .add-row .t-place{flex:1 1 130px;}
 .add-row .t-memo{flex:1 1 100%;}
 .add-row .t-cost{flex:0 0 110px;}
