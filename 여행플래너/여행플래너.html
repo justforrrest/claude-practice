@@ -115,8 +115,8 @@ body{
 select.inp{cursor:pointer;}
 
 /* ── Day cards ── */
-.day-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 14px 10px;margin-bottom:12px;box-shadow:0 1px 4px rgba(100,60,220,.05);}
-.day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
+.day-card{background:var(--surface);border:1.5px solid var(--border-2);border-radius:16px;padding:14px 16px 12px;margin-bottom:16px;box-shadow:0 4px 16px rgba(100,60,220,.10),0 1px 3px rgba(100,60,220,.06);}
+.day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;padding-bottom:10px;border-bottom:2px solid var(--border);}
 .day-badge{display:inline-flex;align-items:center;gap:6px;background:var(--violet-light);color:var(--violet);font-weight:700;font-size:13px;padding:5px 11px;border-radius:999px;}
 .day-date{font-size:12px;color:var(--text-3);white-space:nowrap;}
 .day-cost{font-size:12px;color:var(--text-2);font-weight:600;white-space:nowrap;}
@@ -131,7 +131,7 @@ select.inp{cursor:pointer;}
 .item,.add-row{display:grid;grid-template-columns:104px 1fr 80px 46px 22px;column-gap:6px;align-items:center;}
 .item{padding:8px 0;border-top:1px dashed var(--border);}
 .item:first-of-type{border-top:none;}
-.add-row{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.add-row{margin-top:10px;padding-top:12px;border-top:1px solid var(--border);row-gap:9px;}
 
 /* 입력된 항목 — 투명 처리 */
 .it-time,.it-place,.it-cost{min-width:0;width:100%;background:transparent;border:none;border-radius:0;font-family:var(--font-sans);}
@@ -153,9 +153,10 @@ select.inp{cursor:pointer;}
 .item-memo-btn:hover{color:var(--violet);border-color:var(--violet-2);}
 .item-del{justify-self:center;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:2px;line-height:1;transition:color .15s;}
 .item-del:hover{color:var(--red);}
-.add-row .add-btn{justify-self:stretch;grid-column:4 / 6;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:7px;font-size:15px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:opacity .15s,transform .1s;}
-.add-row .add-btn:hover{opacity:.9;}
-.add-row .add-btn:active{transform:scale(.94);}
+.add-row .add-btn{grid-column:1 / -1;justify-self:stretch;width:100%;background:linear-gradient(135deg,var(--violet),var(--violet-2));color:#fff;border:none;border-radius:10px;padding:9px;font-size:13px;font-weight:600;font-family:var(--font-sans);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 10px rgba(124,58,237,.22);transition:opacity .15s,transform .1s,box-shadow .15s;}
+.add-row .add-btn i{font-size:16px;}
+.add-row .add-btn:hover{opacity:.95;box-shadow:0 4px 16px rgba(124,58,237,.3);}
+.add-row .add-btn:active{transform:scale(.985);}
 .btn{
   background:var(--violet);color:#fff;border:none;border-radius:8px;
   padding:8px 13px;font-size:13px;font-weight:600;font-family:var(--font-sans);
@@ -452,7 +453,7 @@ function renderDays(){
         <input class="t-time" type="time" data-day="${di}" data-f="time">
         <input class="t-place" placeholder="장소 / 활동" data-day="${di}" data-f="place">
         <input class="t-cost" type="text" inputmode="numeric" placeholder="예상비용" data-day="${di}" data-f="cost">
-        <button class="add-btn" data-add="${di}" title="일정 추가"><i class="ti ti-plus"></i></button>
+        <button class="add-btn" data-add="${di}"><i class="ti ti-plus"></i>일정 추가</button>
       </div>`;
     card.innerHTML=html;
     wrap.appendChild(card);
@@ -574,6 +575,14 @@ function bindTripFields(){
 /* 일정/가계부 위임 이벤트 */
 function bindDelegates(){
   const wrap=document.getElementById('days-wrap');
+  // 추가 입력칸에서 Enter → 일정 추가
+  wrap.addEventListener('keydown',e=>{
+    if(e.key!=='Enter')return;
+    const el=e.target;if(!el.dataset.f||el.dataset.id)return; // add-row 입력만
+    if(el.classList.contains('t-time')||el.classList.contains('t-place')||el.classList.contains('t-cost')){
+      e.preventDefault();addItem(Number(el.dataset.day));
+    }
+  });
   wrap.addEventListener('input',e=>{
     const el=e.target,f=el.dataset.f;if(!f)return;
     const di=Number(el.dataset.day),id=el.dataset.id;
@@ -642,10 +651,13 @@ function addItem(di){
   const card=document.querySelectorAll('.day-card')[di];if(!card)return;
   const q=f=>card.querySelector(`.add-row [data-f="${f}"]`);
   const time=q('time').value, place=q('place').value.trim();
-  const cost=Number(onlyNum(q('cost').value))||0, memo=q('memo').value.trim();
+  const cost=Number(onlyNum(q('cost').value))||0;
   if(!place&&!time){q('place').focus();return;}
-  trip.days[di].items.push({id:uid(),time,place,cost,memo});
+  trip.days[di].items.push({id:uid(),time,place,cost,memo:''});
   renderDays();renderSummary();scheduleSave('trip');
+  // 추가 후 같은 날 입력칸으로 포커스 (연속 입력)
+  const next=document.querySelectorAll('.day-card')[di];
+  if(next){const p=next.querySelector('.add-row .t-place');if(p)p.focus();}
 }
 
 function addExpense(){
