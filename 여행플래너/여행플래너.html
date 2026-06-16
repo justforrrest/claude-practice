@@ -127,23 +127,33 @@ select.inp{cursor:pointer;}
 .inline-inp::placeholder{color:var(--text-3);font-weight:400;}
 .day-theme{flex:1 1 90px;min-width:60px;font-size:13px;font-weight:500;color:var(--text-2);}
 
-/* 편집 가능한 일정 항목 행 — grid로 열 고정 정렬 */
-.item,.add-row{display:grid;grid-template-columns:72px 1fr 86px 28px 24px;column-gap:8px;align-items:center;}
+/* 편집 가능한 일정 항목 행 — grid로 열 고정 정렬 (시간 칸 넓힘) */
+.item,.add-row{display:grid;grid-template-columns:104px 1fr 80px 46px 22px;column-gap:6px;align-items:center;}
 .item{padding:8px 0;border-top:1px dashed var(--border);}
 .item:first-of-type{border-top:none;}
-.add-row{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);row-gap:8px;}
+.add-row{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
 
-.it-time,.add-row .t-time{min-width:0;width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 7px;font-size:12px;font-family:var(--font-sans);color:var(--violet);font-weight:600;}
-.it-place,.add-row .t-place{min-width:0;width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:14px;font-weight:500;color:var(--text-1);font-family:var(--font-sans);}
-.it-cost,.add-row .t-cost{min-width:0;width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 7px;font-size:12px;font-family:var(--font-sans);color:var(--coral);font-weight:600;text-align:right;}
-.it-time:focus,.it-cost:focus,.it-place:focus,.add-row .t-time:focus,.add-row .t-cost:focus,.add-row .t-place:focus{outline:none;border-color:var(--violet-2);box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+/* 입력된 항목 — 투명 처리 */
+.it-time,.it-place,.it-cost{min-width:0;width:100%;background:transparent;border:none;border-radius:0;font-family:var(--font-sans);}
+.it-time{padding:4px 0;font-size:12px;color:var(--violet);font-weight:600;}
+.it-place{padding:4px 2px;font-size:14px;font-weight:500;color:var(--text-1);}
+.it-cost{padding:4px 0;font-size:12px;color:var(--coral);font-weight:600;text-align:right;}
+.it-time:focus,.it-place:focus,.it-cost:focus{outline:none;}
 
-.item-memo-btn{justify-self:center;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:17px;padding:2px;line-height:1;transition:color .15s;}
-.item-memo-btn.has-memo{color:var(--violet);}
-.item-memo-btn:hover{color:var(--violet);}
+/* 추가 입력칸 — 음영 처리 */
+.add-row .t-time,.add-row .t-place,.add-row .t-cost{min-width:0;width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 7px;font-size:12px;font-family:var(--font-sans);}
+.add-row .t-time{color:var(--violet);font-weight:600;}
+.add-row .t-place{font-size:14px;font-weight:500;color:var(--text-1);}
+.add-row .t-cost{color:var(--coral);font-weight:600;text-align:right;}
+.add-row .t-time:focus,.add-row .t-place:focus,.add-row .t-cost:focus{outline:none;border-color:var(--violet-2);box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+
+/* 메모 버튼 (텍스트) */
+.item-memo-btn{justify-self:stretch;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;color:var(--text-2);cursor:pointer;font-size:11px;font-family:var(--font-sans);font-weight:600;padding:5px 0;transition:all .15s;}
+.item-memo-btn.has-memo{color:var(--violet);border-color:var(--violet-2);background:var(--violet-light);}
+.item-memo-btn:hover{color:var(--violet);border-color:var(--violet-2);}
 .item-del{justify-self:center;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:2px;line-height:1;transition:color .15s;}
 .item-del:hover{color:var(--red);}
-.add-row .add-btn{justify-self:center;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:6px;font-size:15px;line-height:1;cursor:pointer;grid-column:5;display:inline-flex;align-items:center;justify-content:center;transition:opacity .15s,transform .1s;}
+.add-row .add-btn{justify-self:stretch;grid-column:4 / 6;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:7px;font-size:15px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:opacity .15s,transform .1s;}
 .add-row .add-btn:hover{opacity:.9;}
 .add-row .add-btn:active{transform:scale(.94);}
 .btn{
@@ -432,7 +442,7 @@ function renderDays(){
           <input class="it-time" type="time" value="${it.time||''}" data-id="${it.id}" data-day="${di}" data-f="time">
           <input class="it-place" value="${esc(it.place||'')}" placeholder="장소 / 활동" data-id="${it.id}" data-day="${di}" data-f="place">
           <input class="it-cost" type="text" inputmode="numeric" value="${it.cost?won(it.cost):''}" placeholder="비용" data-id="${it.id}" data-day="${di}" data-f="cost">
-          <button class="item-memo-btn${it.memo?' has-memo':''}" data-memo="${it.id}" data-day="${di}" title="메모"><i class="ti ti-note"></i></button>
+          <button class="item-memo-btn${it.memo&&it.memo.trim()?' has-memo':''}" data-memo="${it.id}" data-day="${di}" title="메모">메모</button>
           <button class="item-del" data-del="${it.id}" data-day="${di}"><i class="ti ti-x"></i></button>
         </div>`).join('');
     }else{
