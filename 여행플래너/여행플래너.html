@@ -127,27 +127,25 @@ select.inp{cursor:pointer;}
 .inline-inp::placeholder{color:var(--text-3);font-weight:400;}
 .day-theme{flex:1 1 90px;min-width:60px;font-size:13px;font-weight:500;color:var(--text-2);}
 
-/* 편집 가능한 일정 항목 행 */
-.item{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--border);}
+/* 편집 가능한 일정 항목 행 — grid로 열 고정 정렬 */
+.item,.add-row{display:grid;grid-template-columns:72px 1fr 86px 28px 24px;column-gap:8px;align-items:center;}
+.item{padding:8px 0;border-top:1px dashed var(--border);}
 .item:first-of-type{border-top:none;}
-.it-time{flex:0 0 72px;background:transparent;border:none;border-radius:0;padding:6px 0;font-size:12px;font-family:var(--font-sans);color:var(--violet);font-weight:600;}
-.it-time:focus{outline:none;}
-.item-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding-top:2px;}
-.it-place{font-size:14px;font-weight:500;}
-.it-memo{font-size:12px;color:var(--text-2);resize:none;overflow:hidden;line-height:1.45;}
-.it-cost{flex:0 0 86px;background:transparent;border:none;border-radius:0;padding:6px 0;font-size:12px;font-family:var(--font-sans);color:var(--coral);font-weight:600;text-align:right;}
-.it-cost:focus{outline:none;}
-.item-del{flex:0 0 auto;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:2px;line-height:1;transition:color .15s;}
-.item-del:hover{color:var(--red);}
+.add-row{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);row-gap:8px;}
 
-.add-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
-.add-row .inp{padding:7px 9px;font-size:13px;border-radius:8px;}
-.add-row .t-time{flex:0 0 72px;background:transparent;border:none;border-radius:0;padding:7px 0;color:var(--violet);font-weight:600;}
-.add-row .t-time:focus{box-shadow:none;border:none;}
-.add-row .t-place{flex:1 1 130px;}
-.add-row .t-memo{flex:1 1 100%;}
-.add-row .t-cost{flex:0 0 110px;background:transparent;border:none;border-radius:0;padding:7px 0;color:var(--coral);font-weight:600;}
-.add-row .t-cost:focus{box-shadow:none;border:none;}
+.it-time,.add-row .t-time{min-width:0;width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 7px;font-size:12px;font-family:var(--font-sans);color:var(--violet);font-weight:600;}
+.it-place,.add-row .t-place{min-width:0;width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:14px;font-weight:500;color:var(--text-1);font-family:var(--font-sans);}
+.it-cost,.add-row .t-cost{min-width:0;width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 7px;font-size:12px;font-family:var(--font-sans);color:var(--coral);font-weight:600;text-align:right;}
+.it-time:focus,.it-cost:focus,.it-place:focus,.add-row .t-time:focus,.add-row .t-cost:focus,.add-row .t-place:focus{outline:none;border-color:var(--violet-2);box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+
+.item-memo-btn{justify-self:center;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:17px;padding:2px;line-height:1;transition:color .15s;}
+.item-memo-btn.has-memo{color:var(--violet);}
+.item-memo-btn:hover{color:var(--violet);}
+.item-del{justify-self:center;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:2px;line-height:1;transition:color .15s;}
+.item-del:hover{color:var(--red);}
+.add-row .add-btn{justify-self:center;background:var(--violet);color:#fff;border:none;border-radius:8px;padding:6px;font-size:15px;line-height:1;cursor:pointer;grid-column:5;display:inline-flex;align-items:center;justify-content:center;transition:opacity .15s,transform .1s;}
+.add-row .add-btn:hover{opacity:.9;}
+.add-row .add-btn:active{transform:scale(.94);}
 .btn{
   background:var(--violet);color:#fff;border:none;border-radius:8px;
   padding:8px 13px;font-size:13px;font-weight:600;font-family:var(--font-sans);
@@ -353,6 +351,18 @@ select.inp{cursor:pointer;}
   </div>
 </div>
 
+<!-- 메모 모달 -->
+<div class="modal-bg" id="memo-modal">
+  <div class="modal">
+    <h3>메모</h3>
+    <textarea class="inp" id="memo-textarea" rows="6" style="resize:vertical;line-height:1.5;" placeholder="이 일정에 대한 메모를 입력하세요"></textarea>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="btn btn-ghost" id="memo-cancel">취소</button>
+      <button class="btn" id="memo-save">저장</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ───────── 상수 ───────── */
 const KEYS={trip:'travel_trip',expenses:'travel_expenses'};
@@ -420,27 +430,23 @@ function renderDays(){
       html+=items.map(it=>`
         <div class="item" data-id="${it.id}">
           <input class="it-time" type="time" value="${it.time||''}" data-id="${it.id}" data-day="${di}" data-f="time">
-          <div class="item-body">
-            <input class="inline-inp it-place" value="${esc(it.place||'')}" placeholder="장소 / 활동" data-id="${it.id}" data-day="${di}" data-f="place">
-            <textarea class="inline-inp it-memo" rows="1" placeholder="메모 (선택)" data-id="${it.id}" data-day="${di}" data-f="memo">${esc(it.memo||'')}</textarea>
-          </div>
+          <input class="it-place" value="${esc(it.place||'')}" placeholder="장소 / 활동" data-id="${it.id}" data-day="${di}" data-f="place">
           <input class="it-cost" type="text" inputmode="numeric" value="${it.cost?won(it.cost):''}" placeholder="비용" data-id="${it.id}" data-day="${di}" data-f="cost">
+          <button class="item-memo-btn${it.memo?' has-memo':''}" data-memo="${it.id}" data-day="${di}" title="메모"><i class="ti ti-note"></i></button>
           <button class="item-del" data-del="${it.id}" data-day="${di}"><i class="ti ti-x"></i></button>
         </div>`).join('');
     }else{
       html+='<div class="empty" style="padding:14px;">일정을 추가해 보세요.</div>';
     }
     html+=`<div class="add-row">
-        <input class="inp t-time" type="time" data-day="${di}" data-f="time">
-        <input class="inp t-place" placeholder="장소 / 활동" data-day="${di}" data-f="place">
-        <input class="inp t-cost" type="text" inputmode="numeric" placeholder="예상비용" data-day="${di}" data-f="cost">
-        <textarea class="inp t-memo" rows="1" placeholder="메모 (선택)" data-day="${di}" data-f="memo"></textarea>
-        <button class="btn btn-sm" data-add="${di}"><i class="ti ti-plus"></i>일정 추가</button>
+        <input class="t-time" type="time" data-day="${di}" data-f="time">
+        <input class="t-place" placeholder="장소 / 활동" data-day="${di}" data-f="place">
+        <input class="t-cost" type="text" inputmode="numeric" placeholder="예상비용" data-day="${di}" data-f="cost">
+        <button class="add-btn" data-add="${di}" title="일정 추가"><i class="ti ti-plus"></i></button>
       </div>`;
     card.innerHTML=html;
     wrap.appendChild(card);
   });
-  wrap.querySelectorAll('.it-memo').forEach(growTA);
 }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 /* 해당 Day 카드의 예상비용 합계만 즉시 갱신 */
@@ -565,7 +571,6 @@ function bindDelegates(){
     if(f==='theme'){if(trip.days[di]){trip.days[di].theme=el.value;scheduleSave('trip');}return;}
     // 신규 추가 행 (data-id 없음)
     if(!id){
-      if(el.classList.contains('t-memo'))growTA(el);
       if(f==='cost'){const v=onlyNum(el.value);el.value=v?won(v):'';}
       return;
     }
@@ -573,7 +578,6 @@ function bindDelegates(){
     const it=trip.days[di]&&trip.days[di].items.find(x=>x.id===id);
     if(!it)return;
     if(f==='place'){it.place=el.value;}
-    else if(f==='memo'){it.memo=el.value;growTA(el);}
     else if(f==='cost'){const v=onlyNum(el.value);el.value=v?won(v):'';it.cost=Number(v)||0;updateDayCost(di);renderSummary();}
     scheduleSave('trip');
   });
@@ -587,6 +591,8 @@ function bindDelegates(){
   wrap.addEventListener('click',e=>{
     const add=e.target.closest('[data-add]');
     if(add){addItem(Number(add.dataset.add));return;}
+    const memo=e.target.closest('[data-memo]');
+    if(memo){openMemo(Number(memo.dataset.day),memo.dataset.memo);return;}
     const del=e.target.closest('[data-del]');
     if(del){
       const di=Number(del.dataset.day),id=del.dataset.del;
@@ -751,6 +757,36 @@ function bindSyncModal(){
   });
 }
 
+/* ───────── 메모 모달 ───────── */
+let memoTarget=null;
+function openMemo(di,id){
+  const it=trip.days[di]&&trip.days[di].items.find(x=>x.id===id);
+  if(!it)return;
+  memoTarget={di,id};
+  const ta=document.getElementById('memo-textarea');
+  ta.value=it.memo||'';
+  document.getElementById('memo-modal').classList.add('show');
+  ta.focus();
+}
+function bindMemoModal(){
+  const modal=document.getElementById('memo-modal');
+  const close=()=>{modal.classList.remove('show');memoTarget=null;};
+  document.getElementById('memo-cancel').addEventListener('click',close);
+  modal.addEventListener('click',e=>{if(e.target===modal)close();});
+  document.getElementById('memo-save').addEventListener('click',()=>{
+    if(memoTarget){
+      const it=trip.days[memoTarget.di]&&trip.days[memoTarget.di].items.find(x=>x.id===memoTarget.id);
+      if(it){
+        it.memo=document.getElementById('memo-textarea').value;
+        const btn=document.querySelector(`[data-memo="${memoTarget.id}"]`);
+        if(btn)btn.classList.toggle('has-memo',!!it.memo.trim());
+        scheduleSave('trip');
+      }
+    }
+    close();
+  });
+}
+
 /* ───────── 부팅 ───────── */
 async function boot(reload){
   document.getElementById('sync-code-label').textContent=getSyncCode();
@@ -788,6 +824,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   bindTripFields();
   bindDelegates();
   bindSyncModal();
+  bindMemoModal();
   document.getElementById('btn-save').addEventListener('click',saveNow);
   document.getElementById('btn-export').addEventListener('click',exportData);
   document.getElementById('btn-import').addEventListener('click',()=>document.getElementById('import-file').click());
