@@ -107,6 +107,22 @@ tr.med-dnd-over td{border-top:2px solid var(--violet-d)!important;}
 .sync-modal-actions{display:flex;gap:8px;margin-top:1rem;}
 .sync-modal-actions .btn{flex:1;}
 textarea,[contenteditable]{cursor:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="20"><line x1="8" y1="1" x2="8" y2="19" stroke="%23111" stroke-width="1.2"/><line x1="4" y1="1" x2="12" y2="1" stroke="%23111" stroke-width="1.2"/><line x1="4" y1="19" x2="12" y2="19" stroke="%23111" stroke-width="1.2"/></svg>') 8 10,text;}
+/* 주문메모 떠있는 창 */
+.order-toggle-btn.on{background:var(--amber-light);border-color:var(--amber);color:#92400E;font-weight:600;}
+#order-memo-win{display:none;position:fixed;z-index:600;background:var(--surface);border:1px solid var(--border-2);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);width:300px;flex-direction:column;overflow:hidden;}
+#order-memo-win.open{display:flex;}
+#order-memo-head{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;background:linear-gradient(135deg,var(--violet-d) 0%,var(--pink) 100%);color:#fff;cursor:move;user-select:none;}
+#order-memo-head .om-title{font-size:13px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:5px;}
+#order-memo-head .om-btns{display:flex;gap:2px;}
+#order-memo-head .om-btn{background:rgba(255,255,255,0.18);border:none;color:#fff;cursor:pointer;font-size:13px;line-height:1;width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+#order-memo-head .om-btn:hover{background:rgba(255,255,255,0.34);}
+#order-memo-body{flex:1;display:flex;flex-direction:column;min-height:0;}
+#order-memo-win.collapsed #order-memo-body{display:none;}
+#order-memo-text{flex:1;border:none;outline:none;resize:none;padding:10px 12px;font-size:13px;font-family:var(--font-sans);line-height:1.7;color:var(--text-1);background:var(--surface);min-height:120px;}
+#order-memo-resize{height:14px;cursor:ns-resize;background:repeating-linear-gradient(45deg,transparent,transparent 3px,var(--border) 3px,var(--border) 4px);flex-shrink:0;}
+.stock-add-order{background:none;border:1px solid var(--border-2);border-radius:5px;cursor:pointer;font-size:11px;line-height:1;color:var(--violet-d);padding:2px 5px;margin-left:4px;transition:all .15s;vertical-align:middle;}
+.stock-add-order:hover{background:var(--violet-d);color:#fff;border-color:var(--violet-d);}
+.stock-add-order.added{background:var(--green-light);color:#065F46;border-color:var(--green);}
 </style>
 </head>
 <body>
@@ -123,6 +139,7 @@ textarea,[contenteditable]{cursor:url('data:image/svg+xml,<svg xmlns="http://www
       <span id="sync-status" style="color:var(--text-3);font-size:11px;"></span>
     </div>
     <div style="display:flex;gap:6px;align-items:center;">
+      <button class="btn-sm order-toggle-btn" id="order-memo-toggle">📝 주문메모</button>
       <button class="btn-sm" id="json-export-btn">⬆ 내보내기</button>
       <label class="btn-sm" style="cursor:pointer;margin:0;">⬇ 가져오기<input type="file" id="import-file" accept=".json" style="display:none"></label>
       <button class="btn btn-primary btn-sm" id="save-all-btn">저장</button>
@@ -150,6 +167,21 @@ textarea,[contenteditable]{cursor:url('data:image/svg+xml,<svg xmlns="http://www
   <div class="view" id="view-meds"></div>
   <div class="view" id="view-supplies"></div>
 
+</div>
+
+<!-- 주문메모 떠있는 창 -->
+<div id="order-memo-win">
+  <div id="order-memo-head">
+    <span class="om-title">📝 주문 메모</span>
+    <span class="om-btns">
+      <button class="om-btn" id="order-memo-collapse" title="접기/펼치기">–</button>
+      <button class="om-btn" id="order-memo-x" title="닫기">×</button>
+    </span>
+  </div>
+  <div id="order-memo-body">
+    <textarea id="order-memo-text" placeholder="주문할 약재를 메모하세요.&#10;재고표의 ＋ 버튼으로도 담을 수 있어요."></textarea>
+    <div id="order-memo-resize" title="크기 조절"></div>
+  </div>
 </div>
 
 <!-- 단가 계산 팝오버 -->
@@ -272,7 +304,7 @@ const DEFAULT_PRICES={
   "황백":30.8,"황정":15.8,"후박":8.8
 };
 const DEFAULT_SUPPLIERS=["바른한약","한퓨어","신우한방","옴니허브"];
-const KEYS={inbound:'herb_inbound_v1',outbound:'herb_outbound_v1',settings:'herb_settings_v1',suppliers:'herb_suppliers_v1',pricelist:'herb_pricelist_v1',herbs:'herb_herbs_v1',adjust:'herb_adjust_v1',meds:'herb_meds_v1',medlogs:'herb_medlogs_v1',supplies:'herb_supplies_v1',waitlist:'herb_supwait_v1'};
+const KEYS={inbound:'herb_inbound_v1',outbound:'herb_outbound_v1',settings:'herb_settings_v1',suppliers:'herb_suppliers_v1',pricelist:'herb_pricelist_v1',herbs:'herb_herbs_v1',adjust:'herb_adjust_v1',meds:'herb_meds_v1',medlogs:'herb_medlogs_v1',supplies:'herb_supplies_v1',waitlist:'herb_supwait_v1',ordermemo:'herb_ordermemo_v1'};
 
 /* ── Firebase ── */
 let db;
@@ -518,6 +550,7 @@ let waitlistData=[];
 let editingInboundId=null,editingOutboundId=null,editingHerbName=null,editingSupplierName=null;
 let inboundMonth='',outboundMonth='';
 let inboundSearch='',outboundSearch='';
+let orderMemoData='';
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function focusEnd(id){const el=document.getElementById(id);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}}
@@ -571,7 +604,7 @@ function renderStock(){
       if(s<=0){badge='없음';bs='badge-zero';}
       else if(m>0&&s<m){badge='부족';bs='badge-low';}
       else{badge='정상';bs='badge-ok';}
-      return`<tr><td class="pl-herb-name" data-herb="${h}" style="border-right:2px solid var(--border);font-weight:600;color:var(--text-1);white-space:nowrap;cursor:pointer" title="클릭하여 메모">${h}<span class="pl-memo-dot" style="color:var(--violet-d);font-weight:700">${settingsData.memos[h]?' ·':''}</span></td><td class="num"${s<0?' style="color:var(--coral)"':''}>${fmt(s)}</td><td class="num"><input class="st-min-inp" data-herb="${h}" type="number" min="0" step="1" value="${m>0?m:''}" placeholder="-" style="text-align:right;width:60px;border:none;background:transparent;font-size:13px;font-family:inherit;color:inherit;outline:none;padding:0;-moz-appearance:textfield;"></td><td class="num">${p>0?fmt(p):'-'}</td><td><span class="badge ${bs}">${badge}</span></td></tr>`;
+      return`<tr><td style="border-right:2px solid var(--border);white-space:nowrap"><span class="pl-herb-name" data-herb="${h}" style="font-weight:600;color:var(--text-1);cursor:pointer" title="클릭하여 메모">${h}<span class="pl-memo-dot" style="color:var(--violet-d);font-weight:700">${settingsData.memos[h]?' ·':''}</span></span><button class="stock-add-order" data-add-order="${h}" title="주문메모에 추가">＋</button></td><td class="num"${s<0?' style="color:var(--coral)"':''}>${fmt(s)}</td><td class="num"><input class="st-min-inp" data-herb="${h}" type="number" min="0" step="1" value="${m>0?m:''}" placeholder="-" style="text-align:right;width:60px;border:none;background:transparent;font-size:13px;font-family:inherit;color:inherit;outline:none;padding:0;-moz-appearance:textfield;"></td><td class="num">${p>0?fmt(p):'-'}</td><td><span class="badge ${bs}">${badge}</span></td></tr>`;
     }).join('');
     const half=Math.ceil(herbs.length/2);
     return`<div style="display:flex;gap:2.5rem;align-items:flex-start;">
@@ -600,6 +633,14 @@ function renderStock(){
 
   el.querySelectorAll('.pl-herb-name').forEach(td=>{
     td.addEventListener('click',e=>{e.stopPropagation();window._plMemoPop.show(td.dataset.herb,td);});
+  });
+  el.querySelectorAll('[data-add-order]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      window._orderMemo.addHerb(btn.dataset.addOrder);
+      btn.classList.add('added');btn.textContent='✓';
+      setTimeout(()=>{btn.classList.remove('added');btn.textContent='＋';},900);
+    });
   });
 
   let stMinSaveTimer=null;
@@ -1636,6 +1677,102 @@ function renderPricelist(){
   window._plMemoPop={show};
 })();
 
+/* ── 주문메모 떠있는 창 ── */
+(function(){
+  const win=document.getElementById('order-memo-win');
+  const head=document.getElementById('order-memo-head');
+  const ta=document.getElementById('order-memo-text');
+  const toggleBtn=document.getElementById('order-memo-toggle');
+  const POS_KEY='orderMemoPos',OPEN_KEY='orderMemoOpen',COL_KEY='orderMemoCollapsed',H_KEY='orderMemoHeight';
+  let saveTimer=null;
+
+  function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+  function applyPos(){
+    const p=JSON.parse(localStorage.getItem(POS_KEY)||'null');
+    const w=win.offsetWidth||300;
+    if(p){
+      win.style.left=clamp(p.left,0,window.innerWidth-w)+'px';
+      win.style.top=clamp(p.top,0,window.innerHeight-40)+'px';
+    }else{
+      win.style.left=(window.innerWidth-w-24)+'px';
+      win.style.top='90px';
+    }
+  }
+  function open(){
+    win.classList.add('open');toggleBtn.classList.add('on');
+    localStorage.setItem(OPEN_KEY,'1');
+    applyPos();
+  }
+  function close(){
+    win.classList.remove('open');toggleBtn.classList.remove('on');
+    localStorage.setItem(OPEN_KEY,'0');
+  }
+
+  toggleBtn.addEventListener('click',()=>{win.classList.contains('open')?close():open();});
+  document.getElementById('order-memo-x').addEventListener('click',close);
+  document.getElementById('order-memo-collapse').addEventListener('click',()=>{
+    const c=win.classList.toggle('collapsed');
+    localStorage.setItem(COL_KEY,c?'1':'0');
+  });
+
+  // 입력 → 디바운스 저장 + 동기화
+  ta.addEventListener('input',()=>{
+    orderMemoData=ta.value;
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>save(KEYS.ordermemo,orderMemoData),700);
+  });
+
+  // 약재 추가 (재고표 ＋ 버튼)
+  function addHerb(h){
+    if(!win.classList.contains('open'))open();
+    if(win.classList.contains('collapsed')){win.classList.remove('collapsed');localStorage.setItem(COL_KEY,'0');}
+    let v=ta.value;
+    if(v&&!v.endsWith('\n'))v+='\n';
+    ta.value=v+h+' ';
+    orderMemoData=ta.value;
+    ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
+    ta.scrollTop=ta.scrollHeight;
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>save(KEYS.ordermemo,orderMemoData),700);
+  }
+
+  // 제목바 드래그 이동
+  let dragging=false,dx=0,dy=0;
+  head.addEventListener('mousedown',e=>{
+    if(e.target.closest('.om-btn'))return;
+    dragging=true;
+    dx=e.clientX-win.offsetLeft;dy=e.clientY-win.offsetTop;
+    document.body.style.userSelect='none';
+  });
+  window.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    win.style.left=clamp(e.clientX-dx,0,window.innerWidth-win.offsetWidth)+'px';
+    win.style.top=clamp(e.clientY-dy,0,window.innerHeight-40)+'px';
+  });
+  window.addEventListener('mouseup',()=>{
+    if(!dragging)return;
+    dragging=false;document.body.style.userSelect='';
+    localStorage.setItem(POS_KEY,JSON.stringify({left:win.offsetLeft,top:win.offsetTop}));
+  });
+
+  // 높이 조절
+  const rz=document.getElementById('order-memo-resize');
+  let rzing=false,startY=0,startH=0;
+  rz.addEventListener('mousedown',e=>{rzing=true;startY=e.clientY;startH=ta.offsetHeight;document.body.style.userSelect='none';e.preventDefault();});
+  window.addEventListener('mousemove',e=>{if(!rzing)return;ta.style.height=clamp(startH+(e.clientY-startY),100,window.innerHeight-160)+'px';});
+  window.addEventListener('mouseup',()=>{if(!rzing)return;rzing=false;document.body.style.userSelect='';localStorage.setItem(H_KEY,String(ta.offsetHeight));});
+
+  // 초기 상태 복원 (데이터는 initOrderMemo에서 주입)
+  function initOrderMemo(){
+    ta.value=orderMemoData||'';
+    const h=localStorage.getItem(H_KEY);if(h)ta.style.height=h+'px';
+    if(localStorage.getItem(COL_KEY)==='1')win.classList.add('collapsed');
+    if(localStorage.getItem(OPEN_KEY)==='1')open();
+  }
+
+  window._orderMemo={addHerb,initOrderMemo};
+})();
+
 /* ── 내보내기 폴더 기억 ── */
 (function(){
   const DB='herb_export_db',STORE='config',KEY='exportDir';
@@ -2260,7 +2397,7 @@ document.getElementById('sync-modal-overlay').addEventListener('click',e=>{
 
 /* ── 초기화 ── */
 (async()=>{
-  const[ib,ob,st,sp,pl,hb,adj,meds,medlogs,sups,wait]=await Promise.all([load(KEYS.inbound),load(KEYS.outbound),load(KEYS.settings),load(KEYS.suppliers),load(KEYS.pricelist),load(KEYS.herbs),load(KEYS.adjust),load(KEYS.meds),load(KEYS.medlogs),load(KEYS.supplies),load(KEYS.waitlist)]);
+  const[ib,ob,st,sp,pl,hb,adj,meds,medlogs,sups,wait,omemo]=await Promise.all([load(KEYS.inbound),load(KEYS.outbound),load(KEYS.settings),load(KEYS.suppliers),load(KEYS.pricelist),load(KEYS.herbs),load(KEYS.adjust),load(KEYS.meds),load(KEYS.medlogs),load(KEYS.supplies),load(KEYS.waitlist),load(KEYS.ordermemo)]);
   if(ib&&Array.isArray(ib))inboundData=ib;
   if(ob&&Array.isArray(ob))outboundData=ob;
   if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;if(st.memos)settingsData.memos=st.memos;}
@@ -2272,6 +2409,8 @@ document.getElementById('sync-modal-overlay').addEventListener('click',e=>{
   if(medlogs&&Array.isArray(medlogs))medLogsData=medlogs;
   if(sups&&Array.isArray(sups))suppliesData=sups;
   if(wait&&Array.isArray(wait))waitlistData=wait;
+  if(typeof omemo==='string')orderMemoData=omemo;
+  if(window._orderMemo)window._orderMemo.initOrderMemo();
   if(!purchaseMonth)purchaseMonth=todayStr().slice(0,7);
   const needsMinInit=herbsData.some(h=>!settingsData.minStock[h]);
   if(needsMinInit){herbsData.forEach(h=>{if(!settingsData.minStock[h])settingsData.minStock[h]=200;});await save(KEYS.settings,settingsData);}
@@ -2306,11 +2445,12 @@ document.getElementById('sync-modal-overlay').addEventListener('click',e=>{
       save(KEYS.medlogs,medLogsData),
       save(KEYS.supplies,suppliesData),
       save(KEYS.waitlist,waitlistData),
+      save(KEYS.ordermemo,orderMemoData),
     ]);
     setStatus('전체 저장 완료 ✓');
   });
   document.getElementById('json-export-btn').addEventListener('click',async function(e){
-    const data={inbound:inboundData,outbound:outboundData,settings:settingsData,suppliers:suppliersData,pricelist:pricelistData,herbs:herbsData,adjust:adjustData,meds:medsData,medlogs:medLogsData,supplies:suppliesData,waitlist:waitlistData};
+    const data={inbound:inboundData,outbound:outboundData,settings:settingsData,suppliers:suppliersData,pricelist:pricelistData,herbs:herbsData,adjust:adjustData,meds:medsData,medlogs:medLogsData,supplies:suppliesData,waitlist:waitlistData,ordermemo:orderMemoData};
     await window._exportToFolder(JSON.stringify(data,null,2),'herb_all_'+todayStr()+'.json',this,e.shiftKey);
   });
   document.getElementById('import-file').addEventListener('change',async e=>{
@@ -2328,8 +2468,9 @@ document.getElementById('sync-modal-overlay').addEventListener('click',e=>{
       if(data.medlogs&&Array.isArray(data.medlogs))medLogsData=data.medlogs;
       if(data.supplies&&Array.isArray(data.supplies))suppliesData=data.supplies;
       if(data.waitlist&&Array.isArray(data.waitlist))waitlistData=data.waitlist;
+      if(typeof data.ordermemo==='string'){orderMemoData=data.ordermemo;const ta=document.getElementById('order-memo-text');if(ta)ta.value=orderMemoData;}
       if(data.settings)settingsData={...settingsData,...data.settings};
-      await Promise.all([save(KEYS.inbound,inboundData),save(KEYS.outbound,outboundData),save(KEYS.settings,settingsData),save(KEYS.suppliers,suppliersData),save(KEYS.pricelist,pricelistData),save(KEYS.herbs,herbsData),save(KEYS.adjust,adjustData),save(KEYS.meds,medsData),save(KEYS.medlogs,medLogsData),save(KEYS.supplies,suppliesData),save(KEYS.waitlist,waitlistData)]);
+      await Promise.all([save(KEYS.inbound,inboundData),save(KEYS.outbound,outboundData),save(KEYS.settings,settingsData),save(KEYS.suppliers,suppliersData),save(KEYS.pricelist,pricelistData),save(KEYS.herbs,herbsData),save(KEYS.adjust,adjustData),save(KEYS.meds,medsData),save(KEYS.medlogs,medLogsData),save(KEYS.supplies,suppliesData),save(KEYS.waitlist,waitlistData),save(KEYS.ordermemo,orderMemoData)]);
       setStatus('가져오기 완료 ✓');
       document.querySelector('.tab[data-tab="stock"]').click();
     }catch(err){alert('파일 형식이 올바르지 않습니다.');}
