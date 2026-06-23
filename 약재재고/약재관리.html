@@ -914,6 +914,11 @@ function renderInbound(){
       if(!settingsData.prices)settingsData.prices={};
       settingsData.prices[herb]=newPrice;
       await save(KEYS.settings,settingsData);
+      if(supplier){
+        if(!pricelistData[herb])pricelistData[herb]={};
+        pricelistData[herb][supplier]=price;
+        await save(KEYS.pricelist,pricelistData);
+      }
     }
     inboundData.push({id:uid(),herb,qty,price,amount,date,supplier,note});
     await save(KEYS.inbound,inboundData);
