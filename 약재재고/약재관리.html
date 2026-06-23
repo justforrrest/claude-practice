@@ -675,7 +675,7 @@ function renderStock(){
 }
 
 /* ── 공통: 약재 자동완성 ── */
-function setupHerbDropdown(inp,dd){
+function setupHerbDropdown(inp,dd,onSelect){
   let hlIdx=-1;
   function open(q){
     const list=q?herbsData.filter(h=>h.includes(q)):herbsData;
@@ -684,7 +684,7 @@ function setupHerbDropdown(inp,dd){
     dd.classList.add('open');
     hlIdx=-1;
     dd.querySelectorAll('li').forEach(li=>{
-      li.addEventListener('mousedown',e=>{e.preventDefault();inp.value=li.dataset.v;dd.classList.remove('open');});
+      li.addEventListener('mousedown',e=>{e.preventDefault();inp.value=li.dataset.v;dd.classList.remove('open');if(onSelect)onSelect(inp.value);});
     });
   }
   inp.addEventListener('input',()=>{const q=inp.value.trim();open(q);});
@@ -697,7 +697,7 @@ function setupHerbDropdown(inp,dd){
     else if(e.key==='Enter'){
       if(dd.classList.contains('open')&&items.length){
         const sel=hlIdx>=0?items[hlIdx]:items[0];
-        inp.value=sel.dataset.v;dd.classList.remove('open');e.preventDefault();
+        inp.value=sel.dataset.v;dd.classList.remove('open');e.preventDefault();if(onSelect)onSelect(inp.value);
       }
     }
     else if(e.key==='Escape'){dd.classList.remove('open');}
@@ -859,8 +859,6 @@ function renderInbound(){
   ibSearchEl.value=inboundSearch;
   ibSearchEl.addEventListener('input',e=>{inboundSearch=e.target.value;renderInboundTbody();});
 
-  setupHerbDropdown(document.getElementById('in-herb'),document.getElementById('in-herb-dd'));
-
   const qtyEl=document.getElementById('in-qty');
   const qtyNEl=document.getElementById('in-qty-n');
   const qtyTotalEl=document.getElementById('in-qty-total');
@@ -874,6 +872,28 @@ function renderInbound(){
   amountEl.addEventListener('input',calcPrc);
   qtyEl.addEventListener('input',()=>{updateQtyTotal();if(priceEl.value)calcAmt();else if(amountEl.value)calcPrc();});
   qtyNEl.addEventListener('input',()=>{updateQtyTotal();if(priceEl.value)calcAmt();else if(amountEl.value)calcPrc();});
+
+  // 약재 선택/공급업체 변경 시 단가표 계산이력·입고이력 중 최신 기록으로 수량·금액/개·단가 자동완성
+  function autofillInbound(herb){
+    const sup=document.getElementById('in-sup').value;
+    if(!herb||!sup)return;
+    let hist=null;
+    try{hist=(JSON.parse(localStorage.getItem('herb_pl_calc_hist')||'{}'))[herb+'::'+sup]||null;}catch{}
+    const histTs=hist?hist.ts:0;
+    const ibLast=[...inboundData]
+      .filter(r=>r.herb===herb&&r.supplier===sup&&r.qty>0&&r.amount>0)
+      .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id))[0];
+    const ibTs=ibLast?new Date(ibLast.date).getTime():0;
+    const src=histTs>ibTs?hist:ibLast;
+    if(!src)return;
+    qtyEl.value=src.qty;
+    qtyNEl.value='';
+    amountEl.value=src.amount;
+    priceEl.value=src.price!=null?src.price:Math.round(src.amount/src.qty*10)/10;
+    updateQtyTotal();
+  }
+  setupHerbDropdown(document.getElementById('in-herb'),document.getElementById('in-herb-dd'),autofillInbound);
+  document.getElementById('in-sup').addEventListener('change',()=>autofillInbound(document.getElementById('in-herb').value));
 
   document.getElementById('in-submit').addEventListener('click',async()=>{
     const herb=document.getElementById('in-herb').value;
