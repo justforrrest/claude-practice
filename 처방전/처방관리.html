@@ -920,9 +920,8 @@ function renderRegister(){
     const refWrap=document.getElementById('rx-prev-ref-wrap');
     const refBtn=document.getElementById('rx-prev-ref-btn');
     if(refWrap&&refBtn){
-      const prevList=name?prescriptionsData.filter(r=>pat?r.patientId===pat.id:r.patientName===name):[];
-      refWrap.style.display=prevList.length?'':'none';
-      if(prevList.length) refBtn.onclick=()=>window._rxCompare.openForPatient(pat?.id,name,{force:true});
+      refWrap.style.display='';
+      refBtn.onclick=()=>showRefRxModal(pat?.id,name);
       window._rxCompare.openForPatient(pat?.id,name,{auto:true});
     }
   };
@@ -1525,10 +1524,32 @@ function showRxHistory(pid){
 
 let selectedRefRxId=null;
 function showRefRxModal(patId,patName){
-  const list=prescriptionsData
-    .filter(r=>patId?r.patientId===patId:r.patientName===patName)
-    .sort((a,b)=>b.date.localeCompare(a.date));
   selectedRefRxId=null;
+  // 목록 계산: 검색어 없으면 현재 환자 처방, 있으면 전체에서 처방명·환자명·약재명 매칭
+  const computeList=q=>{
+    q=(q||'').trim().toLowerCase();
+    let arr;
+    if(!q){
+      arr=prescriptionsData.filter(r=>patId?r.patientId===patId:(patName&&r.patientName===patName));
+    }else{
+      arr=prescriptionsData.filter(r=>
+        (r.diagnosis||'').toLowerCase().includes(q)||
+        (r.patientName||'').toLowerCase().includes(q)||
+        (r.herbs||[]).some(h=>(h.herb||'').toLowerCase().includes(q))
+      );
+    }
+    return arr.sort((a,b)=>b.date.localeCompare(a.date));
+  };
+  const renderList=q=>{
+    const wrap=document.getElementById('ref-rx-list');
+    if(!wrap)return;
+    const showPat=!!(q||'').trim();
+    const list=computeList(q);
+    wrap.innerHTML=list.length?list.map(r=>`<div class="ref-rx-item" data-rxid="${r.id}" style="padding:.625rem 1rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;${r.id===selectedRefRxId?'background:var(--violet-light);color:var(--violet-d)':''}">
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:2px">${r.date}${showPat?' · '+r.patientName:''}</div>
+        <div style="font-size:13px;font-weight:500">${r.diagnosis||'-'}</div>
+      </div>`).join(''):`<div class="empty" style="padding:2rem 1rem;color:var(--text-3);font-size:12px;text-align:center">${(q||'').trim()?'검색 결과가 없습니다':'이전 처방이 없습니다'}</div>`;
+  };
   const renderDetail=rxId=>{
     selectedRefRxId=rxId;
     const rx=rxId?prescriptionsData.find(r=>r.id===rxId):null;
@@ -1570,14 +1591,12 @@ function showRefRxModal(patId,patName){
   };
   document.getElementById('ref-rx-modal-content').innerHTML=`
     <div style="display:flex;height:calc(100vh - 5rem);border-radius:14px;overflow:hidden">
-      <div style="width:200px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column">
-        <div style="padding:.875rem 1rem;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;flex-shrink:0">${patName} 이전 처방</div>
-        <div style="flex:1;overflow-y:auto">
-          ${list.map(r=>`<div class="ref-rx-item" data-rxid="${r.id}" style="padding:.625rem 1rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s">
-            <div style="font-size:12px;color:var(--text-3);margin-bottom:2px">${r.date}</div>
-            <div style="font-size:13px;font-weight:500">${r.diagnosis||'-'}</div>
-          </div>`).join('')}
+      <div style="width:240px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column">
+        <div style="padding:.75rem 1rem .625rem;border-bottom:1px solid var(--border);flex-shrink:0">
+          <div style="font-size:14px;font-weight:700;margin-bottom:.5rem">${patName?patName+' 처방 / 검색':'처방 검색'}</div>
+          <input type="text" id="ref-rx-search" placeholder="처방명·환자명·약재명 검색" autocomplete="off" style="width:100%;box-sizing:border-box;border:1px solid var(--border-2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:var(--font-sans);background:var(--surface);color:var(--text-1);outline:none">
         </div>
+        <div id="ref-rx-list" style="flex:1;overflow-y:auto"></div>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;min-width:0">
         <div style="display:flex;align-items:center;justify-content:flex-end;padding:.625rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0">
@@ -1588,7 +1607,10 @@ function showRefRxModal(patId,patName){
         </div>
       </div>
     </div>`;
-  document.querySelectorAll('.ref-rx-item').forEach(el=>el.addEventListener('click',()=>renderDetail(el.dataset.rxid)));
+  renderList('');
+  const listWrap=document.getElementById('ref-rx-list');
+  listWrap.addEventListener('click',e=>{const item=e.target.closest('.ref-rx-item');if(item)renderDetail(item.dataset.rxid);});
+  document.getElementById('ref-rx-search').addEventListener('input',e=>renderList(e.target.value));
   document.getElementById('close-ref-rx').addEventListener('click',()=>document.getElementById('ref-rx-modal-overlay').classList.remove('open'));
   document.getElementById('ref-rx-modal-overlay').classList.add('open');
 }
