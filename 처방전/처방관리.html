@@ -99,6 +99,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 #rx-cmp-body{flex:1;display:flex;flex-direction:column;min-height:0;}
 #rx-cmp-win.collapsed #rx-cmp-body{display:none;}
 #rx-cmp-controls{padding:8px 10px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+#rx-cmp-search{width:100%;box-sizing:border-box;padding:5px 8px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;background:var(--surface);color:var(--text-1);outline:none;}
 #rx-cmp-select{width:100%;height:auto;padding:5px 8px;font-size:12px;border-radius:6px;}
 #rx-cmp-summary{font-size:11px;color:var(--text-3);display:flex;gap:8px;flex-wrap:wrap;}
 #rx-cmp-summary b{font-weight:700;}
@@ -239,6 +240,7 @@ textarea,[contenteditable]{cursor:url('data:image/svg+xml,<svg xmlns="http://www
   </div>
   <div id="rx-cmp-body">
     <div id="rx-cmp-controls">
+      <input type="text" id="rx-cmp-search" placeholder="다른 환자 처방 검색 (처방·환자·약재)" autocomplete="off">
       <select id="rx-cmp-select"></select>
       <div id="rx-cmp-summary"></div>
     </div>
@@ -921,7 +923,7 @@ function renderRegister(){
     const refBtn=document.getElementById('rx-prev-ref-btn');
     if(refWrap&&refBtn){
       refWrap.style.display='';
-      refBtn.onclick=()=>showRefRxModal(pat?.id,name);
+      refBtn.onclick=()=>window._rxCompare.openForPatient(pat?.id,name,{force:true});
       window._rxCompare.openForPatient(pat?.id,name,{auto:true});
     }
   };
@@ -1257,6 +1259,7 @@ function showDetail(id){
         <div style="font-size:12px;color:var(--text-3);margin-top:2px">${rx.date}${rx.diagnosis?' · '+rx.diagnosis:''}</div>
       </div>
       <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" id="detail-print-btn">출력</button>
         <button class="btn btn-secondary btn-sm" id="detail-edit-btn">수정</button>
         <button class="btn btn-secondary btn-sm" id="close-detail">닫기</button>
       </div>
@@ -1323,10 +1326,32 @@ function showDetail(id){
     })()}`;
   document.getElementById('detail-modal-overlay').classList.add('open');
   document.getElementById('close-detail').addEventListener('click',()=>document.getElementById('detail-modal-overlay').classList.remove('open'));
+  document.getElementById('detail-print-btn').addEventListener('click',()=>printRxDetail(rx));
   document.getElementById('detail-edit-btn').addEventListener('click',()=>{
     document.getElementById('detail-modal-overlay').classList.remove('open');
     editingRxId=id;rxHerbs=[];switchTab('register');
   });
+}
+
+function printRxDetail(rx){
+  const src=document.getElementById('detail-modal-content');
+  if(!src)return;
+  const clone=src.cloneNode(true);
+  clone.querySelectorAll('button').forEach(b=>b.remove());
+  const styles=[...document.querySelectorAll('style')].map(s=>s.outerHTML).join('');
+  const title=`${rx?.patientName||'처방'} - ${rx?.date||''}${rx?.diagnosis?' '+rx.diagnosis:''}`;
+  const w=window.open('','_blank','width=800,height=900');
+  if(!w){showToast('팝업 차단을 해제해주세요');return;}
+  w.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${title}</title>${styles}<style>
+    body{background:#fff;color:var(--text-1);padding:24px;font-family:var(--font-sans)}
+    .tbl-wrap{overflow:visible!important}
+    @page{margin:14mm}
+    @media print{body{padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  </style></head><body>${clone.innerHTML}</body></html>`);
+  w.document.close();
+  w.focus();
+  w.onload=()=>{w.print();};
 }
 
 async function reflectOutbound(id){
@@ -1524,32 +1549,10 @@ function showRxHistory(pid){
 
 let selectedRefRxId=null;
 function showRefRxModal(patId,patName){
+  const list=prescriptionsData
+    .filter(r=>patId?r.patientId===patId:r.patientName===patName)
+    .sort((a,b)=>b.date.localeCompare(a.date));
   selectedRefRxId=null;
-  // 목록 계산: 검색어 없으면 현재 환자 처방, 있으면 전체에서 처방명·환자명·약재명 매칭
-  const computeList=q=>{
-    q=(q||'').trim().toLowerCase();
-    let arr;
-    if(!q){
-      arr=prescriptionsData.filter(r=>patId?r.patientId===patId:(patName&&r.patientName===patName));
-    }else{
-      arr=prescriptionsData.filter(r=>
-        (r.diagnosis||'').toLowerCase().includes(q)||
-        (r.patientName||'').toLowerCase().includes(q)||
-        (r.herbs||[]).some(h=>(h.herb||'').toLowerCase().includes(q))
-      );
-    }
-    return arr.sort((a,b)=>b.date.localeCompare(a.date));
-  };
-  const renderList=q=>{
-    const wrap=document.getElementById('ref-rx-list');
-    if(!wrap)return;
-    const showPat=!!(q||'').trim();
-    const list=computeList(q);
-    wrap.innerHTML=list.length?list.map(r=>`<div class="ref-rx-item" data-rxid="${r.id}" style="padding:.625rem 1rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;${r.id===selectedRefRxId?'background:var(--violet-light);color:var(--violet-d)':''}">
-        <div style="font-size:12px;color:var(--text-3);margin-bottom:2px">${r.date}${showPat?' · '+r.patientName:''}</div>
-        <div style="font-size:13px;font-weight:500">${r.diagnosis||'-'}</div>
-      </div>`).join(''):`<div class="empty" style="padding:2rem 1rem;color:var(--text-3);font-size:12px;text-align:center">${(q||'').trim()?'검색 결과가 없습니다':'이전 처방이 없습니다'}</div>`;
-  };
   const renderDetail=rxId=>{
     selectedRefRxId=rxId;
     const rx=rxId?prescriptionsData.find(r=>r.id===rxId):null;
@@ -1591,12 +1594,14 @@ function showRefRxModal(patId,patName){
   };
   document.getElementById('ref-rx-modal-content').innerHTML=`
     <div style="display:flex;height:calc(100vh - 5rem);border-radius:14px;overflow:hidden">
-      <div style="width:240px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column">
-        <div style="padding:.75rem 1rem .625rem;border-bottom:1px solid var(--border);flex-shrink:0">
-          <div style="font-size:14px;font-weight:700;margin-bottom:.5rem">${patName?patName+' 처방 / 검색':'처방 검색'}</div>
-          <input type="text" id="ref-rx-search" placeholder="처방명·환자명·약재명 검색" autocomplete="off" style="width:100%;box-sizing:border-box;border:1px solid var(--border-2);border-radius:8px;padding:6px 10px;font-size:13px;font-family:var(--font-sans);background:var(--surface);color:var(--text-1);outline:none">
+      <div style="width:200px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column">
+        <div style="padding:.875rem 1rem;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;flex-shrink:0">${patName} 이전 처방</div>
+        <div style="flex:1;overflow-y:auto">
+          ${list.map(r=>`<div class="ref-rx-item" data-rxid="${r.id}" style="padding:.625rem 1rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s">
+            <div style="font-size:12px;color:var(--text-3);margin-bottom:2px">${r.date}</div>
+            <div style="font-size:13px;font-weight:500">${r.diagnosis||'-'}</div>
+          </div>`).join('')}
         </div>
-        <div id="ref-rx-list" style="flex:1;overflow-y:auto"></div>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;min-width:0">
         <div style="display:flex;align-items:center;justify-content:flex-end;padding:.625rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0">
@@ -1607,10 +1612,7 @@ function showRefRxModal(patId,patName){
         </div>
       </div>
     </div>`;
-  renderList('');
-  const listWrap=document.getElementById('ref-rx-list');
-  listWrap.addEventListener('click',e=>{const item=e.target.closest('.ref-rx-item');if(item)renderDetail(item.dataset.rxid);});
-  document.getElementById('ref-rx-search').addEventListener('input',e=>renderList(e.target.value));
+  document.querySelectorAll('.ref-rx-item').forEach(el=>el.addEventListener('click',()=>renderDetail(el.dataset.rxid)));
   document.getElementById('close-ref-rx').addEventListener('click',()=>document.getElementById('ref-rx-modal-overlay').classList.remove('open'));
   document.getElementById('ref-rx-modal-overlay').classList.add('open');
 }
@@ -1637,8 +1639,20 @@ function loadRefRx(rxId){
   const summaryEl=document.getElementById('rx-cmp-summary');
   const tableWrap=document.getElementById('rx-cmp-table-wrap');
   const loadBtn=document.getElementById('rx-cmp-load');
+  const searchInp=document.getElementById('rx-cmp-search');
   const POS_KEY='rxCmpPos',H_KEY='rxCmpHeight',COL_KEY='rxCmpCollapsed';
-  let loadedKey=null,curList=[],curName='',selId=null,userClosed=false;
+  let loadedKey=null,curList=[],curName='',selId=null,userClosed=false,searchQ='';
+
+  // 검색어 없으면 현재 환자 처방(curList), 있으면 전체에서 처방명·환자명·약재명 매칭
+  function computeDisplayList(){
+    const q=searchQ.trim().toLowerCase();
+    if(!q)return curList;
+    return prescriptionsData.filter(r=>
+      (r.diagnosis||'').toLowerCase().includes(q)||
+      (r.patientName||'').toLowerCase().includes(q)||
+      (r.herbs||[]).some(h=>(h.herb||'').toLowerCase().includes(q))
+    ).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  }
 
   function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
   function applyPos(){
@@ -1666,28 +1680,37 @@ function loadRefRx(rxId){
   function openForPatient(patId,name,opts){
     opts=opts||{};
     name=(name||'').trim();
-    if(!name){loadedKey=null;close(false);return;}
-    const list=prescriptionsData
+    const list=name?prescriptionsData
       .filter(r=>patId?r.patientId===patId:r.patientName===name)
-      .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    if(!list.length){if(loadedKey){loadedKey=null;close(false);}return;}
-    const key=patId||name;
+      .sort((a,b)=>(b.date||'').localeCompare(a.date||'')):[];
+    const key=(patId||name||'')+'';
     const changed=key!==loadedKey;
     loadedKey=key;curList=list;curName=name;
-    if(changed){selId=list[0].id;userClosed=false;}
+    const searching=!!searchQ.trim();
+    if(changed&&!searching)selId=list[0]?list[0].id:null;
+
+    if(opts.force){ // 버튼 클릭: 검색 여부와 무관하게 항상 열기(현재 환자 처방이 없어도 검색 가능)
+      userClosed=false;
+      if(!searching&&!list.some(r=>r.id===selId))selId=list[0]?list[0].id:null;
+      showWin();renderControls();refresh();
+      return;
+    }
+    // auto: 타이핑 중
+    if(searching){if(win.classList.contains('open'))refresh();return;}
+    if(!name||!list.length){close(false);return;}
     if(!list.some(r=>r.id===selId))selId=list[0].id;
-    if(opts.force)userClosed=false;
-    if(userClosed&&opts.auto)return; // 사용자가 닫았으면 자동으로 다시 열지 않음
-    showWin();
-    renderControls();
-    refresh();
+    if(userClosed)return; // 사용자가 닫았으면 자동으로 다시 열지 않음
+    showWin();renderControls();refresh();
   }
 
   function renderControls(){
-    titleEl.textContent='📋 '+curName+' 이전 처방';
-    titleEl.title=curName+' 이전 처방';
-    sel.innerHTML=curList.map(r=>`<option value="${r.id}">${r.date||'-'} · ${(r.diagnosis||'-').replace(/"/g,'&quot;')}</option>`).join('');
-    sel.value=selId;
+    const searching=!!searchQ.trim();
+    const dl=computeDisplayList();
+    if(!dl.some(r=>r.id===selId))selId=dl[0]?dl[0].id:null;
+    const t=searching?'📋 처방 검색':'📋 '+curName+' 이전 처방';
+    titleEl.textContent=t;titleEl.title=t;
+    sel.innerHTML=dl.map(r=>`<option value="${r.id}">${r.date||'-'} · ${searching?((r.patientName||'-').replace(/"/g,'&quot;')+' · '):''}${(r.diagnosis||'-').replace(/"/g,'&quot;')}</option>`).join('');
+    sel.value=selId||'';
   }
 
   function curHerbList(){
@@ -1698,7 +1721,7 @@ function loadRefRx(rxId){
 
   function refresh(){
     if(!win.classList.contains('open'))return;
-    const rx=curList.find(r=>r.id===selId);
+    const rx=computeDisplayList().find(r=>r.id===selId);
     if(!rx){tableWrap.innerHTML='<div class="empty" style="padding:1.5rem 1rem">처방을 선택하세요</div>';summaryEl.textContent='';return;}
     const prev=(rx.herbs||[]).map(h=>({herb:(h.herb||'').trim(),g:Number(h.qtyPerPack)||0}));
     const cur=curHerbList();
@@ -1730,6 +1753,12 @@ function loadRefRx(rxId){
   }
 
   sel.addEventListener('change',()=>{selId=sel.value;refresh();});
+  searchInp.addEventListener('input',()=>{
+    searchQ=searchInp.value;
+    const dl=computeDisplayList();
+    selId=dl[0]?dl[0].id:null;
+    renderControls();refresh();
+  });
   loadBtn.addEventListener('click',()=>{if(selId)loadRefRx(selId);});
   document.getElementById('rx-cmp-x').addEventListener('click',()=>close(true));
   document.getElementById('rx-cmp-collapse').addEventListener('click',()=>{
