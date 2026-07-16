@@ -420,7 +420,7 @@ let rxConfig={
   packaging_desc:'',
   packaging_price:3000,
   delivery_desc:'',
-  delivery_price:5000,
+  delivery_price:6000,
 };
 
 function getPrice(h){return settingsData.prices[h]??DEFAULT_PRICES[h]??0;}
@@ -991,7 +991,7 @@ function renderRegister(){
     el.addEventListener('focus',e=>{e.target.value=String(parseNum(e.target.value)||'');e.target.select();});
     el.addEventListener('blur',e=>{const v=parseNum(e.target.value);e.target.value=v?fmtW(v):'';calcSummary();});
   });
-  const DELIVERY_VALS=[0,5000,6000];
+  const DELIVERY_VALS=[0,6000,7000];
   function cycleDelivery(dir){
     const cur=Number(document.getElementById('rx-fee-delivery')?.value)||0;
     let idx=DELIVERY_VALS.indexOf(cur);if(idx<0)idx=1;
