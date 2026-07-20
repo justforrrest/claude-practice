@@ -331,7 +331,7 @@ async function save(key,val){
 /* ── 데이터 ── */
 let inboundData=[];
 let outboundData=[];
-let settingsData={prices:{},minStock:{},memos:{}};
+let settingsData={prices:{},minStock:{},memos:{},hidden:{}};
 let suppliersData=[...DEFAULT_SUPPLIERS];
 const DEFAULT_PRICELIST={
   "가자":{"바른한약":6.67},
@@ -558,6 +558,14 @@ function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMo
 function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
 function getPrice(h){return settingsData.prices[h]??DEFAULT_PRICES[h]??0;}
 function getMinStock(h){return settingsData.minStock[h]??0;}
+function isHidden(h){return !!(settingsData.hidden&&settingsData.hidden[h]);}
+function toggleHerbHidden(name){
+  if(!settingsData.hidden)settingsData.hidden={};
+  if(settingsData.hidden[name])delete settingsData.hidden[name];
+  else settingsData.hidden[name]=true;
+  save(KEYS.settings,settingsData);
+  renderSettings();renderStock();
+}
 function calcStock(){
   const s={};
   herbsData.forEach(h=>s[h]=0);
@@ -572,9 +580,10 @@ let stockSearch='',showLowOnly=false,showZeroOnly=false,stockConsonant='',showUn
 function renderStock(){
   const el=document.getElementById('view-stock');
   const stock=calcStock();
-  const zeroCount=herbsData.filter(h=>stock[h]<=0).length;
-  const lowCount=herbsData.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]>0&&stock[h]<m;}).length;
-  let herbs=herbsData;
+  const baseHerbs=herbsData.filter(h=>!isHidden(h));
+  const zeroCount=baseHerbs.filter(h=>stock[h]<=0).length;
+  const lowCount=baseHerbs.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]>0&&stock[h]<m;}).length;
+  let herbs=baseHerbs;
   if(stockConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===stockConsonant);
   if(stockSearch)herbs=herbs.filter(h=>h.includes(stockSearch));
   if(showLowOnly)herbs=herbs.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]>0&&stock[h]<m;});
@@ -582,7 +591,7 @@ function renderStock(){
   if(showUnder600)herbs=herbs.filter(h=>stock[h]<600);
   el.innerHTML=`
   <div class="stats">
-    <div class="stat-card${!showLowOnly&&!showZeroOnly?' active':''}" data-st-filter="all" style="cursor:pointer"><div class="stat-num">${herbsData.length}</div><div class="stat-label">전체 약재</div></div>
+    <div class="stat-card${!showLowOnly&&!showZeroOnly?' active':''}" data-st-filter="all" style="cursor:pointer"><div class="stat-num">${baseHerbs.length}</div><div class="stat-label">전체 약재</div></div>
     <div class="stat-card${showLowOnly?' active':''}" data-st-filter="low" style="cursor:pointer"><div class="stat-num warn">${lowCount}</div><div class="stat-label">부족 약재</div></div>
     <div class="stat-card${showZeroOnly?' active':''}" data-st-filter="zero" style="cursor:pointer"><div class="stat-num muted">${zeroCount}</div><div class="stat-label">재고 없음</div></div>
   </div>
@@ -678,7 +687,7 @@ function renderStock(){
 function setupHerbDropdown(inp,dd,onSelect){
   let hlIdx=-1;
   function open(q){
-    const list=q?herbsData.filter(h=>h.includes(q)):herbsData;
+    const list=(q?herbsData.filter(h=>h.includes(q)):herbsData).filter(h=>!isHidden(h));
     if(!list.length){dd.classList.remove('open');return;}
     dd.innerHTML=list.map(h=>`<li data-v="${h}">${h}</li>`).join('');
     dd.classList.add('open');
@@ -1193,9 +1202,12 @@ function renderAdjust(){
 let settingsSearch='';
 let settingsConsonant='';
 let settingsSort='';
+let settingsShowHidden=false;
 function renderSettings(){
   const el=document.getElementById('view-settings');
-  let herbs=herbsData;
+  const hiddenCount=herbsData.filter(isHidden).length;
+  if(!hiddenCount)settingsShowHidden=false;
+  let herbs=herbsData.filter(h=>settingsShowHidden?isHidden(h):!isHidden(h));
   if(settingsConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===settingsConsonant);
   if(settingsSearch)herbs=herbs.filter(h=>h.includes(settingsSearch));
   if(settingsSort==='inbound'){const ibQty=h=>inboundData.filter(r=>r.herb===h).reduce((s,r)=>s+Number(r.qty||0),0);herbs=[...herbs].sort((a,b)=>ibQty(b)-ibQty(a));}
@@ -1207,6 +1219,7 @@ function renderSettings(){
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <input type="text" id="herb-new-name" placeholder="새 약재명" style="border:1px solid var(--border-2);border-radius:8px;padding:5px 10px;font-size:13px;font-family:var(--font-sans);outline:none;width:120px;">
         <button class="btn btn-secondary btn-sm" id="herb-add-btn">+ 추가</button>
+        ${hiddenCount?`<button class="btn btn-sm" id="settings-hidden-toggle" style="${settingsShowHidden?'background:var(--violet-d);color:#fff;border:1px solid var(--violet-d);':'background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);'}">${settingsShowHidden?'활성 약재 보기':`숨긴 약재 ${hiddenCount}개 보기`}</button>`:''}
         <button class="btn btn-primary btn-sm" id="settings-save">설정 저장</button>
       </div>
     </div>
@@ -1240,9 +1253,10 @@ function renderSettings(){
       </tr>`;
       return`<tr>
         <td style="border-right:1px solid rgba(0,0,0,0.10);white-space:nowrap">
-          <div style="display:flex;align-items:center">
+          <div style="display:flex;align-items:center;gap:2px">
             <button class="btn-del herb-del" data-herb="${h}" style="opacity:.45;font-size:13px;flex-shrink:0">×</button>
-            <span class="herb-name-click" data-herb="${h}" style="cursor:pointer;flex:1;text-align:left;font-weight:600;color:var(--text-1)">${h}</span>
+            <span class="herb-name-click" data-herb="${h}" style="cursor:pointer;flex:1;text-align:left;font-weight:600;color:${settingsShowHidden?'var(--text-3)':'var(--text-1)'}">${h}</span>
+            <button class="herb-hide-btn" data-herb="${h}" title="${settingsShowHidden?'복원(다시 표시)':'숨김'}" style="background:none;border:none;cursor:pointer;flex-shrink:0;font-size:11px;color:var(--violet-d);padding:2px 5px;border-radius:4px">${settingsShowHidden?'복원':'숨김'}</button>
           </div>
         </td>
         <td style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;text-align:left;"></td>
@@ -1264,6 +1278,10 @@ function renderSettings(){
   });
   el.querySelectorAll('[data-st-sort]').forEach(btn=>{
     btn.addEventListener('click',()=>{settingsSort=settingsSort===btn.dataset.stSort?'':btn.dataset.stSort;renderSettings();});
+  });
+  document.getElementById('settings-hidden-toggle')?.addEventListener('click',()=>{settingsShowHidden=!settingsShowHidden;renderSettings();});
+  el.querySelectorAll('.herb-hide-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>toggleHerbHidden(btn.dataset.herb));
   });
 
   const stSrEl=document.getElementById('settings-search');
@@ -1438,7 +1456,7 @@ function calcPriceList(){
 function renderPricelist(){
   const el=document.getElementById('view-pricelist');
   const derived=calcPriceList();
-  let herbs=herbsData;
+  let herbs=herbsData.filter(h=>!isHidden(h));
   if(pricelistConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===pricelistConsonant);
   if(pricelistSearch)herbs=herbs.filter(h=>h.includes(pricelistSearch));
 
@@ -2425,7 +2443,7 @@ document.getElementById('sync-modal-overlay').addEventListener('click',e=>{
   const[ib,ob,st,sp,pl,hb,adj,meds,medlogs,sups,wait,omemo]=await Promise.all([load(KEYS.inbound),load(KEYS.outbound),load(KEYS.settings),load(KEYS.suppliers),load(KEYS.pricelist),load(KEYS.herbs),load(KEYS.adjust),load(KEYS.meds),load(KEYS.medlogs),load(KEYS.supplies),load(KEYS.waitlist),load(KEYS.ordermemo)]);
   if(ib&&Array.isArray(ib))inboundData=ib;
   if(ob&&Array.isArray(ob))outboundData=ob;
-  if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;if(st.memos)settingsData.memos=st.memos;}
+  if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;if(st.memos)settingsData.memos=st.memos;if(st.hidden)settingsData.hidden=st.hidden;}
   if(sp&&Array.isArray(sp)&&sp.length>0)suppliersData=sp;
   if(pl&&typeof pl==='object'&&!Array.isArray(pl))pricelistData=pl;
   if(hb&&Array.isArray(hb)&&hb.length>0)herbsData=hb;

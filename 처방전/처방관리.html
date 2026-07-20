@@ -409,7 +409,7 @@ const DEFAULT_PRICES={
 let patientsData=[];
 let prescriptionsData=[];
 let herbsData=[];
-let settingsData={prices:{}};
+let settingsData={prices:{},hidden:{}};
 let deliveriesData=[];
 
 const RX_KEYS={patients:'rx_patients_v1',prescriptions:'rx_prescriptions_v1',config:'rx_config_v1',deliveries:'rx_deliveries_v1'};
@@ -437,7 +437,8 @@ function setupHerbAC(input,dropdown,onSelect,onEnterNav){
   let hlIdx=-1;
   const filter=()=>{
     const q=input.value.trim();
-    const matches=q?herbsData.filter(h=>h.includes(q)):herbsData.slice(0,25);
+    const visible=herbsData.filter(h=>!settingsData.hidden?.[h]);
+    const matches=q?visible.filter(h=>h.includes(q)):visible.slice(0,25);
     dropdown.innerHTML=matches.map(h=>`<li data-herb="${h}">${h}</li>`).join('');
     hlIdx=-1;
     dropdown.classList.toggle('open',matches.length>0&&document.activeElement===input);
@@ -2380,6 +2381,7 @@ document.getElementById('import-file').addEventListener('change',async e=>{
   if(rx&&Array.isArray(rx))prescriptionsData=rx;
   if(hb&&Array.isArray(hb)&&hb.length>0)herbsData=hb;
   if(st?.prices)settingsData.prices=st.prices;
+  if(st?.hidden)settingsData.hidden=st.hidden;
   if(cfg&&typeof cfg==='object')rxConfig={...rxConfig,...cfg};
   if(dlv&&Array.isArray(dlv))deliveriesData=dlv;
   document.getElementById('sync-code-display').textContent=getSyncCode();
