@@ -88,6 +88,15 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 #rx-packs,#rx-total-packs{-moz-appearance:textfield;}
 .rx-table .rx-qty{border:1px solid var(--border-2);border-radius:6px;background:var(--surface);}
 .rx-table .rx-qty:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);outline:none;}
+/* 용량 참고표 */
+#rx-dose-guide{width:100%;border-collapse:collapse;font-size:12px;}
+#rx-dose-guide th{padding:3px 4px;font-size:10px;color:var(--text-3);font-weight:600;text-transform:none;letter-spacing:0;border-bottom:1px solid var(--border);}
+#rx-dose-guide td{padding:2px 4px;color:var(--text-2);border-bottom:1px solid var(--border);}
+#rx-dose-guide tr:last-child td{border-bottom:none;}
+#rx-dose-guide tr.dg-hl td{background:var(--violet-light);color:var(--violet-d);font-weight:700;}
+.dg-inp{border:1px solid transparent;border-radius:5px;padding:2px 3px;font-size:12px;font-family:var(--font-sans);background:transparent;color:inherit;outline:none;text-align:center;-moz-appearance:textfield;}
+.dg-inp:hover{border-color:var(--border-2);}
+.dg-inp:focus{border-color:var(--violet-d);background:var(--surface);}
 /* 이전 처방 비교 떠있는 패널 */
 #rx-cmp-win{display:none;position:fixed;z-index:600;background:var(--surface);border:1px solid var(--border-2);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);width:320px;flex-direction:column;overflow:hidden;}
 #rx-cmp-win.open{display:flex;}
@@ -423,6 +432,12 @@ let rxConfig={
   packaging_price:3000,
   delivery_desc:'',
   delivery_price:6000,
+  doseGuide:[
+    {upTo:1500,packs:30,freq:2,days:15},
+    {upTo:1600,packs:32,freq:2,days:16},
+    {upTo:1700,packs:34,freq:2,days:17},
+    {upTo:null,packs:45,freq:3,days:15},
+  ],
 };
 
 function getPrice(h){return settingsData.prices[h]??DEFAULT_PRICES[h]??0;}
@@ -505,6 +520,16 @@ function calcSummary(){
   upd('rx-water-per-pack',fmt(perPackG));
   upd('rx-water-total-herb',fmt(totalG));
   upd('rx-water-gasum',fmtW(gasum));
+  // 용량 참고표 강조 (20첩 기준 총량 = 1첩당 합 × 20)
+  (()=>{
+    const tbl=document.getElementById('rx-dose-guide');
+    if(!tbl)return;
+    const hasHerb=rxHerbs.some(r=>r.herb&&Number(r.qty)>0);
+    const basis=perPackG*20;
+    const guide=rxConfig.doseGuide||[];
+    const hlIdx=hasHerb?guide.findIndex(g=>g.upTo==null||basis<=g.upTo):-1;
+    tbl.querySelectorAll('tr[data-dg-idx]').forEach((tr,i)=>tr.classList.toggle('dg-hl',i===hlIdx));
+  })();
   if(window._rxCompare)window._rxCompare.refresh();
 }
 
@@ -748,6 +773,31 @@ function renderRegister(){
             <label>복용시기</label>
             <input type="text" id="rx-timing" value="${rx?.dosageTiming||'식사 무관'}" placeholder="식사 무관">
           </div>
+        </div>
+        <div style="margin-top:.25rem">
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.4rem">용량 참고 <span style="text-transform:none;font-weight:400;color:var(--text-3)">(20첩 기준)</span></div>
+          <table id="rx-dose-guide">
+            <thead><tr>
+              <th style="text-align:left">총량(g)</th>
+              <th style="text-align:center">팩</th>
+              <th style="text-align:center">회</th>
+              <th style="text-align:center">일</th>
+            </tr></thead>
+            <tbody>
+              ${(rxConfig.doseGuide||[]).map((g,i)=>{
+                const last=g.upTo==null;
+                const totalCell=last
+                  ? `<span style="color:var(--text-3)">그 이상</span>`
+                  : `<span style="color:var(--text-3);font-size:11px">≤</span><input class="dg-inp" data-dg-idx="${i}" data-dg-f="upTo" type="text" inputmode="numeric" value="${g.upTo}" style="width:44px;text-align:right">`;
+                return `<tr data-dg-idx="${i}">
+                  <td style="text-align:left;white-space:nowrap">${totalCell}</td>
+                  <td style="text-align:center"><input class="dg-inp" data-dg-idx="${i}" data-dg-f="packs" type="text" inputmode="numeric" value="${g.packs}" style="width:32px"></td>
+                  <td style="text-align:center"><input class="dg-inp" data-dg-idx="${i}" data-dg-f="freq" type="text" inputmode="numeric" value="${g.freq}" style="width:28px"></td>
+                  <td style="text-align:center"><input class="dg-inp" data-dg-idx="${i}" data-dg-f="days" type="text" inputmode="numeric" value="${g.days}" style="width:32px"></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -1004,6 +1054,20 @@ function renderRegister(){
   }
   document.getElementById('rx-fee-delivery-up')?.addEventListener('click',()=>cycleDelivery(1));
   document.getElementById('rx-fee-delivery-down')?.addEventListener('click',()=>cycleDelivery(-1));
+
+  // 용량 참고표 편집 (동기화 저장)
+  let _dgSaveTimer=null;
+  document.querySelectorAll('#rx-dose-guide .dg-inp').forEach(inp=>{
+    inp.addEventListener('focus',e=>e.target.select());
+    inp.addEventListener('input',()=>{
+      const idx=Number(inp.dataset.dgIdx),f=inp.dataset.dgF;
+      if(!rxConfig.doseGuide||!rxConfig.doseGuide[idx])return;
+      rxConfig.doseGuide[idx][f]=parseNum(inp.value);
+      calcSummary();
+      clearTimeout(_dgSaveTimer);
+      _dgSaveTimer=setTimeout(()=>save(RX_KEYS.config,rxConfig),500);
+    });
+  });
 
   const noteEl=document.getElementById('rx-note');
   const autoResize=()=>{noteEl.style.height='auto';noteEl.style.height=noteEl.scrollHeight+'px';};
