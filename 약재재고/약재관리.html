@@ -1240,7 +1240,7 @@ function renderSettings(){
     const ibCount=h=>inboundData.filter(r=>r.herb===h).reduce((s,r)=>s+Number(r.qty||0),0);
     const stock=calcStock();
     const SEP='border-right:1px solid rgba(0,0,0,0.10)';
-    const stHead=`<thead><tr><th style="text-align:center;${SEP};width:85px">약재명</th><th style="text-align:center;${SEP}">메모</th><th class="num" style="${SEP}">입고 수량 (g)</th><th class="num" style="width:80px;${SEP}">단가 (원/g)</th><th class="num" style="width:80px">현재 재고 (g)</th></tr></thead>`;
+    const stHead=`<thead><tr><th style="text-align:center;${SEP};width:85px">약재명</th><th style="text-align:center;${SEP}">메모</th><th class="num" style="${SEP}">입고 (g)</th><th class="num" style="width:62px;${SEP}">단가 (원)</th><th class="num" style="width:58px">재고 (g)</th></tr></thead>`;
     const stRows=list=>list.map(h=>{
       if(editingHerbName===h)return`<tr style="background:var(--violet-light)">
         <td style="text-align:center;border-right:1px solid rgba(0,0,0,0.10);white-space:nowrap">
@@ -1250,7 +1250,7 @@ function renderSettings(){
         </td>
         <td style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;text-align:left;"></td>
         <td class="num" style="color:var(--text-3);border-right:1px solid rgba(0,0,0,0.10)">${fmt(ibCount(h))}</td>
-        <td class="num" style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}" style="width:64px"></td>
+        <td class="num" style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}" style="width:50px"></td>
         <td class="num"${stock[h]<0?' style="color:var(--coral)"':''}>${fmt(stock[h]||0)}</td>
       </tr>`;
       return`<tr>
@@ -1263,7 +1263,7 @@ function renderSettings(){
         </td>
         <td style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="memo" type="text" value="${settingsData.memos[h]||''}" style="width:100%;min-width:80px;text-align:left;"></td>
         <td class="num" style="color:var(--text-3);border-right:1px solid rgba(0,0,0,0.10)">${fmt(ibCount(h))}</td>
-        <td class="num" style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}" style="width:64px"></td>
+        <td class="num" style="border-right:1px solid rgba(0,0,0,0.10)"><input class="settings-inp" data-herb="${h}" data-field="price" type="number" min="0" step="0.1" value="${getPrice(h)}" style="width:50px"></td>
         <td class="num"${stock[h]<0?' style="color:var(--coral)"':''}>${fmt(stock[h]||0)}</td>
       </tr>`;
     }).join('');
