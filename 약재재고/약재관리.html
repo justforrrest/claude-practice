@@ -331,7 +331,7 @@ async function save(key,val){
 /* ── 데이터 ── */
 let inboundData=[];
 let outboundData=[];
-let settingsData={prices:{},minStock:{},memos:{},hidden:{}};
+let settingsData={prices:{},minStock:{},memos:{},hidden:{},priceManual:{}};
 let suppliersData=[...DEFAULT_SUPPLIERS];
 const DEFAULT_PRICELIST={
   "가자":{"바른한약":6.67},
@@ -557,6 +557,31 @@ function focusEnd(id){const el=document.getElementById(id);if(el){el.focus();el.
 function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
 function fmt(n){return Number(n).toLocaleString('ko-KR',{maximumFractionDigits:1});}
 function getPrice(h){return settingsData.prices[h]??DEFAULT_PRICES[h]??0;}
+// 수량가중 누적 평균 구매단가 (입고기록 기반). 기록 없으면 null
+function calcAvgPrice(h){
+  let tq=0,ta=0;
+  inboundData.forEach(r=>{
+    const q=Number(r.qty)||0,p=Number(r.price)||0;
+    if(r.herb===h&&q>0&&p>0){tq+=q;ta+=q*p;}
+  });
+  return tq>0?Math.round(ta/tq*10)/10:null;
+}
+// 지정 약재들의 저장 단가를 누적평균으로 재계산 + 수동수정 플래그 해제 (settings 저장은 호출측에서)
+function refreshAvgPrice(...herbs){
+  if(!settingsData.priceManual)settingsData.priceManual={};
+  [...new Set(herbs.filter(Boolean))].forEach(h=>{
+    const avg=calcAvgPrice(h);
+    if(avg!=null){settingsData.prices[h]=avg;delete settingsData.priceManual[h];}
+  });
+}
+// 단가조정 탭에서 수동 입력한 단가 반영. 누적평균과 다르면 수동수정으로 표시(고정)
+function applyManualPrice(h,v){
+  if(!settingsData.priceManual)settingsData.priceManual={};
+  settingsData.prices[h]=v;
+  const avg=calcAvgPrice(h);
+  if(avg==null||Math.abs(v-avg)>=0.05)settingsData.priceManual[h]=true;
+  else delete settingsData.priceManual[h];
+}
 function getMinStock(h){return settingsData.minStock[h]??0;}
 function isHidden(h){return !!(settingsData.hidden&&settingsData.hidden[h]);}
 function toggleHerbHidden(name){
@@ -771,8 +796,10 @@ function renderInboundTbody(){
       const supplier=tr.querySelector('.ei-sup').value;
       const note=tr.querySelector('.ei-note').value.trim();
       if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
+      const prevHerb=inboundData.find(r=>r.id===btn.dataset.id)?.herb;
       inboundData=inboundData.map(r=>r.id===btn.dataset.id?{...r,herb,qty,price,amount,date,supplier,note}:r);
       await save(KEYS.inbound,inboundData);
+      refreshAvgPrice(prevHerb,herb);await save(KEYS.settings,settingsData);
       editingInboundId=null;renderInbound();
     });
   });
@@ -803,8 +830,10 @@ function renderInboundTbody(){
           const sup=ibEditTr.querySelector('.ei-sup')?.value||'';
           const note=ibEditTr.querySelector('.ei-note')?.value.trim()||'';
           const id=ibEditTr.querySelector('.ib-save').dataset.id;
+          const prevHerb=inboundData.find(r=>r.id===id)?.herb;
           inboundData=inboundData.map(r=>r.id===id?{...r,herb,qty,price,amount,date,supplier:sup,note}:r);
           await save(KEYS.inbound,inboundData);
+          refreshAvgPrice(prevHerb,herb);await save(KEYS.settings,settingsData);
         },1000);
       });
     });
@@ -813,8 +842,10 @@ function renderInboundTbody(){
   tbody.querySelectorAll('.btn-del[data-type="ib"]').forEach(btn=>{
     btn.addEventListener('click',async()=>{
       if(!confirm('삭제하시겠습니까?'))return;
+      const delHerb=inboundData.find(r=>r.id===btn.dataset.id)?.herb;
       inboundData=inboundData.filter(r=>r.id!==btn.dataset.id);
       await save(KEYS.inbound,inboundData);
+      refreshAvgPrice(delHerb);await save(KEYS.settings,settingsData);
       renderInbound();
     });
   });
@@ -914,23 +945,17 @@ function renderInbound(){
     const supplier=document.getElementById('in-sup').value;
     const note=document.getElementById('in-note').value.trim();
     if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
+    inboundData.push({id:uid(),herb,qty,price,amount,date,supplier,note});
+    await save(KEYS.inbound,inboundData);
     if(price>0){
-      const stockBefore=calcStock()[herb]||0;
-      const curPrice=getPrice(herb);
-      const newPrice=stockBefore<=0
-        ?price
-        :Math.round((stockBefore*curPrice+qty*price)/(stockBefore+qty)*10)/10;
-      if(!settingsData.prices)settingsData.prices={};
-      settingsData.prices[herb]=newPrice;
+      refreshAvgPrice(herb);           // 누적평균으로 단가 갱신
       await save(KEYS.settings,settingsData);
-      if(supplier){
+      if(supplier){                    // 단가표: 도매처별 최근가 갱신 (표시용)
         if(!pricelistData[herb])pricelistData[herb]={};
         pricelistData[herb][supplier]=price;
         await save(KEYS.pricelist,pricelistData);
       }
     }
-    inboundData.push({id:uid(),herb,qty,price,amount,date,supplier,note});
-    await save(KEYS.inbound,inboundData);
     qtyEl.value='';qtyNEl.value='';qtyTotalEl.textContent='';priceEl.value='';amountEl.value='';
     document.getElementById('in-note').value='';
     renderInbound();
@@ -1293,7 +1318,7 @@ function renderSettings(){
   document.getElementById('settings-save').addEventListener('click',async()=>{
     el.querySelectorAll('.settings-inp[data-field]').forEach(inp=>{
       const h=inp.dataset.herb,v=parseFloat(inp.value)||0;
-      if(inp.dataset.field==='price')settingsData.prices[h]=v;
+      if(inp.dataset.field==='price')applyManualPrice(h,v);
       else if(inp.dataset.field==='min')settingsData.minStock[h]=v;
       else if(inp.dataset.field==='memo')settingsData.memos[h]=inp.value.trim();
     });
@@ -1305,7 +1330,7 @@ function renderSettings(){
   const stSaveAll=async()=>{
     el.querySelectorAll('.settings-inp[data-field]').forEach(i=>{
       const h=i.dataset.herb,v=parseFloat(i.value)||0;
-      if(i.dataset.field==='price')settingsData.prices[h]=v;
+      if(i.dataset.field==='price')applyManualPrice(h,v);
       else if(i.dataset.field==='min')settingsData.minStock[h]=v;
       else if(i.dataset.field==='memo')settingsData.memos[h]=i.value.trim();
     });
@@ -1398,8 +1423,8 @@ async function renameHerb(oldName,newName){
   inboundData=inboundData.map(r=>r.herb===oldName?{...r,herb:newName}:r);
   outboundData=outboundData.map(r=>r.herb===oldName?{...r,herb:newName}:r);
   adjustData=adjustData.map(r=>r.herb===oldName?{...r,herb:newName}:r);
-  ['prices','minStock','memos'].forEach(k=>{
-    if(settingsData[k][oldName]!==undefined){settingsData[k][newName]=settingsData[k][oldName];delete settingsData[k][oldName];}
+  ['prices','minStock','memos','priceManual'].forEach(k=>{
+    if(settingsData[k]&&settingsData[k][oldName]!==undefined){settingsData[k][newName]=settingsData[k][oldName];delete settingsData[k][oldName];}
   });
   if(pricelistData[oldName]){pricelistData[newName]=pricelistData[oldName];delete pricelistData[oldName];}
   await Promise.all([
@@ -1432,18 +1457,6 @@ function getChoseong(ch){
   if(c<0||c>11171)return ch;
   const map=['ㄱ','ㄱ','ㄴ','ㄷ','ㄷ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅇ','ㅈ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
   return map[Math.floor(c/588)]||ch;
-}
-function syncPricelistToSettings(){
-  const derived=calcPriceList();
-  herbsData.forEach(h=>{
-    const vals=suppliersData.map(s=>{
-      const m=pricelistData[h]?.[s];
-      if(m>0)return m;
-      const d=derived[h]?.[s];
-      return(d&&d.price>0)?d.price:null;
-    }).filter(v=>v!=null);
-    if(vals.length>0)settingsData.prices[h]=Math.min(...vals);
-  });
 }
 function calcPriceList(){
   const result={};
@@ -1532,11 +1545,9 @@ function renderPricelist(){
       if(v>0)pricelistData[h][s]=v;
       else delete pricelistData[h][s];
     });
-    syncPricelistToSettings();
-    await Promise.all([save(KEYS.pricelist,pricelistData),save(KEYS.settings,settingsData)]);
-    const[pl,st]=await Promise.all([load(KEYS.pricelist),load(KEYS.settings)]);
+    await save(KEYS.pricelist,pricelistData);
+    const pl=await load(KEYS.pricelist);
     if(pl&&typeof pl==='object'&&!Array.isArray(pl))pricelistData=pl;
-    if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;}
     renderPricelist();
   });
 
@@ -1558,8 +1569,7 @@ function renderPricelist(){
           if(!pricelistData[h])pricelistData[h]={};
           if(v>0)pricelistData[h][s]=v;else delete pricelistData[h][s];
         });
-        syncPricelistToSettings();
-        await Promise.all([save(KEYS.pricelist,pricelistData),save(KEYS.settings,settingsData)]);
+        await save(KEYS.pricelist,pricelistData);
       },1000);
     });
   });
@@ -2445,7 +2455,8 @@ document.getElementById('sync-modal-overlay').addEventListener('click',e=>{
   const[ib,ob,st,sp,pl,hb,adj,meds,medlogs,sups,wait,omemo]=await Promise.all([load(KEYS.inbound),load(KEYS.outbound),load(KEYS.settings),load(KEYS.suppliers),load(KEYS.pricelist),load(KEYS.herbs),load(KEYS.adjust),load(KEYS.meds),load(KEYS.medlogs),load(KEYS.supplies),load(KEYS.waitlist),load(KEYS.ordermemo)]);
   if(ib&&Array.isArray(ib))inboundData=ib;
   if(ob&&Array.isArray(ob))outboundData=ob;
-  if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;if(st.memos)settingsData.memos=st.memos;if(st.hidden)settingsData.hidden=st.hidden;}
+  if(st){if(st.prices)settingsData.prices=st.prices;if(st.minStock)settingsData.minStock=st.minStock;if(st.memos)settingsData.memos=st.memos;if(st.hidden)settingsData.hidden=st.hidden;if(st.priceManual)settingsData.priceManual=st.priceManual;}
+  if(!settingsData.priceManual)settingsData.priceManual={};
   if(sp&&Array.isArray(sp)&&sp.length>0)suppliersData=sp;
   if(pl&&typeof pl==='object'&&!Array.isArray(pl))pricelistData=pl;
   if(hb&&Array.isArray(hb)&&hb.length>0)herbsData=hb;
@@ -2459,6 +2470,14 @@ document.getElementById('sync-modal-overlay').addEventListener('click',e=>{
   if(!purchaseMonth)purchaseMonth=todayStr().slice(0,7);
   const needsMinInit=herbsData.some(h=>!settingsData.minStock[h]);
   if(needsMinInit){herbsData.forEach(h=>{if(!settingsData.minStock[h])settingsData.minStock[h]=200;});await save(KEYS.settings,settingsData);}
+  // 기존 저장단가(이동평균/최저가)를 수량가중 누적평균으로 정정. 수동수정건은 보존
+  let priceMigrated=false;
+  herbsData.forEach(h=>{
+    if(settingsData.priceManual[h])return;
+    const avg=calcAvgPrice(h);
+    if(avg!=null&&settingsData.prices[h]!==avg){settingsData.prices[h]=avg;priceMigrated=true;}
+  });
+  if(priceMigrated)await save(KEYS.settings,settingsData);
   document.getElementById('sync-code-display').textContent=getSyncCode();
   setSyncStatus('☁ 동기화됨');
   setStatus('불러옴 ✓');
