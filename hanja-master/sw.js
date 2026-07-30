@@ -1,7 +1,7 @@
 // 서비스워커 - 오프라인 캐시
 // data.js / app.js 등을 수정하면 반드시 이 버전을 올릴 것.
 // 캐시 우선(cache-first) 전략이라 버전을 안 올리면 옛 파일이 계속 제공됨.
-const CACHE = "hanja-master-v31";
+const CACHE = "hanja-master-v32";
 const ASSETS = [
   "index.html",
   "styles.css",
@@ -10,6 +10,8 @@ const ASSETS = [
   "manifest.json",
   "icons/icon-192.png",
   "icons/icon-512.png",
+  "icons/icon-maskable-512.png",
+  "icons/apple-touch-icon.png",
 ];
 
 self.addEventListener("install", e => {
