@@ -1,0 +1,16 @@
+{
+  "name": "한자급수 마스터",
+  "short_name": "한자급수",
+  "description": "한자능력검정시험 대비 학습 앱 - 플래시카드, 퀴즈, 획순쓰기, 오답노트",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f1ea",
+  "theme_color": "#b5432f",
+  "lang": "ko",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

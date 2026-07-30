@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#b5432f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>한자급수 마스터</title>
+</head>
+<body>
+  <header>
+    <div class="title">한자급수 마스터<small id="lv-label">8급</small></div>
+  </header>
+
+  <main>
+    <!-- 홈 -->
+    <section class="view active" id="view-home">
+      <!-- 급수 · 진도 -->
+      <div class="home-card lv">
+        <div class="row">
+          <div>
+            <div class="lv-name" id="home-lv">8급</div>
+            <div class="lv-sub" id="home-scope">시험 범위 50자</div>
+          </div>
+          <button class="chip-btn" id="home-change-lv">급수 변경</button>
+        </div>
+        <div class="bar big"><i id="home-bar"></i></div>
+        <div class="lv-sub" id="home-progress">0자 익힘</div>
+      </div>
+
+      <!-- 이어서 학습 -->
+      <button class="home-resume" id="home-resume">
+        <span class="ic">▶</span>
+        <span class="txt"><b>이어서 학습하기</b><small id="home-resume-sub">읽기 카드 시작</small></span>
+      </button>
+
+      <!-- 학습 메뉴 -->
+      <div class="home-title">학습</div>
+      <div class="home-menu">
+        <button class="menu-card" data-go="flash"><span class="ic">📖</span><b>읽기</b><small id="home-n-flash"></small></button>
+        <button class="menu-card" data-go="write"><span class="ic">✏️</span><b>쓰기</b><small id="home-n-write"></small></button>
+        <button class="menu-card" data-go="quiz"><span class="ic">✅</span><b>퀴즈</b><small id="home-n-quiz"></small></button>
+        <button class="menu-card" data-go="review"><span class="ic">⭐</span><b>복습</b><small id="home-n-review"></small></button>
+      </div>
+
+      <!-- 학습 통계 — 읽기 / 쓰기 / 퀴즈 따로 봅니다 -->
+      <div class="home-title">학습 통계</div>
+      <div class="home-card">
+        <div class="seg seg-mode" id="stat-mode">
+          <button class="active" data-mode="read">📖 읽기</button>
+          <button data-mode="write">✏️ 쓰기</button>
+          <button data-mode="quiz">✅ 퀴즈</button>
+        </div>
+        <!-- 타일은 모드별로 항목이 달라 app.js 에서 만듭니다 -->
+        <div class="stat-row" id="stat-row"></div>
+      </div>
+    </section>
+
+    <!-- 읽기 (플래시카드) -->
+    <section class="view" id="view-flash">
+      <button class="study-bar" id="open-study">
+        <span id="study-summary">학습 설정</span>
+        <span class="gear">⚙︎</span>
+      </button>
+      <div class="progress-row">
+        <span id="flash-count">1 / 50</span>
+        <div class="bar"><i id="flash-bar"></i></div>
+        <button class="chip-btn" id="flash-reset">읽기 초기화</button>
+      </div>
+      <p class="empty" id="flash-empty" hidden>조건에 맞는 한자가 없어요.<br>학습 설정에서 포함할 글자를 늘려보세요.</p>
+      <div class="flash-wrap">
+        <div class="flash" id="flash">
+          <div class="face front">
+            <div class="hanzi" id="flash-hanzi">漢</div>
+            <div class="lv-badge" id="flash-lv"></div>
+            <div class="hint">탭하여 뜻·음 보기</div>
+          </div>
+          <div class="face back">
+            <div class="small-hanzi" id="flash-hanzi-sm">漢</div>
+            <div class="reading" id="flash-reading">한수 한</div>
+            <div class="chips">
+              <span class="chip" id="flash-tc"></span>
+              <span class="chip" id="flash-bu"></span>
+            </div>
+            <div class="hint">탭하여 한자 보기</div>
+          </div>
+        </div>
+      </div>
+      <!-- 카드를 뒤집으면 자가평가, 앞면일 땐 이동 버튼 -->
+      <div class="nav-row" id="flash-nav">
+        <button class="btn" id="flash-prev">◀ 이전</button>
+        <button class="btn" id="flash-shuffle">🔀 섞기</button>
+        <button class="btn primary" id="flash-next">다음 ▶</button>
+      </div>
+      <div class="nav-row grade-row" id="flash-grade">
+        <button class="btn grade no"    data-grade="no">✕<span>몰라요</span></button>
+        <button class="btn grade maybe" data-grade="maybe">?<span>헷갈려요</span></button>
+        <button class="btn grade yes"   data-grade="yes">✓<span>알아요</span></button>
+      </div>
+    </section>
+
+    <!-- 퀴즈 -->
+    <section class="view" id="view-quiz">
+      <div class="progress-row">
+        <span id="quiz-count">1 / 50</span>
+        <div class="bar"><i id="quiz-bar"></i></div>
+        <button class="chip-btn" id="quiz-reset">퀴즈 초기화</button>
+      </div>
+      <div class="quiz-score" id="quiz-score">점수 0 / 0</div>
+      <div class="quiz-q">
+        <div class="prompt-label" id="quiz-label">이 한자의 훈·음은?</div>
+        <div class="prompt" id="quiz-prompt">漢</div>
+      </div>
+      <div class="options" id="quiz-options"></div>
+      <div class="nav-row" style="margin-top:18px">
+        <button class="btn ghost" id="quiz-dunno">🤷 모르겠어요</button>
+      </div>
+    </section>
+
+    <!-- 쓰기 -->
+    <section class="view" id="view-write">
+      <button class="study-bar" id="open-study-write">
+        <span id="study-summary-write">학습 설정</span>
+        <span class="gear">⚙︎</span>
+      </button>
+      <div class="progress-row">
+        <span id="write-count">1 / 50</span>
+        <div class="bar"><i id="write-bar"></i></div>
+        <button class="chip-btn" id="write-reset">순서 초기화</button>
+      </div>
+      <p class="empty" id="write-empty" hidden></p>
+
+      <!-- 한자는 보여주지 않습니다. 훈음·급수·획수만 보고 직접 씁니다. -->
+      <div class="writer-box" id="write-box">
+        <div class="write-reading" id="write-reading">긴 장(:)</div>
+        <div class="chips">
+          <span class="chip" id="write-lv"></span>
+          <span class="chip" id="write-tc"></span>
+        </div>
+        <!-- 획순 재생판 위에 자유롭게 쓰는 캔버스를 겹쳐 둡니다 -->
+        <div class="write-stage" id="write-stage">
+          <div id="writer-target"></div>
+          <canvas id="write-canvas"></canvas>
+        </div>
+        <p class="write-note" id="write-note"></p>
+      </div>
+
+      <div class="nav-row">
+        <!-- 배속은 획순 재생에만 쓰이므로 획순 버튼 안에 배지로 넣었습니다.
+             배지를 누르면 재생 대신 1× → 2× → 3× 로 순환합니다. -->
+        <button class="btn" id="write-animate">✏️ 획순<span class="speed-tag" id="write-speed" title="배속 바꾸기">2×</span></button>
+        <button class="btn" id="write-shuffle">🔀 섞기</button>
+        <button class="btn ghost" id="write-again">↺ 지우기</button>
+      </div>
+      <div class="nav-row grade-row" id="write-grade">
+        <button class="btn grade no"    data-grade="no">✕<span>몰라요</span></button>
+        <button class="btn grade maybe" data-grade="maybe">?<span>헷갈려요</span></button>
+        <button class="btn grade yes"   data-grade="yes">✓<span>알아요</span></button>
+      </div>
+    </section>
+
+    <!-- 복습 — 읽기 / 쓰기 / 퀴즈 항목별로 나눠서 봅니다 -->
+    <section class="view" id="view-review">
+      <div class="seg seg-mode" id="review-mode">
+        <button class="active" data-mode="read">📖 읽기</button>
+        <button data-mode="write">✏️ 쓰기</button>
+        <button data-mode="quiz">✅ 퀴즈</button>
+      </div>
+      <!-- 읽기·쓰기는 자가평가 상태별로, 퀴즈는 틀린 횟수별로 나눕니다 -->
+      <div class="seg seg-sub" id="review-sub">
+        <button data-seg="no">✕ 몰라요</button>
+        <button data-seg="maybe">? 헷갈려요</button>
+        <button data-seg="yes">✓ 알아요</button>
+        <button data-seg="wrong">! 오답 전체</button>
+        <button data-seg="often">🔥 자주 틀림</button>
+      </div>
+      <div id="review-list"></div>
+      <div class="reset-row">
+        <button class="danger-btn" id="reset-know">읽기 기록 초기화</button>
+        <button class="danger-btn" id="reset-knowW">쓰기 기록 초기화</button>
+        <button class="danger-btn" id="reset-wrong">오답노트 초기화</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button class="active" data-tab="home"><span class="ic">🏠</span>홈</button>
+    <button data-tab="flash"><span class="ic">📖</span>읽기</button>
+    <button data-tab="write"><span class="ic">✏️</span>쓰기</button>
+    <button data-tab="quiz"><span class="ic">✅</span>퀴즈</button>
+    <button data-tab="review"><span class="ic">⭐</span>복습</button>
+  </nav>
+
+  <!-- 급수 선택 시트 -->
+  <div class="sheet-backdrop" id="sheet-backdrop"></div>
+  <div class="sheet" id="sheet">
+    <h3>급수 선택</h3>
+    <div id="level-list"></div>
+  </div>
+
+  <!-- 읽기/쓰기 학습 설정 시트 -->
+  <div class="sheet-backdrop" id="study-backdrop"></div>
+  <div class="sheet" id="study-sheet">
+    <h3>읽기 학습 설정</h3>
+    <p class="sheet-sub">카드 뒷면에 보여줄 정보와 포함할 글자를 고르세요</p>
+
+    <div class="opt-title">범위</div>
+    <button class="opt-row" data-toggle="newOnly">
+      <span>신출한자만</span><span class="switch"></span>
+    </button>
+    <button class="opt-row" data-toggle="fullRange" data-only="write">
+      <span>읽기 범위 전체<small>끄면 공식 쓰기 배정한자만</small></span><span class="switch"></span>
+    </button>
+
+    <div class="opt-title" data-only="flash">카드 뒷면에 표시</div>
+    <button class="opt-row" data-toggle="showReading" data-only="flash">
+      <span>훈·음</span><span class="switch"></span>
+    </button>
+    <button class="opt-row" data-toggle="showStroke" data-only="flash">
+      <span>총획</span><span class="switch"></span>
+    </button>
+    <button class="opt-row" data-toggle="showRadical" data-only="flash">
+      <span>부수</span><span class="switch"></span>
+    </button>
+
+    <div class="opt-title">포함할 글자</div>
+    <button class="know-row yes" data-know="yes">
+      <span class="mark">✓</span><span class="lbl">아는 글자</span><b id="cnt-yes">0자</b>
+    </button>
+    <button class="know-row maybe" data-know="maybe">
+      <span class="mark">?</span><span class="lbl">헷갈리는 글자</span><b id="cnt-maybe">0자</b>
+    </button>
+    <button class="know-row no" data-know="no">
+      <span class="mark">✕</span><span class="lbl">모르는 글자</span><b id="cnt-no">0자</b>
+    </button>
+    <div class="target-row"><span>대상 글자</span><b id="cnt-target">0자</b></div>
+
+    <div class="nav-row">
+      <button class="btn ghost" id="study-cancel">닫기</button>
+      <button class="btn primary" id="study-start">학습 시작</button>
+    </div>
+  </div>
+
+  <!-- 확인 팝업 -->
+  <div class="modal-backdrop" id="confirm-backdrop"></div>
+  <div class="modal" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <h4 id="confirm-title">학습 기록을 초기화할까요?</h4>
+    <p id="confirm-body"></p>
+    <div class="nav-row">
+      <button class="btn ghost" id="confirm-cancel">취소</button>
+      <button class="btn danger" id="confirm-ok">초기화</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
