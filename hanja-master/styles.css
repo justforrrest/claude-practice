@@ -231,11 +231,15 @@ main {
 .seg-mode button { padding: 11px 4px; font-size: 14px; }
 .seg-mode button.active { background: var(--accent); border-color: var(--accent); }
 .seg-sub { margin-bottom: 16px; }
-.seg-sub button { font-size: 12.5px; }
+/* 하위 필터가 4개(몰라요·헷갈려요·알아요·미학습)라 폰 폭에서 좁아집니다 */
+.seg-sub button { font-size: 12px; padding: 10px 2px; }
 /* 읽기·쓰기 하위 필터는 평가 버튼(.grade-row)과 같은 색으로 상태를 구분합니다 */
 .seg-sub button[data-seg="no"]    { color: var(--bad);  background: var(--bad-soft); }
 .seg-sub button[data-seg="maybe"] { color: var(--gold-ink); background: var(--gold-soft); }
 .seg-sub button[data-seg="yes"]   { color: var(--good); background: var(--good-soft); }
+/* 미학습은 아직 안 본 것이므로 3색 신호와 떼어 중립 회색으로 둡니다 */
+.seg-sub button[data-seg="unseen"] { color: var(--sub); background: var(--chip-bg); }
+.seg-sub button[data-seg="unseen"].active { background: var(--sub); border-color: var(--sub); color: #fff; }
 .seg-sub button[data-seg="no"].active    { background: var(--bad);  border-color: var(--bad);  color: #fff; }
 .seg-sub button[data-seg="maybe"].active { background: var(--gold-fill); border-color: var(--gold-fill); color: #fff; }
 .seg-sub button[data-seg="yes"].active   { background: var(--good); border-color: var(--good); color: #fff; }
@@ -326,11 +330,16 @@ nav.tabbar button.active { color: var(--accent); }
 .stat.yes:active   { border-color: var(--good); }
 .stat.maybe:active { border-color: var(--gold); }
 .stat.no:active    { border-color: var(--bad); }
+.stat.unseen:active { border-color: var(--sub); }
 .stat b { display: block; font-size: 22px; font-weight: 800; line-height: 1.2; }
 .stat small { font-size: 11px; color: var(--sub); font-weight: 700; }
 .stat.yes b { color: var(--good); }
 .stat.maybe b { color: var(--gold); }
 .stat.no b { color: var(--bad); }
+.stat.unseen b { color: var(--sub); }
+/* 타일이 4개로 늘어 폰 폭에서 좁아지므로 글자를 살짝 줄입니다 */
+.stat-row .stat { padding: 12px 2px; }
+.stat-row .stat small { font-size: 10.5px; }
 /* 눌러서 이동할 목록이 없는 타일(예: 총 틀린 횟수) */
 .stat.info b { color: var(--sub); }
 .stat:disabled { opacity: .85; }
@@ -424,6 +433,11 @@ nav.tabbar button.active { color: var(--accent); }
 .know-row.no.on    { border-color: var(--bad); }
 .know-row.no.on    .mark { background: var(--bad); }
 .know-row.no.on    b { color: var(--bad); }
+/* 미학습은 좋고 나쁨이 아니라 "아직 안 본 것"이라 3색 신호와 떼어 중립 회색으로 둡니다 */
+.know-row.unseen.on { border-color: var(--sub); }
+.know-row.unseen.on .mark { background: var(--sub); }
+.know-row.unseen.on b { color: var(--sub); }
+.know-row .lbl small { display: block; font-size: 11.5px; font-weight: 600; color: var(--sub); margin-top: 2px; }
 
 .target-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -452,6 +466,27 @@ nav.tabbar button.active { color: var(--accent); }
   font-size: 19px; font-weight: 700; line-height: 1; color: var(--ink);
 }
 .g-step:disabled { opacity: .35; }
+
+/* 백업 · 복원 */
+.backup-entry {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; text-align: left;
+}
+.backup-entry b { display: block; font-size: 15px; font-weight: 800; }
+.backup-entry small { display: block; font-size: 12px; color: var(--sub); font-weight: 600; margin-top: 3px; }
+.backup-entry .chev { color: var(--sub); font-size: 20px; font-weight: 700; flex: none; }
+.backup-ta {
+  width: 100%; box-sizing: border-box; margin: 10px 0 4px;
+  padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--card); color: var(--ink);
+  /* 16px 미만이면 아이폰이 입력할 때 화면을 확대해 버립니다 */
+  font-size: 16px; font-family: inherit; line-height: 1.4;
+  resize: none; overflow: auto;
+}
+.backup-ta[readonly] { color: var(--sub); }
+/* 파일 입력은 기본 모습이 제각각이라 label 을 버튼처럼 쓰고 input 은 숨깁니다 */
+.file-btn { display: block; text-align: center; }
+.file-btn input { display: none; }
 
 /* Level sheet */
 .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 40; display: none; }

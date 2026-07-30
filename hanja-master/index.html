@@ -74,6 +74,13 @@
         <!-- 타일은 모드별로 항목이 달라 app.js 에서 만듭니다 -->
         <div class="stat-row" id="stat-row"></div>
       </div>
+
+      <!-- 백업 · 복원 — 아이폰은 홈화면 앱을 지우면 기록이 함께 날아갈 수 있습니다 -->
+      <div class="home-title">학습 기록</div>
+      <button class="home-card backup-entry" id="open-backup">
+        <span><b>기록 백업 · 복원</b><small>기기를 바꾸거나 앱을 다시 설치할 때</small></span>
+        <span class="chev">›</span>
+      </button>
     </section>
 
     <!-- 읽기 (플래시카드) -->
@@ -189,6 +196,7 @@
         <button data-seg="no">✕ 몰라요</button>
         <button data-seg="maybe">? 헷갈려요</button>
         <button data-seg="yes">✓ 알아요</button>
+        <button data-seg="unseen">○ 미학습</button>
         <button data-seg="wrong">! 오답 전체</button>
         <button data-seg="often">🔥 자주 틀림</button>
       </div>
@@ -249,7 +257,10 @@
       <span class="mark">?</span><span class="lbl">헷갈리는 글자</span><b id="cnt-maybe">0자</b>
     </button>
     <button class="know-row no" data-know="no">
-      <span class="mark">✕</span><span class="lbl">모르는 글자</span><b id="cnt-no">0자</b>
+      <span class="mark">✕</span><span class="lbl">모르는 글자<small>몰라요를 누른 것</small></span><b id="cnt-no">0자</b>
+    </button>
+    <button class="know-row unseen" data-know="unseen">
+      <span class="mark">○</span><span class="lbl">미학습 글자<small>아직 평가 안 한 것</small></span><b id="cnt-unseen">0자</b>
     </button>
     <div class="target-row"><span>대상 글자</span><b id="cnt-target">0자</b></div>
 
@@ -281,6 +292,34 @@
 
     <div class="nav-row">
       <button class="btn primary" id="daily-close">확인</button>
+    </div>
+  </div>
+
+  <!-- 학습 기록 백업 · 복원 시트 -->
+  <div class="sheet-backdrop" id="backup-backdrop"></div>
+  <div class="sheet" id="backup-sheet">
+    <h3>학습 기록 백업 · 복원</h3>
+    <p class="sheet-sub">지금 기록: <b id="backup-now">—</b></p>
+
+    <div class="opt-title">내보내기</div>
+    <div class="nav-row">
+      <button class="btn" id="backup-share">📤 파일로 저장</button>
+      <button class="btn primary" id="backup-copy">📋 복사하기</button>
+    </div>
+    <!-- 위 두 방법이 막혔을 때 직접 골라 복사하는 칸 -->
+    <textarea class="backup-ta" id="backup-out" readonly rows="3"></textarea>
+
+    <div class="opt-title">불러오기</div>
+    <label class="btn ghost file-btn">
+      📁 파일 선택
+      <input type="file" id="backup-file" accept="application/json,.json" />
+    </label>
+    <textarea class="backup-ta" id="backup-in" rows="3"
+      placeholder="백업 내용을 여기에 붙여넣으세요"></textarea>
+    <p class="sheet-sub">불러오면 지금 이 기기의 기록은 덮어써집니다</p>
+    <div class="nav-row">
+      <button class="btn ghost" id="backup-close">닫기</button>
+      <button class="btn danger" id="backup-restore">불러오기</button>
     </div>
   </div>
 

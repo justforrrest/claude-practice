@@ -15,7 +15,8 @@ let state = {
     showRadical: true,  // 뒷면에 부수 표시
     yes: true,          // 아는 글자 포함
     maybe: true,        // 헷갈리는 글자 포함
-    no: true,           // 모르는 글자(미평가 포함) 포함
+    no: true,           // 모르는 글자(몰라요를 누른 것) 포함
+    unseen: true,       // 미학습 글자(아직 평가 안 한 것) 포함
   },
   // 하루 학습량 목표. 자가평가를 누른 글자 수로 자동 집계합니다.
   daily: {
@@ -39,14 +40,19 @@ function load() {
   if (!LEVELS.some(l => l.code === state.level)) state.level = "8";
   if (state.scope !== "new") state.scope = "cumulative";
   // 예전 저장본에는 flash 설정이 없으므로 기본값을 채워 넣음
+  // 미학습 구분이 없던 저장본에는 unseen 키가 없습니다. 예전 "모르는 글자" 스위치가
+  // 미학습까지 포함했으므로 그 값을 물려받게 합니다 (기본값을 덮기 전에 확인).
+  const savedFlash = state.flash || {}, savedWrite = state.write || {};
+  if (savedFlash.unseen === undefined && savedFlash.no !== undefined) savedFlash.unseen = savedFlash.no;
+  if (savedWrite.unseen === undefined && savedWrite.no !== undefined) savedWrite.unseen = savedWrite.no;
   state.flash = Object.assign(
-    { showReading: true, showStroke: true, showRadical: true, yes: true, maybe: true, no: true },
-    state.flash || {}
+    { showReading: true, showStroke: true, showRadical: true, yes: true, maybe: true, no: true, unseen: true },
+    savedFlash
   );
   // 쓰기 탭 설정 (fullRange=true 면 공식 쓰기 범위 대신 읽기 범위 전체를 씁니다)
   state.write = Object.assign(
-    { yes: true, maybe: true, no: true, fullRange: false, speed: 1 },
-    state.write || {}
+    { yes: true, maybe: true, no: true, unseen: true, fullRange: false, speed: 1 },
+    savedWrite
   );
   if (![1, 2, 3].includes(state.write.speed)) state.write.speed = 1;
   // 하루 학습량 목표 (예전 저장본에는 없음)
@@ -110,9 +116,16 @@ function deck() {
   }
   return deckCache.list;
 }
-// 자가평가 상태. 아직 평가하지 않은 글자는 "모르는 글자"로 봅니다.
+// 자가평가 상태 4단계.
+//   "no"     = 몰라요를 누른 것 — 한 번 봤는데 기억이 안 나는 글자
+//   "unseen" = 아직 평가한 적 없는 글자
+// 이 둘을 갈라야 "봤는데 잊은 것"만 따로 복습할 수 있습니다. 기록에는 원래
+// undefined / "no" 로 구분돼 있었고, 예전 knowOf 가 둘을 "no" 로 접었을 뿐입니다.
+// ("new" 는 state.scope 의 신습한자만 뜻으로 이미 쓰이므로 "unseen" 을 씁니다.)
+const GRADES = ["yes", "maybe", "no", "unseen"];
 function knowOf(c) {
-  return state.know[c] === "yes" || state.know[c] === "maybe" ? state.know[c] : "no";
+  const v = state.know[c];
+  return v === "yes" || v === "maybe" || v === "no" ? v : "unseen";
 }
 
 // 읽기 카드에 쓸 목록 = 현재 급수 범위 중 "포함할 글자"로 고른 것만
@@ -141,9 +154,10 @@ function writeRangeCodes(levelCode, scope, fullRange) {
   return cum.filter(c => !prev.includes(c));
 }
 
-// 쓰기 자가평가 (읽기와 별도로 쌓습니다)
+// 쓰기 자가평가 (읽기와 별도로 쌓습니다). 4단계 구분은 knowOf 와 같습니다.
 function knowWOf(c) {
-  return state.knowW[c] === "yes" || state.knowW[c] === "maybe" ? state.knowW[c] : "no";
+  const v = state.knowW[c];
+  return v === "yes" || v === "maybe" || v === "no" ? v : "unseen";
 }
 
 // 쓰기 배정 범위 전체 (자가평가 필터 적용 전, 가나다순).
@@ -196,11 +210,13 @@ $$("nav.tabbar button").forEach(b => b.addEventListener("click", () => switchTab
 let confirmAction = null;
 
 // onOk 를 주지 않으면 알림만 하는 창이 됩니다.
-function openConfirm(title, body, onOk) {
+// okLabel 로 확인 버튼 글자를 바꿉니다 (기본은 기록 초기화용 "초기화").
+function openConfirm(title, body, onOk, okLabel) {
   $("#confirm-title").textContent = title;
   $("#confirm-body").innerHTML = body;
   confirmAction = onOk || null;
   $("#confirm-ok").hidden = !onOk;
+  $("#confirm-ok").textContent = okLabel || "초기화";
   $("#confirm-cancel").textContent = onOk ? "취소" : "확인";
   $("#confirm-backdrop").classList.add("open");
   $("#confirm-modal").classList.add("open");
@@ -277,7 +293,7 @@ let statMode = "read"; // "read" | "write" | "quiz"
 
 // 모드별 집계 대상. 읽기는 급수 범위 전체(deck), 쓰기는 쓰기 배정 범위(writeBase)입니다.
 function countBy(list, gradeOf) {
-  const cnt = { yes: 0, maybe: 0, no: 0 };
+  const cnt = { yes: 0, maybe: 0, no: 0, unseen: 0 };
   list.forEach(h => cnt[gradeOf(h.c)]++);
   return cnt;
 }
@@ -367,9 +383,10 @@ function statTiles() {
   const isW = statMode === "write";
   const c = countBy(isW ? writeBase() : deck(), isW ? knowWOf : knowOf);
   return [
-    { cls: "yes",   label: isW ? "쓰는 글자" : "읽는 글자", n: c.yes,   seg: "yes" },
-    { cls: "maybe", label: "헷갈리는",                      n: c.maybe, seg: "maybe" },
-    { cls: "no",    label: isW ? "못 쓰는" : "모르는",       n: c.no,    seg: "no" },
+    { cls: "yes",    label: isW ? "쓰는 글자" : "읽는 글자", n: c.yes,    seg: "yes" },
+    { cls: "maybe",  label: "헷갈리는",                      n: c.maybe,  seg: "maybe" },
+    { cls: "no",     label: isW ? "못 쓰는" : "모르는",       n: c.no,     seg: "no" },
+    { cls: "unseen", label: "미학습",                        n: c.unseen, seg: "unseen" },
   ];
 }
 
@@ -954,23 +971,29 @@ $("#write-reset").addEventListener("click", resetWrite);
 // ---------- 복습 ----------
 // 읽기 / 쓰기 / 퀴즈를 항목별로 나눠서 봅니다. 기록이 서로 다른 곳에 쌓이므로
 // (know / knowW / wrong) 하위 필터도 모드마다 다릅니다.
-//   읽기·쓰기 → 자가평가 상태별 (모르는 / 헷갈리는 / 아는)
+//   읽기·쓰기 → 자가평가 상태별 (모르는 / 헷갈리는 / 아는 / 미학습)
 //   퀴즈      → 오답 전체 / 3회 이상 자주 틀린 것
 let reviewMode = "read"; // "read" | "write" | "quiz"
-// 모드를 오가도 보던 필터를 기억합니다. 복습은 "모르는" 것부터 보는 게 기본.
+// 모드를 오가도 보던 필터를 기억합니다. 복습은 "모르는"(봤는데 잊은) 것부터가 기본.
 let reviewSegBy = { read: "no", write: "no", quiz: "wrong" };
-const REVIEW_SEGS = { read: ["no", "maybe", "yes"], write: ["no", "maybe", "yes"], quiz: ["wrong", "often"] };
+const REVIEW_SEGS = {
+  read: ["no", "maybe", "yes", "unseen"],
+  write: ["no", "maybe", "yes", "unseen"],
+  quiz: ["wrong", "often"],
+};
 
 const REVIEW_EMPTY = {
   read: {
     yes:   "읽을 수 있는 글자가 없어요.<br>읽기 카드에서 <b>알아요</b>를 눌러보세요.",
     maybe: "헷갈리는 글자가 없어요.<br>읽기 카드에서 <b>헷갈려요</b>를 눌러보세요.",
-    no:    "모르는 글자가 없어요.<br>이 급수 읽기는 다 익히셨네요! 👏",
+    no:    "모르는 글자가 없어요.<br>읽기 카드에서 <b>몰라요</b>를 누른 글자가 여기 모입니다.",
+    unseen: "미학습 글자가 없어요.<br>이 급수는 전부 한 번씩 보셨네요! 👏",
   },
   write: {
     yes:   "쓸 수 있는 글자가 없어요.<br>쓰기 연습에서 <b>알아요</b>를 눌러보세요.",
     maybe: "헷갈리는 글자가 없어요.<br>쓰기 연습에서 <b>헷갈려요</b>를 눌러보세요.",
-    no:    "못 쓰는 글자가 없어요.<br>이 급수 쓰기는 다 익히셨네요! 👏",
+    no:    "못 쓰는 글자가 없어요.<br>쓰기 연습에서 <b>몰라요</b>를 누른 글자가 여기 모입니다.",
+    unseen: "미학습 글자가 없어요.<br>쓰기 배정한자를 전부 한 번씩 보셨네요! 👏",
   },
   quiz: {
     wrong: "오답이 없어요! 👏<br>퀴즈를 풀면 틀린 한자가 여기 모입니다.",
@@ -982,8 +1005,9 @@ const REVIEW_EMPTY = {
 // 읽기·쓰기는 평가 버튼(.grade-row)과 같은 말을 써서 어떤 기록을 보는지 바로 알게 합니다.
 function reviewSegLabel(mode, seg) {
   if (mode === "quiz") return seg === "wrong" ? "! 오답 전체" : "🔥 자주 틀림";
-  if (seg === "yes")   return "✓ 알아요";
-  if (seg === "maybe") return "? 헷갈려요";
+  if (seg === "yes")    return "✓ 알아요";
+  if (seg === "maybe")  return "? 헷갈려요";
+  if (seg === "unseen") return "○ 미학습";
   return "✕ 몰라요";
 }
 
@@ -1043,9 +1067,12 @@ function renderReview() {
   const tip = document.createElement("p");
   tip.className = "hint";
   tip.style.cssText = "position:static;text-align:center;margin:0 0 12px";
+  // 평가를 지우면 그 글자는 "미학습"으로 돌아갑니다 (지금 보는 목록에서도 빠집니다).
   tip.textContent = reviewMode === "quiz"
     ? `${chars.length}자 · 탭하면 오답노트에서 지웁니다`
-    : `${chars.length}자 · 탭하면 평가를 지워 "몰라요"로 되돌립니다`;
+    : seg === "unseen"
+      ? `${chars.length}자 · 아직 한 번도 평가하지 않은 글자`
+      : `${chars.length}자 · 탭하면 평가를 지워 "미학습"으로 되돌립니다`;
 
   const grid = document.createElement("div");
   grid.className = "chip-grid";
@@ -1173,11 +1200,11 @@ function renderStudySheet() {
 
   // 자가평가 상태별 글자 수 (해당 탭의 범위·평가 기준)
   const cnt = countBy(isWrite ? writeBase() : deck(), isWrite ? knowWOf : knowOf);
-  ["yes", "maybe", "no"].forEach(k => {
+  GRADES.forEach(k => {
     $("#cnt-" + k).textContent = cnt[k] + "자";
     $(`#study-sheet .know-row[data-know="${k}"]`).classList.toggle("on", !!o[k]);
   });
-  const target = ["yes", "maybe", "no"].reduce((a, k) => a + (o[k] ? cnt[k] : 0), 0);
+  const target = GRADES.reduce((a, k) => a + (o[k] ? cnt[k] : 0), 0);
   $("#cnt-target").textContent = target + "자";
   $("#study-start").disabled = target === 0;
   $("#study-start").textContent = isWrite ? "쓰기 시작" : "읽기 시작";
@@ -1304,6 +1331,115 @@ $("#daily-edit").addEventListener("click", openGoalSheet);
 $("#daily-off").addEventListener("click", openGoalSheet);
 $("#daily-close").addEventListener("click", closeGoalSheet);
 $("#daily-backdrop").addEventListener("click", closeGoalSheet);
+
+// ---------- 학습 기록 백업 · 복원 ----------
+// 아이폰 홈화면 웹앱은 Safari 와 저장소가 따로여서, 아이콘을 지우면 localStorage
+// 기록이 함께 날아갈 수 있습니다. 앱 밖에서는 그 저장소를 볼 수 없으므로
+// 내보내기·불러오기를 앱 안에 둡니다.
+//
+// 형식은 state 를 손대지 않고 그대로 감쌉니다. 압축·축약 코덱을 두면 버그 하나로
+// 학습 기록이 날아가므로 용량보다 무손실을 택했습니다.
+const BACKUP_APP = "seodanggae-kim";
+const BACKUP_V = 1;
+
+function backupJSON() {
+  return JSON.stringify({
+    app: BACKUP_APP,
+    v: BACKUP_V,
+    exportedAt: new Date().toISOString(),
+    state,
+  });
+}
+
+// 기록이 얼마나 담겼는지 — 내보내기 전/불러오기 전 확인용
+function recordSummary(s) {
+  const n = o => Object.keys(o || {}).length;
+  const wrong = Object.keys(s.wrong || {}).filter(c => s.wrong[c] > 0).length;
+  return `읽기 ${n(s.know)}자 · 쓰기 ${n(s.knowW)}자 · 오답 ${wrong}자`;
+}
+
+// 붙여넣기·파일 어느 쪽이든 이 함수를 거칩니다.
+// 되돌릴 수 없는 동작이므로 요약을 보여주고 확인을 받은 뒤에만 덮어씁니다.
+function restoreFrom(text) {
+  let data;
+  try {
+    data = JSON.parse((text || "").trim());
+  } catch (e) {
+    return openConfirm("불러오지 못했어요", "백업 내용이 온전하지 않습니다.<br>복사한 내용이 잘리지 않았는지 확인해 주세요.");
+  }
+  // 예전에 state 만 저장해 둔 것도 받아 줍니다.
+  const s = data && data.state ? data.state : data;
+  if (!s || typeof s !== "object" || Array.isArray(s) || (!s.know && !s.knowW)) {
+    return openConfirm("불러오지 못했어요", "이 앱의 백업 파일이 아닌 것 같습니다.");
+  }
+  const when = data.exportedAt ? new Date(data.exportedAt).toLocaleString("ko-KR") : "알 수 없음";
+  openConfirm(
+    "이 기록을 불러올까요?",
+    `<b>${recordSummary(s)}</b><br>내보낸 시각: ${when}<br><br>지금 이 기기의 학습 기록은 <b>덮어써집니다.</b>`,
+    () => {
+      localStorage.setItem(STORE_KEY, JSON.stringify(s));
+      // 캐시·화면 상태를 하나씩 되돌리는 대신 새로고침으로 load() 를 다시 타게 합니다.
+      location.reload();
+    },
+    "불러오기"
+  );
+}
+
+function renderBackupSheet() {
+  $("#backup-now").textContent = recordSummary(state);
+  $("#backup-out").value = backupJSON();
+  $("#backup-in").value = "";
+  // 파일 공유는 아이폰 15+ 등에서만 됩니다. 안 되면 복사하기만 씁니다.
+  const canFile = !!(navigator.canShare && navigator.canShare({
+    files: [new File(["{}"], "t.json", { type: "application/json" })],
+  }));
+  $("#backup-share").hidden = !canFile;
+}
+
+$("#backup-share").addEventListener("click", async () => {
+  const file = new File([backupJSON()], "서당개김백국-백업.json", { type: "application/json" });
+  try {
+    await navigator.share({ files: [file], title: "서당개 김백국 학습 기록" });
+  } catch (e) {
+    // 사용자가 공유 창을 닫은 것도 여기로 옵니다 — 조용히 넘깁니다.
+  }
+});
+
+$("#backup-copy").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(backupJSON());
+    openConfirm("복사했어요", "메모 앱에 붙여넣어 두세요.<br>재설치한 뒤 <b>불러오기</b>에 그대로 붙여넣으면 됩니다.");
+  } catch (e) {
+    // 클립보드가 막힌 경우: 아래 칸을 직접 골라 복사하도록 안내합니다.
+    $("#backup-out").select();
+    openConfirm("직접 복사해 주세요", "아래 칸이 선택되었습니다.<br>길게 눌러 <b>복사</b>를 골라 주세요.");
+  }
+});
+
+$("#backup-file").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => restoreFrom(String(r.result));
+  r.onerror = () => openConfirm("불러오지 못했어요", "파일을 읽을 수 없습니다.");
+  r.readAsText(f);
+  e.target.value = ""; // 같은 파일을 다시 고를 수 있게 비웁니다
+});
+
+$("#backup-restore").addEventListener("click", () => restoreFrom($("#backup-in").value));
+
+function openBackupSheet() {
+  renderBackupSheet();
+  $("#backup-backdrop").classList.add("open");
+  $("#backup-sheet").classList.add("open");
+}
+function closeBackupSheet() {
+  $("#backup-backdrop").classList.remove("open");
+  $("#backup-sheet").classList.remove("open");
+}
+$("#open-backup").addEventListener("click", openBackupSheet);
+$("#backup-close").addEventListener("click", closeBackupSheet);
+$("#backup-backdrop").addEventListener("click", closeBackupSheet);
 
 // ---------- 초기화 ----------
 load();
