@@ -289,7 +289,6 @@ $("#home-resume").addEventListener("click", () => {
     state.level = r.level;
     state.scope = r.scope;
     save();
-    $("#lv-label").textContent = (LEVELS.find(l => l.code === r.level) || {}).name || r.level;
     resetFlash();
     const i = flashDeck().findIndex(h => h.c === r.c);
     if (i >= 0) { flashIdx = flashOrder.indexOf(i); renderFlash(); }
@@ -1126,7 +1125,6 @@ $("#study-sheet").addEventListener("click", e => {
 // ---------- 급수 선택 ----------
 function applyLevelChange() {
   save();
-  $("#lv-label").textContent = (LEVELS.find(l => l.code === state.level) || {}).name || state.level;
   resetFlash();
   const active = document.querySelector("nav.tabbar button.active").dataset.tab;
   switchTab(active);
@@ -1172,7 +1170,6 @@ $("#sheet-backdrop").addEventListener("click", closeSheet);
 
 // ---------- 초기화 ----------
 load();
-$("#lv-label").textContent = (LEVELS.find(l => l.code === state.level) || {}).name || state.level;
 resetFlash();
 renderHome();
 
