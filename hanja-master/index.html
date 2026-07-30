@@ -11,7 +11,7 @@
        두 개를 걸면 iOS 가 나중 것을 골라 버리므로 하나만 둡니다. -->
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="styles.css" />
-  <title>한자급수 마스터</title>
+  <title>서당개김백국</title>
 </head>
 <body>
   <!-- 헤더 없음: 폰에서 본문 면적을 확보하기 위해 제거했습니다.
@@ -30,6 +30,17 @@
         </div>
         <div class="bar big"><i id="home-bar"></i></div>
         <div class="lv-sub" id="home-progress">0자 익힘</div>
+      </div>
+
+      <!-- 오늘의 분량 — 자가평가를 누른 글자 수로 자동 집계됩니다 -->
+      <div class="home-card daily">
+        <div class="row">
+          <div class="daily-head">오늘의 분량</div>
+          <button class="chip-btn" id="daily-edit">목표 변경</button>
+        </div>
+        <div class="daily-row" id="daily-read"></div>
+        <div class="daily-row" id="daily-write"></div>
+        <button class="daily-off" id="daily-off" hidden>목표가 꺼져 있어요 · 눌러서 정하기</button>
       </div>
 
       <!-- 이어서 학습 -->
@@ -93,7 +104,6 @@
       <!-- 카드를 뒤집으면 자가평가, 앞면일 땐 이동 버튼 -->
       <div class="nav-row" id="flash-nav">
         <button class="btn" id="flash-prev">◀ 이전</button>
-        <button class="btn" id="flash-shuffle">🔀 섞기</button>
         <button class="btn primary" id="flash-next">다음 ▶</button>
       </div>
       <div class="nav-row grade-row" id="flash-grade">
@@ -130,7 +140,7 @@
       <div class="progress-row">
         <span id="write-count">1 / 50</span>
         <div class="bar"><i id="write-bar"></i></div>
-        <button class="chip-btn" id="write-reset">순서 초기화</button>
+        <button class="chip-btn" id="write-reset">처음부터</button>
       </div>
       <p class="empty" id="write-empty" hidden></p>
 
@@ -153,7 +163,6 @@
         <!-- 배속은 획순 재생에만 쓰이므로 획순 버튼 안에 배지로 넣었습니다.
              배지를 누르면 재생 대신 1× → 2× → 3× 로 순환합니다. -->
         <button class="btn" id="write-animate">✏️ 획순<span class="speed-tag" id="write-speed" title="배속 바꾸기">2×</span></button>
-        <button class="btn" id="write-shuffle">🔀 섞기</button>
         <button class="btn ghost" id="write-again">↺ 지우기</button>
       </div>
       <div class="nav-row grade-row" id="write-grade">
@@ -242,6 +251,31 @@
     <div class="nav-row">
       <button class="btn ghost" id="study-cancel">닫기</button>
       <button class="btn primary" id="study-start">학습 시작</button>
+    </div>
+  </div>
+
+  <!-- 하루 목표 설정 시트 -->
+  <div class="sheet-backdrop" id="daily-backdrop"></div>
+  <div class="sheet" id="daily-sheet">
+    <h3>오늘의 분량 목표</h3>
+    <p class="sheet-sub">자가평가(몰라요·헷갈려요·알아요)를 누른 글자 수로 자동 집계됩니다</p>
+
+    <div class="goal-row" id="goal-read" data-goal="read">
+      <span class="g-lbl">📖 읽기</span>
+      <button class="g-step" data-step="-1" aria-label="줄이기">−</button>
+      <b class="g-val">20자</b>
+      <button class="g-step" data-step="1" aria-label="늘리기">+</button>
+    </div>
+    <div class="goal-row" id="goal-write" data-goal="write">
+      <span class="g-lbl">✏️ 쓰기</span>
+      <button class="g-step" data-step="-1" aria-label="줄이기">−</button>
+      <b class="g-val">10자</b>
+      <button class="g-step" data-step="1" aria-label="늘리기">+</button>
+    </div>
+    <p class="sheet-sub">0자로 내리면 그 목표는 꺼집니다</p>
+
+    <div class="nav-row">
+      <button class="btn primary" id="daily-close">확인</button>
     </div>
   </div>
 

@@ -1,4 +1,4 @@
-// ===== 한자급수 마스터 =====
+// ===== 서당개김백국 =====
 
 const STORE_KEY = "hanja-master-v1";
 let state = {
@@ -16,6 +16,15 @@ let state = {
     yes: true,          // 아는 글자 포함
     maybe: true,        // 헷갈리는 글자 포함
     no: true,           // 모르는 글자(미평가 포함) 포함
+  },
+  // 하루 학습량 목표. 자가평가를 누른 글자 수로 자동 집계합니다.
+  daily: {
+    read: 20,        // 하루 읽기 목표 자수 (0 = 목표 끔)
+    write: 10,       // 하루 쓰기 목표 자수
+    date: "",        // 집계 기준 날짜 "2026-07-30"
+    readChars: [],   // 오늘 평가한 읽기 글자 — 같은 글자를 다시 평가해도 한 번만 셉니다
+    writeChars: [],
+    cheered: [],     // 오늘 축하 알림을 이미 띄운 모드 ["read", "write"]
   },
   // 마지막으로 보던 카드 (홈의 "이어서 학습하기"용)
   resume: null, // { level, scope, c }
@@ -40,9 +49,15 @@ function load() {
     state.write || {}
   );
   if (![1, 2, 3].includes(state.write.speed)) state.write.speed = 1;
+  // 하루 학습량 목표 (예전 저장본에는 없음)
+  state.daily = Object.assign(
+    { read: 20, write: 10, date: "", readChars: [], writeChars: [], cheered: [] },
+    state.daily || {}
+  );
   state.knowW = state.knowW || {};
   state.quizOk = state.quizOk || {}; // 예전 저장본에는 없음
   delete state.fav; // 즐겨찾기 기능은 제거됨
+  rollDaily(); // 날짜가 넘어갔으면 오늘치 집계를 비웁니다
 }
 function save() {
   localStorage.setItem(STORE_KEY, JSON.stringify(state));
@@ -74,14 +89,24 @@ function levelNameOf(lvCode) {
   return lv ? lv.name : lvCode;
 }
 
-// 현재 급수의 한자 목록.
-// 최대 5,978자를 매번 훑지 않도록 급수/범위 기준으로 캐시합니다.
+// 가나다순 — 음(s)이 먼저, 같으면 훈(h), 그래도 같으면 한자(c)로 갈라 세웁니다.
+// 급수는 보지 않으므로 누적 범위에서도 사전처럼 8급·5급이 섞여 이어집니다.
+// 데이터 5,978자 모두 s(음)가 채워져 있어 빈 값 처리는 필요 없습니다.
+const KO_COLLATOR = new Intl.Collator("ko");
+function byGanada(a, b) {
+  return KO_COLLATOR.compare(a.s, b.s)
+      || KO_COLLATOR.compare(a.h, b.h)
+      || KO_COLLATOR.compare(a.c, b.c);
+}
+
+// 현재 급수의 한자 목록 (가나다순).
+// 최대 5,978자를 매번 훑고 정렬하지 않도록 급수/범위 기준으로 캐시합니다.
 let deckCache = { key: null, list: [] };
 function deck() {
   const key = state.level + "|" + state.scope;
   if (deckCache.key !== key) {
     const codes = new Set(levelCodes(state.level, state.scope));
-    deckCache = { key, list: HANJA.filter(h => codes.has(h.lv)) };
+    deckCache = { key, list: HANJA.filter(h => codes.has(h.lv)).sort(byGanada) };
   }
   return deckCache.list;
 }
@@ -121,10 +146,22 @@ function knowWOf(c) {
   return state.knowW[c] === "yes" || state.knowW[c] === "maybe" ? state.knowW[c] : "no";
 }
 
+// 쓰기 배정 범위 전체 (자가평가 필터 적용 전, 가나다순).
+// 홈 통계와 쓰기 카드가 함께 쓰므로 deck() 과 같은 방식으로 캐시합니다.
+let writeDeckCache = { key: null, list: [] };
+function writeBase() {
+  const key = state.level + "|" + state.scope + "|" + (state.write.fullRange ? "1" : "0");
+  if (writeDeckCache.key !== key) {
+    const codes = new Set(writeRangeCodes(state.level, state.scope, state.write.fullRange));
+    writeDeckCache = { key, list: HANJA.filter(h => codes.has(h.lv)).sort(byGanada) };
+  }
+  return writeDeckCache.list;
+}
+
+// 쓰기 카드에 쓸 목록 = 쓰기 배정 범위 중 "포함할 글자"로 고른 것만
 function writeDeck() {
   const w = state.write;
-  const codes = new Set(writeRangeCodes(state.level, state.scope, w.fullRange));
-  return HANJA.filter(h => codes.has(h.lv) && w[knowWOf(h.c)]);
+  return writeBase().filter(h => w[knowWOf(h.c)]);
 }
 
 function findByChar(c) {
@@ -181,16 +218,64 @@ $("#confirm-ok").addEventListener("click", () => {
   if (fn) fn();
 });
 
+// ---------- 하루 학습량 ----------
+// 읽기·쓰기에서 자가평가를 누른 "서로 다른 글자" 수를 오늘치로 셉니다.
+// 같은 글자를 다시 평가해도 두 번 세지 않습니다.
+const GOAL_STEP = 5, GOAL_MAX = 100;
+
+// 로컬 날짜 기준. toISOString() 은 UTC라 한국에서는 오전 9시에 날짜가 바뀝니다.
+function todayKey() {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+// 날짜가 넘어갔으면 오늘치를 비웁니다 (목표 자수는 그대로 둡니다).
+// 앱을 켜 둔 채 자정을 넘길 수 있어 집계·렌더 직전에도 부릅니다.
+function rollDaily() {
+  const t = todayKey();
+  if (state.daily.date === t) return false;
+  state.daily.date = t;
+  state.daily.readChars = [];
+  state.daily.writeChars = [];
+  state.daily.cheered = [];
+  return true;
+}
+
+// mode: "read" | "write"
+function dailyProgress(mode) {
+  const dl = state.daily;
+  const chars = mode === "write" ? dl.writeChars : dl.readChars;
+  const goal = mode === "write" ? dl.write : dl.read;
+  return { done: chars.length, goal, met: goal > 0 && chars.length >= goal };
+}
+
+function countDaily(mode, char) {
+  rollDaily();
+  const dl = state.daily;
+  const key = mode === "write" ? "writeChars" : "readChars";
+  if (dl[key].includes(char)) return;
+  dl[key].push(char);
+
+  // 목표를 막 채운 순간 한 번만 축하합니다 (onOk 없이 = 알림 전용 팝업)
+  const p = dailyProgress(mode);
+  if (p.met && !dl.cheered.includes(mode)) {
+    dl.cheered.push(mode);
+    const name = mode === "write" ? "쓰기" : "읽기";
+    openConfirm(
+      `오늘의 ${name} 분량 완료! 🎉`,
+      `${p.goal}자를 다 보셨어요. 계속 해도 좋고, 여기서 멈춰도 오늘 몫은 채웠습니다.`
+    );
+  }
+}
+
 // ---------- 홈 ----------
 // 읽기 / 쓰기 / 퀴즈는 기록이 서로 다른 곳에 쌓이므로(know / knowW / wrong)
 // 통계도 모드를 골라서 봅니다.
 let statMode = "read"; // "read" | "write" | "quiz"
 
-// 모드별 집계 대상. 읽기는 급수 범위 전체, 쓰기는 쓰기 배정 범위입니다.
-function writeBase() {
-  const codes = new Set(writeRangeCodes(state.level, state.scope, state.write.fullRange));
-  return HANJA.filter(h => codes.has(h.lv));
-}
+// 모드별 집계 대상. 읽기는 급수 범위 전체(deck), 쓰기는 쓰기 배정 범위(writeBase)입니다.
 function countBy(list, gradeOf) {
   const cnt = { yes: 0, maybe: 0, no: 0 };
   list.forEach(h => cnt[gradeOf(h.c)]++);
@@ -235,7 +320,35 @@ function renderHome() {
   $("#home-n-quiz").textContent = `${quizOk}/${d.length}자`;
   $("#home-n-review").textContent = `${d.length - needReview}/${d.length}자`;
 
+  renderDaily();
   renderStats();
+}
+
+// ---------- 홈: 오늘의 분량 ----------
+function renderDaily() {
+  rollDaily();
+  // 쓰기 배정한자가 없는 급수(8급·7급II·7급)는 쓰기 목표를 숨깁니다.
+  const rows = [
+    { mode: "read",  el: $("#daily-read"),  icon: "📖", label: "읽기", show: true },
+    { mode: "write", el: $("#daily-write"), icon: "✏️", label: "쓰기", show: writeBase().length > 0 },
+  ];
+  let visible = 0;
+  rows.forEach(r => {
+    const p = dailyProgress(r.mode);
+    // 목표 0 = 그 모드는 목표를 끈 것
+    const on = r.show && p.goal > 0;
+    r.el.hidden = !on;
+    if (!on) return;
+    visible++;
+    const pct = Math.min(100, Math.round((p.done / p.goal) * 100));
+    r.el.classList.toggle("done", p.met);
+    r.el.innerHTML =
+      `<span class="d-lbl">${r.icon} ${r.label}</span>` +
+      `<div class="bar"><i style="width:${pct}%"></i></div>` +
+      `<span class="d-num">${p.done} / ${p.goal}${p.met ? " ✓" : ""}</span>`;
+  });
+  // 둘 다 꺼 두면 카드에 남는 게 없으므로 안내를 대신 보여줍니다.
+  $("#daily-off").hidden = visible > 0;
 }
 
 // ---------- 홈 학습 통계 ----------
@@ -291,7 +404,7 @@ $("#home-resume").addEventListener("click", () => {
     save();
     resetFlash();
     const i = flashDeck().findIndex(h => h.c === r.c);
-    if (i >= 0) { flashIdx = flashOrder.indexOf(i); renderFlash(); }
+    if (i >= 0) { flashIdx = i; renderFlash(); }
   }
   switchTab("flash");
 });
@@ -306,16 +419,16 @@ $("#stat-row").addEventListener("click", e => {
 });
 
 // ---------- 플래시카드 ----------
-let flashOrder = [];
+// 순서는 항상 flashDeck() 의 가나다순 그대로입니다. 자가평가로 카드가 목록에서
+// 빠지면 그 자리에 다음 글자가 오므로 위치(flashIdx)만 들고 있으면 됩니다.
 let flashIdx = 0;
 
 function resetFlash() {
-  flashOrder = flashDeck().map((_, i) => i);
   flashIdx = 0;
   renderFlash();
 }
 function currentFlashItem() {
-  return flashDeck()[flashOrder[flashIdx]];
+  return flashDeck()[flashIdx];
 }
 // 카드를 앞면으로 되돌립니다. 새 카드로 넘어가는 길이므로 애니메이션 없이
 // 즉시 앞면이 되게 합니다 — 안 그러면 새 카드의 뒷면이 잠깐 보입니다.
@@ -337,7 +450,7 @@ function renderFlash() {
   $("#flash-grade").hidden = d.length === 0;
   $(".progress-row").hidden = d.length === 0;
   if (!d.length) return;
-  if (flashIdx >= flashOrder.length) flashIdx = 0;
+  if (flashIdx >= d.length) flashIdx = 0;
   const item = currentFlashItem();
   resetFlashFace();
   $("#flash-hanzi").textContent = item.c;
@@ -379,29 +492,29 @@ $("#flash").addEventListener("click", () => {
 $("#flash-grade").addEventListener("click", e => {
   const b = e.target.closest("button[data-grade]");
   if (!b) return;
-  state.know[currentFlashItem().c] = b.dataset.grade;
+  const c = currentFlashItem().c;
+  state.know[c] = b.dataset.grade;
+  countDaily("read", c); // 오늘의 읽기 분량에 반영
   save();
-  flashIdx = (flashIdx + 1) % flashOrder.length;
+  // 평가한 글자가 필터에서 빠지면 그 자리에 다음 글자가 오므로 위치를 유지합니다.
+  const n = flashDeck().length;
+  if (!n) { flashIdx = 0; }
+  else if (flashDeck()[flashIdx] && flashDeck()[flashIdx].c === c) flashIdx = (flashIdx + 1) % n;
+  else if (flashIdx >= n) flashIdx = 0;
   renderFlash();
+  renderHome();
 });
 $("#flash-next").addEventListener("click", () => {
-  flashIdx = (flashIdx + 1) % flashOrder.length;
+  flashIdx = (flashIdx + 1) % flashDeck().length;
   renderFlash();
 });
 $("#flash-prev").addEventListener("click", () => {
-  flashIdx = (flashIdx - 1 + flashOrder.length) % flashOrder.length;
-  renderFlash();
-});
-// 섞기: 이미 지나온 카드는 건드리지 않고, 현재 위치부터 남은 것만 섞습니다.
-// 진행도(몇 번째까지 봤는지)는 그대로 유지됩니다.
-$("#flash-shuffle").addEventListener("click", () => {
-  const seen = flashOrder.slice(0, flashIdx);
-  const rest = shuffleArr(flashOrder.slice(flashIdx));
-  flashOrder = seen.concat(rest);
+  const n = flashDeck().length;
+  flashIdx = (flashIdx - 1 + n) % n;
   renderFlash();
 });
 
-// 읽기 초기화: 원래 순서로 되돌리고 처음부터. 자가평가 기록은 지우지 않습니다.
+// 읽기 초기화: 첫 글자로 되돌립니다. 자가평가 기록은 지우지 않습니다.
 $("#flash-reset").addEventListener("click", resetFlash);
 
 // ---------- 퀴즈 ----------
@@ -542,23 +655,18 @@ $("#quiz-reset").addEventListener("click", startQuiz);
 
 // ---------- 쓰기 연습 ----------
 let writeIdx = 0;
-let writeOrder = [];   // 표시 순서 (한자 문자). 섞어 두면 그대로 유지됩니다.
+let writeOrder = [];   // 표시 순서 (한자 문자) — 항상 writeDeck() 의 가나다순입니다.
 let writerInstance = null;
 
-// 대상 한자가 바뀌어도(설정 변경, 자가평가로 필터에서 빠짐) 섞어 둔 순서는 살립니다.
-// 빠진 글자만 걷어내고 새로 들어온 글자를 뒤에 붙입니다.
+// 대상 한자가 바뀌어도(설정 변경, 자가평가로 필터에서 빠짐) 순서는 늘 가나다순이므로
+// 목록을 그대로 다시 받아옵니다. 위치(writeIdx)는 부르는 쪽에서 챙깁니다.
 function syncWriteOrder() {
-  const chars = writeDeck().map(h => h.c);
-  const inDeck = new Set(chars);
-  const kept = writeOrder.filter(c => inDeck.has(c));
-  const seen = new Set(kept);
-  writeOrder = kept.concat(chars.filter(c => !seen.has(c)));
+  writeOrder = writeDeck().map(h => h.c);
   return writeOrder;
 }
 
-// 순서를 원래(배정한자) 순서로 되돌리고 처음부터
+// 첫 글자로 되돌리고 처음부터
 function resetWrite() {
-  writeOrder = [];
   writeIdx = 0;
   renderWrite();
 }
@@ -613,7 +721,7 @@ function plainGlyph(char, size) {
   return `<div style="font-size:${Math.round(size*0.62)}px;font-family:Batang,'Noto Serif KR',serif;line-height:1">${char}</div>`;
 }
 
-// 획순판에 쓸 수 있는 세로 높이. 아래 버튼(획순·섞기·지우기 + 자가평가)까지
+// 획순판에 쓸 수 있는 세로 높이. 아래 버튼(획순·지우기 + 자가평가)까지
 // 한 화면에 들어오도록, 실제 배치를 재서 위/아래 요소가 쓰는 높이를 뺍니다.
 // 다른 탭에서 renderWrite 가 불려 쓰기 화면이 아직 안 보이면 잴 수 없으므로
 // 추정치를 쓰고, 쓰기 탭에 들어올 때 switchTab 이 다시 렌더해 정확히 맞춥니다.
@@ -822,15 +930,6 @@ $("#write-again").addEventListener("click", () => {
   if (!animating) $("#write-note").textContent = "훈·음을 보고 손가락으로 써보세요";
 });
 
-// 섞기: 이미 지나온 글자는 건드리지 않고 현재 위치부터 남은 것만 섞습니다.
-// 진행도(몇 번째까지 왔는지)는 그대로 유지됩니다.
-$("#write-shuffle").addEventListener("click", () => {
-  if (animating) return; // 획순 재생 중에는 글자를 바꾸지 않습니다
-  const seen = writeOrder.slice(0, writeIdx);
-  writeOrder = seen.concat(shuffleArr(writeOrder.slice(writeIdx)));
-  renderWrite();
-});
-
 // 쓰기 자가평가 — 기록하고 다음 한자로 (이전/다음 버튼을 대신합니다)
 $("#write-grade").addEventListener("click", e => {
   const b = e.target.closest("button[data-grade]");
@@ -838,6 +937,7 @@ $("#write-grade").addEventListener("click", e => {
   const item = currentWriteItem();
   if (!item) return;
   state.knowW[item.c] = b.dataset.grade;
+  countDaily("write", item.c); // 오늘의 쓰기 분량에 반영
   save();
   // 평가한 글자가 필터에서 빠지면 그 자리에 다음 글자가 오므로 위치를 유지합니다.
   const order = syncWriteOrder();
@@ -848,7 +948,7 @@ $("#write-grade").addEventListener("click", e => {
   renderHome();
 });
 
-// 순서 초기화 — 섞기 전 배정한자 순서로 되돌립니다 (자가평가 기록은 그대로)
+// 처음부터 — 첫 글자로 되돌립니다 (자가평가 기록은 그대로)
 $("#write-reset").addEventListener("click", resetWrite);
 
 // ---------- 복습 ----------
@@ -1167,6 +1267,43 @@ function renderLevelSheet() {
 function openSheet() { renderLevelSheet(); $("#sheet-backdrop").classList.add("open"); $("#sheet").classList.add("open"); }
 function closeSheet() { $("#sheet-backdrop").classList.remove("open"); $("#sheet").classList.remove("open"); }
 $("#sheet-backdrop").addEventListener("click", closeSheet);
+
+// ---------- 하루 목표 설정 시트 ----------
+// 숫자 입력창 대신 ± 버튼을 씁니다 — 폰에서 키보드가 올라오지 않고 오입력이 없습니다.
+function renderGoalSheet() {
+  ["read", "write"].forEach(mode => {
+    const v = state.daily[mode];
+    const row = $(`#goal-${mode}`);
+    row.querySelector(".g-val").textContent = v > 0 ? `${v}자` : "끔";
+    row.querySelector('[data-step="-1"]').disabled = v <= 0;
+    row.querySelector('[data-step="1"]').disabled = v >= GOAL_MAX;
+  });
+  // 쓰기 배정한자가 없는 급수에서는 쓰기 목표를 설정할 일이 없습니다.
+  $("#goal-write").hidden = writeBase().length === 0;
+}
+$("#daily-sheet").addEventListener("click", e => {
+  const b = e.target.closest("button[data-step]");
+  if (!b) return;
+  const mode = b.closest("[data-goal]").dataset.goal;
+  const next = state.daily[mode] + Number(b.dataset.step) * GOAL_STEP;
+  state.daily[mode] = Math.max(0, Math.min(GOAL_MAX, next));
+  save();
+  renderGoalSheet();
+  renderDaily();
+});
+function openGoalSheet() {
+  renderGoalSheet();
+  $("#daily-backdrop").classList.add("open");
+  $("#daily-sheet").classList.add("open");
+}
+function closeGoalSheet() {
+  $("#daily-backdrop").classList.remove("open");
+  $("#daily-sheet").classList.remove("open");
+}
+$("#daily-edit").addEventListener("click", openGoalSheet);
+$("#daily-off").addEventListener("click", openGoalSheet);
+$("#daily-close").addEventListener("click", closeGoalSheet);
+$("#daily-backdrop").addEventListener("click", closeGoalSheet);
 
 // ---------- 초기화 ----------
 load();
