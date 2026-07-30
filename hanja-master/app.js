@@ -1,4 +1,4 @@
-// ===== 서당개김백국 =====
+// ===== 서당개 김백국 =====
 
 const STORE_KEY = "hanja-master-v1";
 let state = {

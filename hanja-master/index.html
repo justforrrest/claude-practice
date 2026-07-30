@@ -6,12 +6,17 @@
   <meta name="theme-color" content="#b5432f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="manifest.json" />
+  <!-- 아이폰은 매니페스트의 name 을 보지 않고 이 값을 홈화면 이름으로 씁니다.
+       없으면 <title> 로 떨어지므로 앱 이름을 바꿀 때 여기도 같이 고칠 것. -->
+  <meta name="apple-mobile-web-app-title" content="서당개 김백국" />
+  <!-- ?v= 는 이름·아이콘을 바꿨을 때 브라우저가 옛 매니페스트를 재사용하지
+       않도록 붙입니다. manifest 를 고치면 이 숫자도 같이 올릴 것. -->
+  <link rel="manifest" href="manifest.json?v=2" />
   <!-- 아이폰은 매니페스트 아이콘을 쓰지 않고 이 링크를 씁니다.
        두 개를 걸면 iOS 가 나중 것을 골라 버리므로 하나만 둡니다. -->
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="styles.css" />
-  <title>서당개김백국</title>
+  <title>서당개 김백국</title>
 </head>
 <body>
   <!-- 헤더 없음: 폰에서 본문 면적을 확보하기 위해 제거했습니다.
