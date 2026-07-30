@@ -1173,7 +1173,40 @@ load();
 resetFlash();
 renderHome();
 
-// PWA 서비스워커 등록
+// ---------- PWA 서비스워커 등록 + 새 버전 자동 반영 ----------
+// sw.js 는 cache-first 라서 그냥 두면 앱을 두 번 열어야 새 화면이 나옵니다
+// (첫 열기에 캐시로 그리고, 새 파일 내려받기는 그 뒤에 끝나므로).
+// 새 워커가 제어권을 잡는 순간 한 번 새로고침해서 바로 반영합니다.
+const SW_RELOAD_KEY = "hanja-sw-reloaded";
+
+// 업데이트 알림 — 알리기만 하면 되므로 잠깐 떴다 스스로 사라집니다.
+function showUpdatedToast() {
+  const el = document.createElement("div");
+  el.className = "update-toast";
+  el.textContent = "새 버전으로 업데이트되었습니다";
+  document.body.appendChild(el);
+  setTimeout(() => {
+    el.classList.add("out");
+    el.addEventListener("transitionend", () => el.remove(), { once: true });
+  }, 3500);
+}
+
 if ("serviceWorker" in navigator) {
+  // 최초 설치 때도 controllerchange 가 옵니다. 그때 새로고침하면 앱을 처음 열
+  // 때마다 한 번씩 새로고침되므로, 원래 제어자가 있었는지 기억해 둡니다.
+  const hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController) return;                        // 최초 설치는 갱신이 아님
+    if (sessionStorage.getItem(SW_RELOAD_KEY)) return; // 이미 했으면 반복 금지
+    sessionStorage.setItem(SW_RELOAD_KEY, "1");
+    location.reload();
+  });
+}
+
+// 방금 위 새로고침으로 돌아왔으면 알려줍니다.
+// "shown" 으로 바꿔 두어 알림도 한 번, 새로고침도 한 번만 일어나게 합니다.
+if (sessionStorage.getItem(SW_RELOAD_KEY) === "1") {
+  sessionStorage.setItem(SW_RELOAD_KEY, "shown");
+  showUpdatedToast();
 }
