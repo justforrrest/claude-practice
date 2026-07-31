@@ -1255,8 +1255,29 @@ function renderStudySheet() {
   });
   const target = GRADES.reduce((a, k) => a + (o[k] ? cnt[k] : 0), 0);
   $("#cnt-target").textContent = target + "자";
-  $("#study-start").disabled = target === 0;
-  $("#study-start").textContent = isWrite ? "쓰기 시작" : "읽기 시작";
+}
+
+// 설정을 바꾸기 "전에" 보고 있던 글자. 설정을 저장하고 나면 목록이 이미 바뀌어
+// 되짚을 수 없으므로, 손대기 전에 붙잡아 둡니다.
+function currentStudyChar() {
+  if (studyMode === "write") return writeOrder[writeIdx];
+  const item = flashDeck()[flashIdx];
+  return item && item.c;
+}
+
+// 설정을 바꾸면 학습 화면에 곧바로 반영합니다 (시트에 확인 버튼이 없습니다).
+// 포함할 글자를 건드리면 목록 자체가 바뀌는데, 그때마다 첫 카드로 튀면 성가시므로
+// 보던 글자가 새 목록에도 있으면 그 자리를 지킵니다. 빠졌으면 처음으로 돌아갑니다.
+function applyStudyOpts(keepChar) {
+  if (studyMode === "write") {
+    const i = syncWriteOrder().indexOf(keepChar);
+    writeIdx = i >= 0 ? i : 0;
+    renderWrite();
+  } else {
+    const i = flashDeck().findIndex(h => h.c === keepChar);
+    flashIdx = i >= 0 ? i : 0;
+    renderFlash();
+  }
 }
 
 function openStudySheet(mode) {
@@ -1272,30 +1293,25 @@ function closeStudySheet() {
 
 $("#open-study").addEventListener("click", () => openStudySheet("flash"));
 $("#open-study-write").addEventListener("click", () => openStudySheet("write"));
+// 시트에 버튼이 없습니다. 설정은 바꾸는 즉시 반영되고, 닫기는 배경 탭으로 합니다.
 $("#study-backdrop").addEventListener("click", closeStudySheet);
-$("#study-cancel").addEventListener("click", closeStudySheet);
-$("#study-start").addEventListener("click", () => {
-  closeStudySheet();
-  if (studyMode === "write") resetWrite();
-  else resetFlash();
-});
 
 $("#study-sheet").addEventListener("click", e => {
   const t = e.target.closest("[data-toggle]");
+  const k = t ? null : e.target.closest(".know-row");
+  if (!t && !k) return;
+
+  const keep = currentStudyChar(); // 설정이 바뀌기 전에 보던 글자
   if (t) {
     const key = t.dataset.toggle;
     if (key === "newOnly") state.scope = state.scope === "new" ? "cumulative" : "new";
     else studyOpts()[key] = !studyOpts()[key];
-    save();
-    renderStudySheet();
-    return;
-  }
-  const k = e.target.closest(".know-row");
-  if (k) {
+  } else {
     studyOpts()[k.dataset.know] = !studyOpts()[k.dataset.know];
-    save();
-    renderStudySheet();
   }
+  save();
+  renderStudySheet();
+  applyStudyOpts(keep);
 });
 
 // ---------- 급수 선택 ----------
