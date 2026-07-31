@@ -50,7 +50,16 @@ const argv = new Map(
 );
 const opt = (k, d) => (argv.has(k) ? argv.get(k) : d);
 
-const KEY = opt("key", process.env.OPENDICT_KEY);
+// 인증키는 파일에 두는 것을 기본으로 합니다 (.gitignore 로 막아 둠).
+// 메모장으로 저장하면 앞에 BOM 이 붙으므로 떼어 냅니다.
+function readKeyFile(name) {
+  const p = path.join(HERE, name);
+  if (!fs.existsSync(p)) return "";
+  return fs.readFileSync(p, "utf8").replace(/^﻿/, "").trim();
+}
+
+const KEY = opt("key", process.env.OPENDICT_KEY) || readKeyFile(".opendict-key");
+const KR_KEY = opt("kr-key", process.env.KRDICT_KEY) || readKeyFile(".krdict-key");
 const PER = Number(opt("per", 2));
 const OUT = path.resolve(ROOT, String(opt("out", "examples.js")));
 const CONCURRENCY = Number(opt("concurrency", 2));
@@ -64,10 +73,11 @@ const CKPT = path.join(HERE, ".harvest-progress.json");
 
 const SELFTEST = argv.has("selftest");
 
-if (!KEY && !SELFTEST) {
+if (!KEY && !KR_KEY && !SELFTEST) {
   console.error(
-    "인증키가 없습니다. --key=... 또는 환경변수 OPENDICT_KEY 를 설정하세요.\n" +
-      "신청: https://opendict.korean.go.kr/service/openApiInfo"
+    "인증키가 없습니다. tools/.opendict-key 또는 tools/.krdict-key 에 넣으세요.\n" +
+      "  한국어기초사전: https://krdict.korean.go.kr/kor/openApi/openApiRegister\n" +
+      "  우리말샘:       https://opendict.korean.go.kr/service/openApiInfo"
   );
   process.exit(1);
 }
@@ -147,6 +157,71 @@ async function fetchPage(char, start = 1) {
   }
 }
 
+// ─── 한국어기초사전(krdict) ───────────────────────────────────────────
+// 우리말샘과 같은 플랫폼이라 advanced=y·letter_s/e·start(페이지 번호)가 같습니다.
+// 다른 점 둘: 원어 검색이 target=4 이고, 응답이 XML 전용입니다(req_type 무시).
+//
+// 우리말샘이 110만 표제어의 개방형 사전인 반면 이쪽은 학습자용 5만 표제어라,
+// 등재되어 있다는 것 자체가 "실제로 쓰는 말" 필터입니다. 게다가 word_grade 로
+// 초급·중급·고급을 알려 줍니다. 그래서 이쪽을 우선 쓰고 우리말샘은 폴백입니다.
+const KR_API = "https://krdict.korean.go.kr/api/search";
+
+async function fetchKrPage(char, start = 1) {
+  const url = new URL(KR_API);
+  url.search = new URLSearchParams({
+    key: KR_KEY,
+    q: nfc(char),
+    target: "4", // 원어(한자)
+    lang: "2",
+    method: "include",
+    type1: "word",
+    num: "100",
+    start: String(start),
+    advanced: "y",
+    letter_s: "2",
+    letter_e: "3",
+    sort: "dict",
+  }).toString();
+
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+      if (res.status === 429 || res.status >= 500) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.text();
+    } catch (e) {
+      if (attempt === 3) throw e;
+      await sleep(500 * 2 ** attempt);
+    }
+  }
+}
+
+// XML 파싱 — 태그 값에는 < 가 없으므로 [^<]* 로 충분합니다.
+// 문자 클래스를 템플릿 문자열로 조립하면 백슬래시가 먹혀 [\s\S] 가 [sS] 로
+// 망가지는 함정이 있어(실제로 겪었습니다) 이 형태를 씁니다.
+const krTag = (s, t) => {
+  const m = s.match(new RegExp("<" + t + ">([^<]*)</" + t + ">"));
+  return m ? m[1].trim() : "";
+};
+
+function krTotal(xml) {
+  return Number(krTag(xml, "total") || 0);
+}
+
+function normalizeKrItems(xml) {
+  return [...String(xml).matchAll(/<item>([^]*?)<\/item>/g)].map((m) => ({
+    word: krTag(m[1], "word").replace(/[-^]/g, ""),
+    origin: krTag(m[1], "origin"),
+    definition: krTag(m[1], "definition"),
+    pos: krTag(m[1], "pos"),
+    type: "", // krdict 에는 방언·북한어 구분이 없습니다 (애초에 안 실립니다)
+    cat: "", // 전문 분야 필드도 없습니다
+    senseNo: "", // 뜻 번호 대신 sense_order 가 오지만 선별에 쓰지 않습니다
+    grade: krTag(m[1], "word_grade"), // 초급 / 중급 / 고급
+    src: "kr",
+  }));
+}
+
 // ─── 응답 정규화 ──────────────────────────────────────────────────────
 // 우리말샘 응답의 sense/origin 위치가 항목마다 흔들려서 방어적으로 훑습니다.
 const asArray = (v) => (v == null ? [] : Array.isArray(v) ? v : [v]);
@@ -164,6 +239,8 @@ function normalizeItems(json) {
       // 우리말샘은 "뜻 하나 = 항목 하나"로 내려줍니다. 001 이 그 낱말의 대표 뜻이라
       // 이걸 우선하지 않으면 學校 가 "죄수들의 은어" 같은 곁뜻으로 뽑힙니다.
       senseNo: String(it.sense_no ?? sense.sense_no ?? ""),
+      grade: "", // 우리말샘에는 어휘 등급이 없습니다
+      src: "od",
     };
   });
 }
@@ -239,8 +316,17 @@ function buildDerivCount(words) {
 function score(cand, selfRank) {
   let s = 0;
 
-  // 파생어가 많은 = 실제로 자주 쓰이는 낱말을 우선합니다.
-  s += Math.min(45, (derivCount.get(cand.hanja) ?? 0) * 2.5);
+  // 가장 센 신호: 한국어기초사전 등재 여부. 학습자용으로 5만 표제어만 추린
+  // 사전이라 여기 있다는 것 자체가 "실제로 쓰는 말"이라는 뜻입니다.
+  // 우리말샘에만 있는 낱말은 기초사전이 못 덮는 글자에서만 이깁니다.
+  if (cand.src === "kr") {
+    s += 120;
+    // 등급이 있으면 흔한 쪽을 먼저. 고급도 기초사전 등재어라 감점하지 않습니다.
+    s += { 초급: 40, 중급: 25, 고급: 10 }[cand.grade] ?? 0;
+  }
+
+  // 파생어 개수는 등급이 없을 때를 위한 보조 신호로만 남깁니다.
+  s += Math.min(20, (derivCount.get(cand.hanja) ?? 0) * 1.2);
 
   // 2자 한자어가 시험에 가장 많이 나옵니다.
   if (cand.hanja.length === 2) s += 30;
@@ -300,12 +386,18 @@ function toWord(it) {
     senseNo: it.senseNo,
     pos: it.pos,
     cat: it.cat,
+    grade: it.grade || "",
+    src: it.src || "od",
   };
 }
 
-// 같은 낱말이 뜻마다 따로 내려오므로 대표 뜻(001)을 우선해 하나만 남깁니다.
+// 같은 낱말이 여러 번 들어옵니다. 우리말샘은 뜻마다 따로 내려주고, 두 사전
+// 양쪽에 있는 낱말도 많습니다. 하나만 남기되 아래 순서로 고릅니다.
 function betterWord(a, b) {
   if (!a) return b;
+  // 1) 한국어기초사전 것이 우선 — 학습자용이라 뜻풀이가 짧고 쉽습니다
+  if (a.src !== b.src) return a.src === "kr" ? a : b;
+  // 2) 우리말샘끼리는 대표 뜻(001) 우선 — 곁뜻이 뽑히는 것을 막습니다
   const rank = (x) => (x.senseNo === "001" ? 0 : x.senseNo === "002" ? 1 : 2);
   if (rank(a) !== rank(b)) return rank(a) < rank(b) ? a : b;
   if (!!a.cat !== !!b.cat) return a.cat ? b : a;
@@ -347,7 +439,8 @@ function pickFrom(cands) {
       .sort((a, b) => b._s - a._s);
     out.push(...pool.slice(0, PER - out.length));
   }
-  return out.map((c) => ({ w: c.hanja, r: c.read, d: c.definition, t: c.tier }));
+  // t(완화 단계)와 src(출처)는 통계용입니다. examples.js 에는 w/r/d 만 나갑니다.
+  return out.map((c) => ({ w: c.hanja, r: c.read, d: c.definition, t: c.tier, src: c.src }));
 }
 
 // 찾은 낱말을 공용 풀에 모읍니다. 어떤 한자를 조회하다 나왔든, 그 낱말은
@@ -387,6 +480,7 @@ function pick(items, char) {
 // 아예 없어집니다. MAX_PAGES 는 예외적으로 긴 글자에 대한 안전장치입니다.
 async function collectInto(pool, char) {
   let reqs = 0;
+  if (!KEY) return reqs; // 우리말샘 키가 없으면 건너뜁니다 (기초사전만 수확)
   const first = await fetchPage(char, 1);
   reqs++;
   accumulate(pool, normalizeItems(first));
@@ -400,6 +494,23 @@ async function collectInto(pool, char) {
   return reqs;
 }
 
+// 한국어기초사전 쪽. 사전이 20배 작아 대개 1~2페이지에서 끝납니다.
+async function collectKrInto(pool, char) {
+  let reqs = 0;
+  if (!KR_KEY) return reqs;
+  const first = await fetchKrPage(char, 1);
+  reqs++;
+  accumulate(pool, normalizeKrItems(first));
+  const pages = Math.max(1, Math.ceil(krTotal(first) / 100));
+
+  for (let p = 2; p <= Math.min(pages, MAX_PAGES); p++) {
+    await sleep(DELAY);
+    accumulate(pool, normalizeKrItems(await fetchKrPage(char, p)));
+    reqs++;
+  }
+  return reqs;
+}
+
 // ─── 체크포인트 ───────────────────────────────────────────────────────
 // 낱말 풀 전체를 저장합니다. 예시 선정은 수확이 다 끝난 뒤 한 번에 하므로,
 // 중단됐다 이어받아도 그때까지 모은 낱말이 그대로 쓰입니다.
@@ -407,9 +518,18 @@ const pool = new Map();
 let done = new Set();
 if (RESUME && fs.existsSync(CKPT)) {
   const saved = JSON.parse(fs.readFileSync(CKPT, "utf8"));
-  for (const w of saved.pool ?? []) pool.set(w.hanja, w);
-  done = new Set(saved.done ?? []);
-  console.log(`체크포인트에서 이어감: ${done.size}자 완료, 낱말 ${pool.size}개`);
+  for (const w of saved.pool ?? []) {
+    // 출처 표시가 없던 시절의 체크포인트는 전부 우리말샘 것입니다
+    pool.set(w.hanja, { ...w, src: w.src || "od", grade: w.grade || "" });
+  }
+  // 예전 체크포인트는 완료 표시가 글자 하나("校")였습니다. 그때는 우리말샘만
+  // 훑었으므로 "od:校" 로 옮겨 줍니다 — 그래야 기초사전만 새로 수확합니다.
+  done = new Set((saved.done ?? []).map((k) => (k.includes(":") ? k : "od:" + k)));
+  const n = (p) => [...done].filter((k) => k.startsWith(p)).length;
+  console.log(
+    `체크포인트에서 이어감: 낱말 ${pool.size}개 ` +
+      `(기초사전 완료 ${n("kr:")}자 / 우리말샘 완료 ${n("od:")}자)`
+  );
 }
 const saveCkpt = () =>
   fs.writeFileSync(CKPT, JSON.stringify({ pool: [...pool.values()], done: [...done] }), "utf8");
@@ -546,10 +666,16 @@ for (const h of targets) {
   if (v && !assigned.has(v) && !extra.some((e) => e.c === v)) extra.push({ c: v, lv: h.lv });
 }
 
-const todo = [...targets, ...extra].filter((h) => !done.has(h.c));
+// 완료 표시는 출처별로 남깁니다("od:校" / "kr:校"). 우리말샘은 이미 다 훑어
+// 두었으므로, 기초사전 키만 새로 넣으면 그쪽만 이어서 수확합니다.
+const needs = (h) =>
+  (KEY && !done.has("od:" + h.c)) || (KR_KEY && !done.has("kr:" + h.c));
+
+const todo = [...targets, ...extra].filter(needs);
 console.log(
   `대상 ${targets.length}자${extra.length ? ` (+이체자 ${extra.length}자)` : ""}` +
-    ` / 남은 ${todo.length}자 / 동시 ${CONCURRENCY}`
+    ` / 남은 ${todo.length}자 / 동시 ${CONCURRENCY}` +
+    ` / 출처 ${[KR_KEY && "기초사전", KEY && "우리말샘"].filter(Boolean).join("+") || "없음"}`
 );
 
 let processed = 0;
@@ -563,9 +689,16 @@ async function worker(queue) {
     try {
       // await 앞뒤로 나눠야 합니다. `totalReqs += await ...` 는 await 이전 값을
       // 읽어 두므로 동시 실행 시 갱신이 유실됩니다.
-      const reqs = await collectInto(pool, h.c);
-      totalReqs += reqs;
-      done.add(h.c);
+      if (KR_KEY && !done.has("kr:" + h.c)) {
+        const r = await collectKrInto(pool, h.c);
+        totalReqs += r;
+        done.add("kr:" + h.c);
+      }
+      if (KEY && !done.has("od:" + h.c)) {
+        const r = await collectInto(pool, h.c);
+        totalReqs += r;
+        done.add("od:" + h.c);
+      }
     } catch (e) {
       failed.push({ c: h.c, err: String(e.message ?? e) });
     }
@@ -603,12 +736,16 @@ for (const w of pool.values()) {
 }
 
 const result = {};
+const srcCount = { kr: 0, od: 0 };
 for (const h of targets) {
   const c = nfc(h.c);
   const alias = VARIANTS.get(c);
   const cands = [...(byChar.get(c) ?? []), ...(alias ? byChar.get(alias) ?? [] : [])];
   const picked = pickForChar(cands, h.c);
-  if (picked.length) result[h.c] = picked;
+  if (picked.length) {
+    result[h.c] = picked;
+    for (const e of picked) srcCount[e.src === "kr" ? "kr" : "od"]++;
+  }
 }
 
 // ─── 출력 ─────────────────────────────────────────────────────────────
@@ -660,6 +797,7 @@ for (const h of ordered) for (const e of result[h.c]) tiers[e.t ?? 1]++;
 console.log(
   `  단계별: 1단계(2자·배정한자) ${tiers[1]} / 2단계(3자) ${tiers[2]} / 3단계(배정한자 밖) ${tiers[3]}`
 );
+console.log(`  출처별: 한국어기초사전 ${srcCount.kr} / 우리말샘 ${srcCount.od}`);
 if (failed.length) {
   console.log(`  실패 ${failed.length}자 — --resume 으로 재시도하세요`);
   console.log(`  ${failed.slice(0, 10).map((f) => f.c).join(" ")}`);

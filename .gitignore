@@ -6,7 +6,8 @@ __pycache__/
 KakaoTalk_*.jpg
 KakaoTalk_*.png
 
-# 우리말샘 오픈 API 인증키. 절대 커밋하지 않습니다.
+# 국립국어원 오픈 API 인증키. 절대 커밋하지 않습니다.
 hanja-master/tools/.opendict-key
+hanja-master/tools/.krdict-key
 hanja-master/tools/.harvest-progress.json
 hanja-master/tools/harvest.log
