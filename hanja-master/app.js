@@ -5,7 +5,9 @@ let state = {
   level: "8",
   scope: "cumulative", // "cumulative" = 시험 범위(누적) | "new" = 신습한자만
   wrong: {},   // { "漢": count }  퀴즈 오답 횟수
+  quizRight: {}, // { "漢": count } 퀴즈 정답 횟수 (한자 정보 화면용, 누적)
   quizOk: {},  // { "漢": true }   퀴즈에서 맞힌 글자 (홈 학습율용)
+               // quizRight 와 달리 다시 틀리면 취소되는 "지금 아는가" 값입니다
   know: {},    // { "漢": "no" | "maybe" | "yes" }  읽기 자가평가
   knowW: {},   // 쓰기 자가평가 — 읽을 줄 알아도 쓸 줄은 모를 수 있어 따로 둡니다
   // 읽기 탭 학습 설정
@@ -64,6 +66,8 @@ function load() {
   );
   state.knowW = state.knowW || {};
   state.quizOk = state.quizOk || {}; // 예전 저장본에는 없음
+  // 정답 횟수는 나중에 도입해서, 그 전에 맞힌 것은 세어져 있지 않습니다 (0회로 시작)
+  state.quizRight = state.quizRight || {};
   delete state.fav; // 즐겨찾기 기능은 제거됨
   rollDaily(); // 날짜가 넘어갔으면 오늘치 집계를 비웁니다
 }
@@ -676,6 +680,7 @@ function answerQuiz(btn, chosen, answer, type) {
   if (correct) {
     quizScore++;
     state.quizOk[answer.c] = true; // 홈 학습율용 정답 기록
+    state.quizRight[answer.c] = (state.quizRight[answer.c] || 0) + 1;
     save();
   } else {
     btn.classList.add("wrong");
@@ -1116,12 +1121,10 @@ function renderReview() {
   const tip = document.createElement("p");
   tip.className = "hint";
   tip.style.cssText = "position:static;text-align:center;margin:0 0 12px";
-  // 평가를 지우면 그 글자는 "미학습"으로 돌아갑니다 (지금 보는 목록에서도 빠집니다).
-  tip.textContent = reviewMode === "quiz"
-    ? `${chars.length}자 · 탭하면 오답노트에서 지웁니다`
-    : seg === "unseen"
-      ? `${chars.length}자 · 아직 한 번도 평가하지 않은 글자`
-      : `${chars.length}자 · 탭하면 평가를 지워 "미학습"으로 되돌립니다`;
+  // 탭하면 한자 정보 시트가 열리고, 거기서 학습 상태를 직접 고칩니다.
+  tip.textContent = seg === "unseen" && reviewMode !== "quiz"
+    ? `${chars.length}자 · 아직 한 번도 평가하지 않은 글자`
+    : `${chars.length}자 · 탭하면 한자 정보를 봅니다`;
 
   const grid = document.createElement("div");
   grid.className = "chip-grid";
@@ -1133,19 +1136,210 @@ function renderReview() {
     const cnt = reviewMode === "quiz"
       ? `<div class="mn" style="color:var(--bad)">✕${state.wrong[c]}</div>` : "";
     el.innerHTML = `<div class="ch">${item.c}</div><div class="mn">${item.h} ${item.s}</div>${cnt}`;
-    el.addEventListener("click", () => {
-      if (reviewMode === "quiz") delete state.wrong[c];
-      else if (reviewMode === "write") delete state.knowW[c];
-      else delete state.know[c];
-      save();
-      renderReview();
-      renderHome();
-    });
+    el.addEventListener("click", () => openDetail(c));
     grid.appendChild(el);
   });
   list.appendChild(tip);
   list.appendChild(grid);
 }
+
+// ---------- 한자 정보 시트 ----------
+// 복습 목록에서 글자를 누르면 열립니다. 예전에는 누르는 즉시 평가가 지워졌는데,
+// 이제 여기서 원하는 상태로 직접 고릅니다 ("미학습"도 그중 하나입니다).
+//
+// 목록은 시트를 열 때의 것을 그대로 붙잡아 둡니다. 학습 상태를 바꾸면 그 글자가
+// 목록 조건에서 빠질 수 있는데, 그때마다 목록을 다시 계산하면 보고 있던 글자가
+// 사라져 화면이 튑니다. 닫을 때 renderReview() 로 새로 그립니다.
+let detailList = [];
+let detailIdx = 0;
+
+function openDetail(char) {
+  detailList = reviewChars();
+  detailIdx = Math.max(0, detailList.indexOf(char));
+  renderDetail();
+  $("#detail-backdrop").classList.add("open");
+  $("#detail-sheet").classList.add("open");
+}
+
+function closeDetail() {
+  $("#detail-backdrop").classList.remove("open");
+  $("#detail-sheet").classList.remove("open");
+  destroyDetailWriter();
+  renderReview();
+  renderHome();
+}
+
+function detailChar() {
+  return detailList[detailIdx];
+}
+
+function renderDetail() {
+  const c = detailChar();
+  const item = c && findByChar(c);
+  if (!item) return;
+
+  $("#detail-pos").textContent = `${detailIdx + 1} / ${detailList.length}`;
+  $("#detail-prev").disabled = detailIdx === 0;
+  $("#detail-next").disabled = detailIdx >= detailList.length - 1;
+
+  $("#detail-ch").textContent = item.c;
+  $("#detail-reading").textContent = readingText(item);
+  $("#detail-lv").textContent = levelNameOf(item.lv);
+  $("#detail-hun").textContent = item.h;
+  $("#detail-eum").textContent = item.s;
+  $("#detail-tc").textContent = item.tc + "획";
+  $("#detail-bu").textContent = item.bu;
+
+  // 읽기·쓰기는 따로 기록되므로 각각 표시합니다
+  const cur = { read: knowOf(c), write: knowWOf(c) };
+  $$("#detail-sheet .seg-know").forEach(seg => {
+    const now = cur[seg.dataset.kind];
+    seg.querySelectorAll("button").forEach(b => {
+      b.classList.toggle("active", b.dataset.set === now);
+    });
+  });
+
+  $("#detail-right").textContent = (state.quizRight[c] || 0) + "회";
+  $("#detail-wrong").textContent = (state.wrong[c] || 0) + "회";
+  $("#detail-clear-wrong").hidden = !(state.wrong[c] > 0);
+
+  // 사용례가 없는 글자는 "연관 단어" 구역을 통째로 숨깁니다
+  const ex = $("#detail-ex");
+  renderExamples(ex, item, true);
+  $("#detail-ex-title").hidden = ex.hidden;
+
+  buildDetailWriter(item);
+}
+
+// 학습 상태 바꾸기 — "미학습"은 키를 지우는 것입니다 (knowOf 가 값 없음을
+// 미학습으로 보므로, 예전의 "탭하면 미학습으로 되돌리기"와 같은 결과입니다).
+$("#detail-sheet").addEventListener("click", e => {
+  const b = e.target.closest(".seg-know button");
+  if (!b) return;
+  const c = detailChar();
+  if (!c) return;
+  const store = b.closest(".seg-know").dataset.kind === "write" ? state.knowW : state.know;
+  const v = b.dataset.set;
+  if (v === "unseen") delete store[c];
+  else store[c] = v;
+  save();
+  renderDetail();
+});
+
+$("#detail-clear-wrong").addEventListener("click", () => {
+  const c = detailChar();
+  if (!c) return;
+  delete state.wrong[c];
+  save();
+  renderDetail();
+});
+
+$("#detail-prev").addEventListener("click", () => {
+  if (detailIdx > 0) { detailIdx--; renderDetail(); }
+});
+$("#detail-next").addEventListener("click", () => {
+  if (detailIdx < detailList.length - 1) { detailIdx++; renderDetail(); }
+});
+$("#detail-backdrop").addEventListener("click", closeDetail);
+
+// 획순보기 — 쓰기 탭의 writerInstance 와 얽히면 서로의 재생을 끊어 먹으므로
+// 이 시트만 쓰는 인스턴스를 따로 둡니다.
+let detailWriter = null;
+let detailWriterGen = 0;
+let detailAnimating = false;
+let detailAnimTimer = null;
+
+// 재생을 끝내고 버튼을 되살립니다. onComplete 와 안전장치 양쪽에서 부르므로
+// 한 번만 실행되도록 detailAnimating 으로 막습니다.
+function finishDetailAnimate(gen) {
+  if (!detailAnimating) return;
+  detailAnimating = false;
+  clearTimeout(detailAnimTimer);
+  $("#detail-stroke").disabled = false;
+  if (gen !== detailWriterGen || !detailWriter) return; // 그새 글자가 바뀌었으면 중단
+  detailWriter.hideCharacter();
+  detailWriter.hideOutline();
+}
+
+function destroyDetailWriter() {
+  detailWriterGen++;
+  detailAnimating = false;
+  clearTimeout(detailAnimTimer);
+  detailWriter = null;
+  $("#detail-writer").innerHTML = "";
+}
+
+function buildDetailWriter(item) {
+  const gen = ++detailWriterGen;
+  detailAnimating = false;
+  const target = $("#detail-writer");
+  target.innerHTML = "";
+  $("#detail-note").hidden = true;
+  $("#detail-stroke").hidden = false;
+  $("#detail-stroke").disabled = false;
+
+  if (typeof HanziWriter === "undefined") {
+    $("#detail-stroke").hidden = true;
+    $("#detail-note").hidden = false;
+    $("#detail-note").textContent = "※ 획순은 인터넷 연결 시 볼 수 있습니다.";
+    detailWriter = null;
+    return;
+  }
+
+  // 어문회 원본의 호환용 한자(U+F900~FAFF)와 한국 정자체는 획순 데이터셋에
+  // 없어서, buildWriter() 와 같은 방식으로 대응 글자를 찾습니다.
+  const normChar = item.c.normalize("NFC");
+  const drawChar = STROKE_ALT[normChar] || normChar;
+  const size = Math.max(140, Math.min(200, Math.floor(window.innerWidth * 0.44)));
+
+  const pane = document.createElement("div");
+  pane.style.width = size + "px";
+  pane.style.height = size + "px";
+  pane.style.backgroundSize = `${size / 2}px ${size / 2}px`;
+  pane.classList.add("grid-bg");
+  target.appendChild(pane);
+
+  try {
+    detailWriter = HanziWriter.create(pane, drawChar, {
+      width: size, height: size, padding: 6,
+      showCharacter: false, showOutline: false,
+      strokeColor: "#2b2b2b", radicalColor: "#b5432f",
+      strokeAnimationSpeed: 1, delayBetweenStrokes: 180,
+      onLoadCharDataError: () => {
+        if (gen !== detailWriterGen) return; // 그새 다른 글자로 넘어갔으면 무시
+        target.innerHTML = "";
+        $("#detail-stroke").hidden = true;
+        $("#detail-note").hidden = false;
+        $("#detail-note").textContent = "※ 이 한자는 획순 데이터가 없습니다.";
+        detailWriter = null;
+      },
+    });
+  } catch (e) {
+    target.innerHTML = "";
+    $("#detail-stroke").hidden = true;
+    detailWriter = null;
+  }
+}
+
+$("#detail-stroke").addEventListener("click", () => {
+  if (!detailWriter || detailAnimating) return;
+  const item = findByChar(detailChar());
+  const gen = detailWriterGen;
+  detailAnimating = true;
+  $("#detail-stroke").disabled = true;
+  detailWriter.showOutline();
+  detailWriter.animateCharacter({ onComplete: () => finishDetailAnimate(gen) });
+  // 안전장치: 화면이 가려지면 requestAnimationFrame 이 멈춰 onComplete 가 영영
+  // 안 옵니다. 그대로 두면 버튼이 죽으므로 예상 재생 시간이 지나면 되돌립니다.
+  clearTimeout(detailAnimTimer);
+  const expected = ((item && item.tc) || 12) * 700 + 3000;
+  detailAnimTimer = setTimeout(() => finishDetailAnimate(gen), expected);
+});
+
+// 화면이 숨겨지면 애니메이션이 멈춰 onComplete 가 오지 않으므로 상태를 되돌립니다.
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && detailAnimating) finishDetailAnimate(detailWriterGen);
+});
 
 // ---------- 기록 초기화 ----------
 // 읽기(know) · 쓰기(knowW) · 퀴즈(wrong)를 각각 따로 지웁니다.
