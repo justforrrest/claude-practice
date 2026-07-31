@@ -1208,7 +1208,7 @@ function renderDetail() {
   renderExamples(ex, item, true);
   $("#detail-ex-title").hidden = ex.hidden;
 
-  buildDetailWriter(item);
+  resetDetailStroke();
 }
 
 // 학습 상태 바꾸기 — "미학습"은 키를 지우는 것입니다 (knowOf 가 값 없음을
@@ -1269,22 +1269,30 @@ function destroyDetailWriter() {
   $("#detail-writer").innerHTML = "";
 }
 
-function buildDetailWriter(item) {
-  const gen = ++detailWriterGen;
-  detailAnimating = false;
-  const target = $("#detail-writer");
-  target.innerHTML = "";
+// 글자를 열거나 넘길 때는 판을 만들지 않고 버튼만 둡니다.
+// 획순 데이터는 비동기로 받아오므로, 미리 만들면 데이터 없는 글자에서 빈 격자가
+// 떴다가 뒤늦게 사라지는 깜빡임이 생깁니다.
+function resetDetailStroke() {
+  destroyDetailWriter();
   $("#detail-note").hidden = true;
   $("#detail-stroke").hidden = false;
   $("#detail-stroke").disabled = false;
+  $("#detail-stroke").textContent = "획순보기 ▶";
 
   if (typeof HanziWriter === "undefined") {
     $("#detail-stroke").hidden = true;
     $("#detail-note").hidden = false;
     $("#detail-note").textContent = "※ 획순은 인터넷 연결 시 볼 수 있습니다.";
-    detailWriter = null;
-    return;
   }
+}
+
+// 획순보기를 눌렀을 때 비로소 판을 만듭니다. 데이터가 오면 이어서 재생하고,
+// 없는 글자면 판을 아예 지워 상자가 남지 않게 합니다.
+function buildDetailWriter(item) {
+  const gen = ++detailWriterGen;
+  detailAnimating = false;
+  const target = $("#detail-writer");
+  target.innerHTML = "";
 
   // 어문회 원본의 호환용 한자(U+F900~FAFF)와 한국 정자체는 획순 데이터셋에
   // 없어서, buildWriter() 와 같은 방식으로 대응 글자를 찾습니다.
@@ -1299,32 +1307,36 @@ function buildDetailWriter(item) {
   pane.classList.add("grid-bg");
   target.appendChild(pane);
 
+  const giveUp = (msg) => {
+    if (gen !== detailWriterGen) return; // 그새 다른 글자로 넘어갔으면 무시
+    target.innerHTML = "";
+    $("#detail-stroke").hidden = true;
+    $("#detail-note").hidden = false;
+    $("#detail-note").textContent = msg;
+    detailWriter = null;
+  };
+
   try {
     detailWriter = HanziWriter.create(pane, drawChar, {
       width: size, height: size, padding: 6,
       showCharacter: false, showOutline: false,
       strokeColor: "#2b2b2b", radicalColor: "#b5432f",
       strokeAnimationSpeed: 1, delayBetweenStrokes: 180,
-      onLoadCharDataError: () => {
-        if (gen !== detailWriterGen) return; // 그새 다른 글자로 넘어갔으면 무시
-        target.innerHTML = "";
-        $("#detail-stroke").hidden = true;
-        $("#detail-note").hidden = false;
-        $("#detail-note").textContent = "※ 이 한자는 획순 데이터가 없습니다.";
-        detailWriter = null;
+      onLoadCharDataSuccess: () => {
+        if (gen !== detailWriterGen) return;
+        $("#detail-stroke").textContent = "획순보기 ▶";
+        playDetailStroke(gen);
       },
+      onLoadCharDataError: () => giveUp("※ 이 한자는 획순 데이터가 없습니다."),
     });
   } catch (e) {
-    target.innerHTML = "";
-    $("#detail-stroke").hidden = true;
-    detailWriter = null;
+    giveUp("※ 이 한자는 획순 데이터가 없습니다.");
   }
 }
 
-$("#detail-stroke").addEventListener("click", () => {
-  if (!detailWriter || detailAnimating) return;
+function playDetailStroke(gen) {
+  if (!detailWriter || detailAnimating || gen !== detailWriterGen) return;
   const item = findByChar(detailChar());
-  const gen = detailWriterGen;
   detailAnimating = true;
   $("#detail-stroke").disabled = true;
   detailWriter.showOutline();
@@ -1334,6 +1346,17 @@ $("#detail-stroke").addEventListener("click", () => {
   clearTimeout(detailAnimTimer);
   const expected = ((item && item.tc) || 12) * 700 + 3000;
   detailAnimTimer = setTimeout(() => finishDetailAnimate(gen), expected);
+}
+
+$("#detail-stroke").addEventListener("click", () => {
+  if (detailAnimating) return;
+  if (detailWriter) return playDetailStroke(detailWriterGen); // 같은 글자 다시 보기
+  const item = findByChar(detailChar());
+  if (!item) return;
+  // 데이터를 받아오는 동안 두 번 눌리지 않게 잠급니다. 받아오면 바로 재생됩니다.
+  $("#detail-stroke").disabled = true;
+  $("#detail-stroke").textContent = "불러오는 중…";
+  buildDetailWriter(item);
 });
 
 // 화면이 숨겨지면 애니메이션이 멈춰 onComplete 가 오지 않으므로 상태를 되돌립니다.
