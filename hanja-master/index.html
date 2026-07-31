@@ -109,6 +109,8 @@
               <span class="chip" id="flash-tc"></span>
               <span class="chip" id="flash-bu"></span>
             </div>
+            <!-- 한자어 사용례. 데이터가 없는 글자는 통째로 숨겨집니다 -->
+            <div class="examples" id="flash-ex"></div>
             <div class="hint">탭하여 한자 보기</div>
           </div>
         </div>
@@ -248,6 +250,9 @@
     <button class="opt-row" data-toggle="showRadical" data-only="flash">
       <span>부수</span><span class="switch"></span>
     </button>
+    <button class="opt-row" data-toggle="showExample" data-only="flash">
+      <span>한자어 사용례<small>그 한자가 쓰인 낱말과 뜻</small></span><span class="switch"></span>
+    </button>
 
     <div class="opt-title">포함할 글자</div>
     <button class="know-row yes" data-know="yes">
@@ -336,6 +341,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <script src="data.js"></script>
+  <script src="examples.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

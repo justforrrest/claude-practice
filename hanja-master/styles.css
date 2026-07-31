@@ -129,6 +129,36 @@ main {
   color: var(--sub); background: var(--chip-bg);
 }
 
+/* 한자어 사용례 — 그 한자가 실제로 쓰인 낱말과 뜻.
+   .hint 가 bottom:12px 로 겹쳐 있어 뒷면 아래 여백을 더 둡니다.
+   뜻풀이는 2줄로 잘라 카드 높이가 넘치지 않게 고정합니다. */
+.face.back { padding-bottom: 36px; overflow-y: auto; }
+.face.back .examples {
+  width: 100%; margin-top: 16px; padding-top: 13px;
+  border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 11px;
+  text-align: left;
+}
+.ex-word {
+  font-size: 18px; font-weight: 800; color: var(--ink);
+  font-family: "Batang", "Noto Serif KR", serif;
+  line-height: 1.2;
+}
+/* 학습 중인 글자가 낱말의 어느 자리에 쓰였는지 바로 보이게 강조 */
+.ex-word .hit { color: var(--accent); }
+.ex-read {
+  margin-left: 7px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px; font-weight: 700; color: var(--accent2);
+}
+.ex-def {
+  margin-top: 3px;
+  font-size: 12.5px; line-height: 1.45; color: var(--sub);
+  word-break: keep-all;
+  display: -webkit-box; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; overflow: hidden;
+}
+
 /* 자가평가 버튼 (뒷면일 때만 노출) */
 .hidden { display: none !important; }
 .grade-row .grade {

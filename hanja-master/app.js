@@ -13,6 +13,7 @@ let state = {
     showReading: true,  // 뒷면에 훈·음 표시
     showStroke: true,   // 뒷면에 총획 표시
     showRadical: true,  // 뒷면에 부수 표시
+    showExample: true,  // 뒷면에 한자어 사용례 표시
     yes: true,          // 아는 글자 포함
     maybe: true,        // 헷갈리는 글자 포함
     no: true,           // 모르는 글자(몰라요를 누른 것) 포함
@@ -46,7 +47,8 @@ function load() {
   if (savedFlash.unseen === undefined && savedFlash.no !== undefined) savedFlash.unseen = savedFlash.no;
   if (savedWrite.unseen === undefined && savedWrite.no !== undefined) savedWrite.unseen = savedWrite.no;
   state.flash = Object.assign(
-    { showReading: true, showStroke: true, showRadical: true, yes: true, maybe: true, no: true, unseen: true },
+    { showReading: true, showStroke: true, showRadical: true, showExample: true,
+      yes: true, maybe: true, no: true, unseen: true },
     savedFlash
   );
   // 쓰기 탭 설정 (fullRange=true 면 공식 쓰기 범위 대신 읽기 범위 전체를 씁니다)
@@ -87,6 +89,15 @@ function levelCodes(levelCode, scope) {
 //   北 -> 북녘 북 | 달아날 배:
 function readingText(item) {
   return item.hs;
+}
+
+// 그 한자가 쓰인 한자어 사용례. examples.js 가 없거나 아직 안 채워졌을 수도 있어
+// 항상 배열을 돌려줍니다 (없으면 빈 배열 -> 화면에서 영역이 숨겨짐).
+// 키는 data.js 의 c 그대로지만, 호환용 한자(U+F900~FAFF)로 어긋날 때를 대비해
+// 정규화한 글자로도 한 번 더 찾습니다.
+function examplesOf(item) {
+  if (typeof EXAMPLES === "undefined") return [];
+  return EXAMPLES[item.c] || EXAMPLES[item.c.normalize("NFC")] || [];
 }
 
 // 한자의 lv 코드("80","72"...)로 급수 이름을 찾습니다. 예: "72" -> "7급II"
@@ -457,6 +468,43 @@ function resetFlashFace() {
   void el.offsetWidth; // 리플로우를 강제해 transition:none 상태로 확정시킴
   el.classList.remove("no-flip-anim");
 }
+// 사용례를 그립니다. 설정이 꺼져 있거나 그 글자에 데이터가 없으면 영역을 숨깁니다.
+// 대상 한자는 낱말 안에서 강조해 어느 자리에 쓰였는지 바로 보이게 합니다.
+function renderExamples(box, item, show) {
+  const list = show ? examplesOf(item) : [];
+  box.hidden = list.length === 0;
+  box.textContent = "";
+  if (!list.length) return;
+
+  const target = item.c.normalize("NFC");
+  for (const ex of list) {
+    const row = document.createElement("div");
+    row.className = "ex-row";
+
+    const word = document.createElement("div");
+    word.className = "ex-word";
+    // 한자를 한 글자씩 넣고 대상 글자에만 표시를 줍니다
+    for (const ch of ex.w) {
+      const s = document.createElement("span");
+      s.textContent = ch;
+      if (ch.normalize("NFC") === target) s.className = "hit";
+      word.appendChild(s);
+    }
+    const read = document.createElement("span");
+    read.className = "ex-read";
+    read.textContent = ex.r;
+    word.appendChild(read);
+
+    const def = document.createElement("div");
+    def.className = "ex-def";
+    def.textContent = ex.d;
+
+    row.appendChild(word);
+    row.appendChild(def);
+    box.appendChild(row);
+  }
+}
+
 function renderFlash() {
   const d = flashDeck();
   updateStudySummary();
@@ -482,6 +530,7 @@ function renderFlash() {
   $("#flash-bu").textContent = "부수 " + item.bu;
   $("#flash-bu").hidden = !f.showRadical;
   $(".face.back .chips").hidden = !f.showStroke && !f.showRadical;
+  renderExamples($("#flash-ex"), item, f.showExample);
   $("#flash-count").textContent = `${flashIdx + 1} / ${d.length}`;
   $("#flash-bar").style.width = Math.round(((flashIdx + 1) / d.length) * 100) + "%";
   updateFlashControls();
