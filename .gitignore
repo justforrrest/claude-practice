@@ -9,9 +9,11 @@ KakaoTalk_*.png
 # 국립국어원 오픈 API 인증키. 절대 커밋하지 않습니다.
 hanja-master/tools/.opendict-key
 hanja-master/tools/.krdict-key
+hanja-master/tools/.anthropic-key
 hanja-master/tools/.harvest-progress.json
 hanja-master/tools/harvest.log
 
 # 구성원리 생성용 원본 내려받기 캐시 (cjkvi-ids / makemeahanzi / Unihan, 약 13MB)
 # tools/build-origin.mjs 가 없으면 자동으로 다시 받습니다.
 hanja-master/tools/.origin-cache/
+hanja-master/tools/node_modules/

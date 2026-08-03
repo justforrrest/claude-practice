@@ -282,6 +282,12 @@ async function main() {
   const hangul = loadHangul(unzipEntry(unihanBuf, "Unihan_Readings.txt").toString("utf8"));
   const variants = loadVariants(unzipEntry(unihanBuf, "Unihan_Variants.txt").toString("utf8"));
 
+  // 사람 손이 닿은 유일한 자료입니다. 원본을 다시 받아 빌드해도 살아남도록
+  // origin.js 가 아니라 여기서 읽어 합칩니다. (tools/translate-origin.mjs 가 생성)
+  const koFile = path.join(HERE, "origin-ko.json");
+  const ko = fs.existsSync(koFile) ? JSON.parse(fs.readFileSync(koFile, "utf8")) : {};
+  if (Object.keys(ko).length) log(`  번역된 자원 풀이 ${Object.keys(ko).length}건을 합칩니다`);
+
   const HANJA = loadHanja();
   const byChar = new Map(HANJA.map(h => [nfc(h.c), h]));
   log(`  배정한자 ${HANJA.length}자 / IDS ${idsMap.size} / makemeahanzi ${mmah.size} / kHangul ${hangul.size}`);
@@ -332,10 +338,11 @@ async function main() {
         rec.s = nfc(ety.semantic);
         rec.p = nfc(ety.phonetic);
       } else if (ety.hint) {
-        // 회의·지사·상형의 영어 풀이. 2단계에서 x(한국어)로 옮깁니다.
+        // 회의·지사·상형의 영어 풀이. translate-origin.mjs 가 x(한국어)로 옮깁니다.
         rec.en = ety.hint;
       }
     }
+    if (ko[c]) rec.x = ko[c];   // 번역이 있으면 붙입니다 (앱은 x 만 보여줍니다)
     if (comps.length) rec.d = comps;
 
     // 화면에 실제로 그릴 게 있어야 넣습니다. 유형만 있고 성분도 풀이도 없으면

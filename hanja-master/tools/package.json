@@ -1,0 +1,9 @@
+{
+  "name": "hanja-master-tools",
+  "private": true,
+  "type": "module",
+  "description": "서당개 김백국 데이터 생성 스크립트. 앱 자체는 의존성이 없습니다.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0"
+  }
+}
