@@ -52,14 +52,22 @@
 button { color: inherit; font-family: inherit; }
 /* display:flex 등이 지정된 요소도 hidden 속성으로 확실히 감춰지게 */
 [hidden] { display: none !important; }
-html, body { margin: 0; height: 100%; }
+/* 앱 셸 높이는 "지금 보이는 화면(dvh)" 하나로만 잡습니다.
+   예전엔 body 에도 height:100% 가 걸려 있었는데, 모바일에서 그 100% 는
+   툴바가 접힌 상태의 큰 뷰포트(lvh)라 body 가 가시 영역보다 길어졌습니다.
+   그러면 main 말고 문서 루트까지 스크롤돼서 탭바 아래에 빈 여백이 생겼다가
+   스크롤하면 줄어듭니다. html 의 height:100% 는 dvh 폴백 기준으로만 남깁니다. */
+html, body { margin: 0; }
+html { height: 100%; overflow: hidden; }
 body {
   font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
   background: var(--bg);
   color: var(--ink);
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  height: 100vh;  /* dvh 미지원 구형 브라우저용 폴백 */
+  height: 100dvh;
+  overflow: hidden; /* 스크롤은 main 한 곳에서만 */
   overscroll-behavior-y: contain;
 }
 
@@ -67,7 +75,7 @@ body {
    (홈 화면에 추가해 전체화면으로 열면 첫 줄이 상태바 아래로 파고듭니다) */
 main {
   flex: 1; overflow-y: auto;
-  padding: calc(16px + env(safe-area-inset-top)) 14px 90px;
+  padding: calc(16px + env(safe-area-inset-top)) 14px calc(70px + env(safe-area-inset-bottom));
   -webkit-overflow-scrolling: touch;
 }
 .view { display: none; }
