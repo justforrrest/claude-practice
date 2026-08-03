@@ -113,6 +113,8 @@
               <span class="chip" id="flash-tc"></span>
               <span class="chip" id="flash-bu"></span>
             </div>
+            <!-- 구성원리(자원). 데이터가 없는 글자는 통째로 숨겨집니다 -->
+            <div class="origin" id="flash-origin"></div>
             <!-- 한자어 사용례. 데이터가 없는 글자는 통째로 숨겨집니다 -->
             <div class="examples" id="flash-ex"></div>
             <div class="hint">탭하여 한자 보기</div>
@@ -254,6 +256,9 @@
     <button class="opt-row" data-toggle="showRadical" data-only="flash">
       <span>부수</span><span class="switch"></span>
     </button>
+    <button class="opt-row" data-toggle="showOrigin" data-only="flash">
+      <span>구성원리<small>어떤 조각으로 이루어진 글자인지</small></span><span class="switch"></span>
+    </button>
     <button class="opt-row" data-toggle="showExample" data-only="flash">
       <span>한자어 사용례<small>그 한자가 쓰인 낱말과 뜻</small></span><span class="switch"></span>
     </button>
@@ -353,6 +358,10 @@
       <div class="drow"><span>부수</span><b id="detail-bu">—</b></div>
     </div>
 
+    <!-- 구성원리. 데이터가 없는 글자는 제목까지 통째로 숨겨집니다 -->
+    <div class="opt-title" id="detail-origin-title">구성원리</div>
+    <div class="detail-card origin" id="detail-origin"></div>
+
     <!-- 읽기와 쓰기는 따로 기록됩니다. 각각 눌러서 바꿉니다. -->
     <div class="opt-title">학습 상태</div>
     <div class="detail-card">
@@ -401,6 +410,7 @@
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <script src="data.js"></script>
   <script src="examples.js"></script>
+  <script src="origin.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

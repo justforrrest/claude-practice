@@ -1,13 +1,14 @@
 // 서비스워커 - 오프라인 캐시
 // data.js / app.js 등을 수정하면 반드시 이 버전을 올릴 것.
 // 캐시 우선(cache-first) 전략이라 버전을 안 올리면 옛 파일이 계속 제공됨.
-const CACHE = "hanja-master-v50";
+const CACHE = "hanja-master-v51";
 const ASSETS = [
   "index.html",
   "styles.css",
   "app.js",
   "data.js",
   "examples.js",
+  "origin.js",
   // index.html 이 ?v= 를 붙여 부르므로 그 주소 그대로 담아 둡니다.
   // (캐시 조회는 쿼리까지 비교하므로 "manifest.json" 만 담으면 빗나갑니다)
   "manifest.json?v=2",

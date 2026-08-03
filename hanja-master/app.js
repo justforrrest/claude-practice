@@ -49,7 +49,7 @@ function load() {
   if (savedFlash.unseen === undefined && savedFlash.no !== undefined) savedFlash.unseen = savedFlash.no;
   if (savedWrite.unseen === undefined && savedWrite.no !== undefined) savedWrite.unseen = savedWrite.no;
   state.flash = Object.assign(
-    { showReading: true, showStroke: true, showRadical: true, showExample: true,
+    { showReading: true, showStroke: true, showRadical: true, showOrigin: true, showExample: true,
       yes: true, maybe: true, no: true, unseen: true },
     savedFlash
   );
@@ -102,6 +102,19 @@ function readingText(item) {
 function examplesOf(item) {
   if (typeof EXAMPLES === "undefined") return [];
   return EXAMPLES[item.c] || EXAMPLES[item.c.normalize("NFC")] || [];
+}
+
+// 그 한자의 구성원리(자원). examplesOf 와 같은 규칙으로 찾습니다.
+// 없으면 null 을 돌려주고, 화면에서는 영역이 통째로 숨습니다.
+function originOf(item) {
+  if (typeof ORIGIN === "undefined") return null;
+  return ORIGIN[item.c] || ORIGIN[item.c.normalize("NFC")] || null;
+}
+
+// 성분 한 글자를 "木(나무 목)" 형태로. 훈음을 모르는 성분은 글자만 남깁니다.
+function partLabel(ch) {
+  const name = typeof PARTS !== "undefined" ? PARTS[ch] : null;
+  return { ch, name: name || "" };
 }
 
 // 한자의 lv 코드("80","72"...)로 급수 이름을 찾습니다. 예: "72" -> "7급II"
@@ -509,6 +522,85 @@ function renderExamples(box, item, show) {
   }
 }
 
+// 구성원리. renderExamples 와 같은 시그니처이고, 보여줄 게 없으면 영역을 숨깁니다.
+//
+//   형성   木(나무 목) 뜻 + 交(사귈 교) 음
+//   회의   日(날 일) + 月(달 월)
+//   구성   木 + 交                          <- 유형을 모를 때
+//
+// x(한국어 자원 풀이)가 있으면 아래에 문장으로 덧붙입니다.
+function renderOrigin(box, item, show) {
+  let o = show ? originOf(item) : null;
+  // 한국어로 보여줄 게 있어야 그립니다. en(영어 원문)만 있는 글자는 아직 번역이
+  // 안 된 것이라, "상형" 딱지만 덩그러니 뜨는 대신 통째로 숨깁니다.
+  // tools/translate-origin.mjs 로 x 가 채워지면 저절로 나타납니다.
+  if (o && !(o.s && o.p) && !(o.d && o.d.length) && !o.x) o = null;
+  box.hidden = !o;
+  box.textContent = "";
+  if (!o) return;
+
+  const line = document.createElement("div");
+  line.className = "og-line";
+
+  const tag = document.createElement("span");
+  tag.className = "og-type";
+  tag.textContent = o.t || "구성";
+  line.appendChild(tag);
+
+  const parts = document.createElement("span");
+  parts.className = "og-parts";
+
+  // 성분 하나를 "木(나무 목)" + 역할 꼬리표로 붙입니다
+  const put = (ch, role) => {
+    const { name } = partLabel(ch);
+    const w = document.createElement("span");
+    w.className = "og-part";
+    const c = document.createElement("b");
+    c.className = "og-ch";
+    c.textContent = ch;
+    w.appendChild(c);
+    if (name) {
+      // 부수 훈음 자체에 "물 수(삼수변)" 처럼 괄호가 있으므로 여기서 더 씌우지
+      // 않습니다. 씌우면 攵(칠 복(등글월문)) 처럼 괄호가 겹칩니다.
+      const n = document.createElement("span");
+      n.className = "og-name";
+      n.textContent = name;
+      w.appendChild(n);
+    }
+    if (role) {
+      const r = document.createElement("span");
+      r.className = "og-role";
+      r.textContent = role;
+      w.appendChild(r);
+    }
+    parts.appendChild(w);
+  };
+  const plus = () => {
+    const s = document.createElement("span");
+    s.className = "og-plus";
+    s.textContent = "+";
+    parts.appendChild(s);
+  };
+
+  if (o.s && o.p) {           // 형성자 — 뜻 담당과 음 담당을 갈라 보여줍니다
+    put(o.s, "뜻");
+    plus();
+    put(o.p, "음");
+  } else if (o.d && o.d.length) {
+    o.d.forEach((ch, i) => { if (i) plus(); put(ch, ""); });
+  }
+  line.appendChild(parts);
+  box.appendChild(line);
+
+  // 한국어 자원 풀이 (tools/translate-origin.mjs 로 채워집니다)
+  if (o.x) {
+    const p = document.createElement("p");
+    p.className = "og-story";
+    p.textContent = o.x;
+    box.appendChild(p);
+  }
+}
+
 function renderFlash() {
   const d = flashDeck();
   updateStudySummary();
@@ -534,6 +626,7 @@ function renderFlash() {
   $("#flash-bu").textContent = "부수 " + item.bu;
   $("#flash-bu").hidden = !f.showRadical;
   $(".face.back .chips").hidden = !f.showStroke && !f.showRadical;
+  renderOrigin($("#flash-origin"), item, f.showOrigin);
   renderExamples($("#flash-ex"), item, f.showExample);
   $("#flash-count").textContent = `${flashIdx + 1} / ${d.length}`;
   $("#flash-bar").style.width = Math.round(((flashIdx + 1) / d.length) * 100) + "%";
@@ -1202,6 +1295,11 @@ function renderDetail() {
   $("#detail-right").textContent = (state.quizRight[c] || 0) + "회";
   $("#detail-wrong").textContent = (state.wrong[c] || 0) + "회";
   $("#detail-clear-wrong").hidden = !(state.wrong[c] > 0);
+
+  // 구성원리가 없는 글자는 제목까지 통째로 숨깁니다
+  const og = $("#detail-origin");
+  renderOrigin(og, item, true);
+  $("#detail-origin-title").hidden = og.hidden;
 
   // 사용례가 없는 글자는 "연관 단어" 구역을 통째로 숨깁니다
   const ex = $("#detail-ex");
