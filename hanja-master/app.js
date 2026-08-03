@@ -1728,6 +1728,23 @@ load();
 resetFlash();
 renderHome();
 
+// ---------- 앱 셸 높이 실측 ----------
+// iOS 홈 화면 앱(standalone)은 실행 직후 뷰포트 높이를 실제보다 짧게 보고했다가
+// 나중에 바로잡습니다. CSS 의 100dvh 는 그 짧은 값으로 한 번 굳으면 스스로
+// 고쳐지지 않아 탭바 아래에 빈 여백이 남습니다. 그래서 직접 재서 넣습니다.
+// visualViewport 대신 innerHeight 를 쓰는 이유: 백업 시트 textarea 에 키보드가
+// 올라오면 visualViewport 는 줄어들어 셸 높이까지 같이 튑니다.
+function applyAppHeight() {
+  const h = window.innerHeight;
+  if (h) document.documentElement.style.setProperty("--app-h", h + "px");
+}
+applyAppHeight();
+["resize", "orientationchange", "pageshow"].forEach(
+  ev => window.addEventListener(ev, applyAppHeight)
+);
+// 실행 직후 높이가 뒤늦게 바로잡히는 기기를 위해 몇 차례 더 잽니다
+[60, 200, 500, 1000].forEach(ms => setTimeout(applyAppHeight, ms));
+
 // ---------- PWA 서비스워커 등록 + 새 버전 자동 반영 ----------
 // sw.js 는 cache-first 라서 그냥 두면 앱을 두 번 열어야 새 화면이 나옵니다
 // (첫 열기에 캐시로 그리고, 새 파일 내려받기는 그 뒤에 끝나므로).
@@ -1765,3 +1782,59 @@ if (sessionStorage.getItem(SW_RELOAD_KEY) === "1") {
   sessionStorage.setItem(SW_RELOAD_KEY, "shown");
   showUpdatedToast();
 }
+
+/* ==========================================================================
+   ===== 임시 진단 — 하단 여백 원인 확인용. 확인 끝나면 이 블록 통째로 삭제 =====
+   styles.css 맨 끝의 "임시 진단" 블록도 같이 지울 것.
+   ========================================================================== */
+(function diag() {
+  // env(safe-area-inset-*) 와 100dvh 는 JS 로 직접 못 읽으므로 프로브로 잽니다
+  const probe = document.createElement("div");
+  probe.style.cssText =
+    "position:fixed;left:-9999px;top:0;visibility:hidden;height:100dvh;" +
+    "padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);";
+  document.body.appendChild(probe);
+
+  const panel = document.createElement("div");
+  panel.id = "diag";
+  document.body.appendChild(panel);
+
+  function read() {
+    const cs = getComputedStyle(probe);
+    const nav = document.querySelector("nav.tabbar").getBoundingClientRect();
+    return {
+      ih: window.innerHeight,
+      de: document.documentElement.clientHeight,
+      dvh: Math.round(probe.getBoundingClientRect().height),
+      sh: screen.height,
+      sat: Math.round(parseFloat(cs.paddingTop) || 0),
+      sab: Math.round(parseFloat(cs.paddingBottom) || 0),
+      navB: Math.round(nav.bottom),
+      navH: Math.round(nav.height),
+      appH: document.documentElement.style.getPropertyValue("--app-h") || "-",
+      rootOv: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+    };
+  }
+  const fmt = r =>
+    `ih ${r.ih}  de ${r.de}  dvh ${r.dvh}  sh ${r.sh}\n` +
+    `sat ${r.sat}  sab ${r.sab}  navB ${r.navB}  navH ${r.navH}\n` +
+    `appH ${r.appH}  rootOv ${r.rootOv}`;
+
+  const t0 = read();
+  const sa = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+
+  function render() {
+    const now = read();
+    panel.innerHTML =
+      `<b>t0</b>  ` + fmt(t0).replace(/\n/g, "\n     ") + "\n" +
+      `<b>now</b> ` + fmt(now).replace(/\n/g, "\n     ") + "\n" +
+      `<b>sa</b> ${!!sa}   <b>gap</b> ${window.innerHeight - now.navB}`;
+  }
+  render();
+  ["resize", "scroll", "orientationchange"].forEach(
+    ev => window.addEventListener(ev, render, true)
+  );
+  panel.addEventListener("click", render);
+  [60, 200, 500, 1000, 2000].forEach(ms => setTimeout(render, ms));
+})();
+/* ===== 임시 진단 끝 ===== */
