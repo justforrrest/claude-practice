@@ -52,11 +52,9 @@
 button { color: inherit; font-family: inherit; }
 /* display:flex 등이 지정된 요소도 hidden 속성으로 확실히 감춰지게 */
 [hidden] { display: none !important; }
-/* 앱 셸 높이.
-   iOS 홈 화면 앱(standalone)은 실행 직후 뷰포트 높이를 실제보다 짧게 보고했다가
-   나중에 바로잡습니다. 100dvh 는 그 짧은 값으로 한 번 굳으면 스스로 안 고쳐져서
-   탭바 아래에 빈 여백이 남습니다. 그래서 app.js 가 window.innerHeight 를 직접 재
-   --app-h 에 넣고, 값이 바뀔 때마다 다시 잽니다. 아래는 그 폴백 사슬입니다. */
+/* 앱 셸 높이는 "지금 보이는 화면" 하나로만 잡습니다. body 에 height:100% 를
+   같이 걸면 그건 모바일에서 툴바가 접힌 상태의 큰 뷰포트(lvh)라 dvh 와 어긋나,
+   main 말고 문서 루트까지 스크롤되는 일이 생깁니다. */
 html, body { margin: 0; }
 html { height: 100%; }
 body {
@@ -65,9 +63,8 @@ body {
   color: var(--ink);
   display: flex;
   flex-direction: column;
-  height: 100vh;                /* 폴백 1 — dvh 미지원 브라우저 */
-  height: 100dvh;               /* 폴백 2 — app.js 실행 전 */
-  height: var(--app-h, 100dvh); /* 실측값이 있으면 이걸 씁니다 */
+  height: 100vh;  /* dvh 미지원 구형 브라우저용 폴백 */
+  height: 100dvh;
   overscroll-behavior-y: contain;
 }
 
@@ -640,22 +637,3 @@ nav.tabbar button.active { color: var(--accent); }
   /* 뒷면 크림색 배경은 다크에서 눈부시므로 카드색을 따라가게 함 */
   .face.back { background: #202530; }
 }
-
-/* ==========================================================================
-   ===== 임시 진단 — 하단 여백 원인 확인용. 확인 끝나면 이 블록 통째로 삭제 =====
-
-   (a) html 배경을 마젠타로 둡니다. 탭바 아래 빈 띠가
-       - 마젠타면  -> body 가 화면보다 짧다 = 높이 계산 문제
-       - 크림색이면 -> body 는 화면을 다 덮었고 fixed 탭바만 잘못 놓인 것
-   (b) #diag 패널에 실측값을 띄웁니다.
-   ========================================================================== */
-html { background: magenta; }
-#diag {
-  position: fixed; left: 6px; right: 6px; bottom: 62px; z-index: 60;
-  background: rgba(0,0,0,.82); color: #6f6;
-  font: 700 10px/1.35 ui-monospace, Menlo, Consolas, monospace;
-  padding: 6px 8px; border-radius: 8px; white-space: pre;
-  overflow-x: auto; -webkit-user-select: text; user-select: text;
-}
-#diag b { color: #ff6; font-weight: 700; }
-/* ===== 임시 진단 끝 ===== */

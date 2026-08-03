@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
   <meta name="theme-color" content="#b5432f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <!-- black-translucent 는 쓰지 말 것. iOS 홈 화면 앱에서 웹뷰 높이만 상태바
+       높이만큼 줄이고 위치는 맨 위에 두는 버그가 있어, 화면 맨 아래에 정확히
+       상태바 높이(예: 47pt)만큼 빈 띠가 남습니다. default 는 웹뷰를 상태바
+       아래에 제대로 배치하고 화면 끝까지 채웁니다. -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <!-- 아이폰은 매니페스트의 name 을 보지 않고 이 값을 홈화면 이름으로 씁니다.
        없으면 <title> 로 떨어지므로 앱 이름을 바꿀 때 여기도 같이 고칠 것. -->
   <meta name="apple-mobile-web-app-title" content="서당개 김백국" />
