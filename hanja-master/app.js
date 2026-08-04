@@ -99,9 +99,19 @@ function readingText(item) {
 // 항상 배열을 돌려줍니다 (없으면 빈 배열 -> 화면에서 영역이 숨겨짐).
 // 키는 data.js 의 c 그대로지만, 호환용 한자(U+F900~FAFF)로 어긋날 때를 대비해
 // 정규화한 글자로도 한 번 더 찾습니다.
+//
+// examples-lv1.js(1급 대비 hwp 자료)를 먼저 봅니다. 우리말샘에서 자동 수확한 examples.js
+// 는 1급 어휘가 검수 전이라, 그 자리를 시험 대비용 낱말로 덮는 겁니다. EXAMPLES_LV1 에는
+// 1급 신습한자만 들어 있어서 여기서 급수를 따로 가리지 않아도 됩니다.
+// 두 표 다 typeof 로 막아둔 건 스크립트 하나가 빠져도 앱이 통째로 죽지 않게 하려는 겁니다.
 function examplesOf(item) {
+  const nfc = item.c.normalize("NFC");
+  if (typeof EXAMPLES_LV1 !== "undefined") {
+    const lv1 = EXAMPLES_LV1[item.c] || EXAMPLES_LV1[nfc];
+    if (lv1) return lv1;
+  }
   if (typeof EXAMPLES === "undefined") return [];
-  return EXAMPLES[item.c] || EXAMPLES[item.c.normalize("NFC")] || [];
+  return EXAMPLES[item.c] || EXAMPLES[nfc] || [];
 }
 
 // 그 한자의 구성원리(자원). examplesOf 와 같은 규칙으로 찾습니다.
