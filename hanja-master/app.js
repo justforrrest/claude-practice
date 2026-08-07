@@ -891,6 +891,14 @@ const STROKE_ALT = {
   "眞": "真",
 };
 
+// 획순판(SVG)과 필기 캔버스는 색을 JS 로 직접 넘겨야 해서 CSS 변수가 닿지 않습니다.
+// 그대로 두면 다크 모드에서도 라이트용 색(거의 검정)이 나와 배경에 묻히므로,
+// :root 에 지금 적용된 값을 읽어 씁니다. 폴백은 구형 브라우저 대비용입니다.
+function themeColor(name, fallback) {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
+
 function plainGlyph(char, size) {
   return `<div style="font-size:${Math.round(size*0.62)}px;font-family:Batang,'Noto Serif KR',serif;line-height:1">${char}</div>`;
 }
@@ -962,8 +970,9 @@ function buildWriter(char) {
       // 채점은 하지 않습니다 — 획순 재생(획순 보기)에만 씁니다.
       showCharacter: false,
       showOutline: false,
-      strokeColor: "#2b2b2b",
-      radicalColor: "#b5432f",
+      strokeColor: themeColor("--ink", "#2b2b2b"),
+      radicalColor: themeColor("--accent", "#b5432f"),
+      outlineColor: themeColor("--stroke-outline", "#dddddd"),
       strokeAnimationSpeed: state.write.speed,
       delayBetweenStrokes: Math.round(180 / state.write.speed),
       onLoadCharDataError: () => {
@@ -1001,7 +1010,7 @@ function resetCanvas(size) {
   ctx.lineWidth = Math.max(5, Math.round(size / 26));
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.strokeStyle = "#2f6db5";
+  ctx.strokeStyle = themeColor("--accent2", "#2f6db5");
   if (canvasReady) return;
   canvasReady = true;
 
@@ -1096,6 +1105,24 @@ function renderSpeedTag() {
 // 화면이 숨겨질 때 상태를 되돌려 놓습니다.
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && animating) finishAnimate(writerGen);
+});
+
+// 앱을 켜 둔 사이 기기 테마가 바뀌면(밤에 자동 다크 전환 등) 이미 만들어 둔 획순판과
+// 캔버스는 옛 색 그대로입니다. 획순판은 updateColor 로 다시 칠하고, 캔버스는 앞으로
+// 그을 획부터 새 색을 씁니다. 이미 그은 필기는 픽셀이라 되칠할 수 없는데, 지우고
+// 새로 그리게 하면 쓰던 걸 날리게 되므로 그대로 둡니다.
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  const colors = {
+    strokeColor: themeColor("--ink", "#2b2b2b"),
+    radicalColor: themeColor("--accent", "#b5432f"),
+    outlineColor: themeColor("--stroke-outline", "#dddddd"),
+  };
+  for (const w of [writerInstance, detailWriter]) {
+    // CDN 이 막혀 hanzi-writer 가 없으면 writer 자체가 null 입니다
+    if (!w || typeof w.updateColor !== "function") continue;
+    for (const [k, v] of Object.entries(colors)) w.updateColor(k, v, { duration: 0 });
+  }
+  $("#write-canvas").getContext("2d").strokeStyle = themeColor("--accent2", "#2f6db5");
 });
 
 // 지우기 — 내가 쓴 필기만 지웁니다
@@ -1428,7 +1455,9 @@ function buildDetailWriter(item) {
     detailWriter = HanziWriter.create(pane, drawChar, {
       width: size, height: size, padding: 6,
       showCharacter: false, showOutline: false,
-      strokeColor: "#2b2b2b", radicalColor: "#b5432f",
+      strokeColor: themeColor("--ink", "#2b2b2b"),
+      radicalColor: themeColor("--accent", "#b5432f"),
+      outlineColor: themeColor("--stroke-outline", "#dddddd"),
       strokeAnimationSpeed: 1, delayBetweenStrokes: 180,
       onLoadCharDataSuccess: () => {
         if (gen !== detailWriterGen) return;
