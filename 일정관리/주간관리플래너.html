@@ -1119,6 +1119,43 @@ function renderWeekCal(){
   document.getElementById('wcal-next').onclick=()=>{wCalDate=new Date(y,m+1,1);renderWeekCal();};
 }
 function focusLastInput(bi,cls){const tr=document.getElementById('block-tbody').querySelectorAll('tr')[Number(bi)];if(tr){const ins=tr.querySelectorAll(cls);if(ins.length)ins[ins.length-1].focus();}}
+/* 입력 요소로 포커스 + 캐럿을 끝으로 */
+function focusAtEnd(el){
+  if(!el) return;
+  el.focus();
+  if(el.tagName==='TEXTAREA'||el.tagName==='INPUT'){
+    const n=el.value.length;try{el.setSelectionRange(n,n);}catch(e){}
+  }else{
+    const r=document.createRange();r.selectNodeContents(el);r.collapse(false);
+    const s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  }
+}
+/* D-Log: 셀·카드의 빈 여백을 클릭해도 해당 입력칸에 바로 포커스 (두 번 클릭 방지) */
+document.getElementById('view-daily').addEventListener('mousedown',e=>{
+  const t=e.target;
+  if(!(t instanceof Element))return;
+  if(t.closest('input,textarea,button,select,a,[contenteditable="true"],.col-resizer'))return;
+  let target=null;
+  const emCard=t.closest('.emotion-card');
+  const issueCard=t.closest('#d-issue-wrap .card');
+  const td=t.closest('#block-tbody td');
+  if(emCard) target=emCard.querySelector('.emotion-editable');
+  else if(issueCard) target=issueCard.querySelector('textarea');
+  else if(td){
+    if(td.classList.contains('kw-cell')) target=td.querySelector('.kw-input');
+    else{
+      const ins=[...td.querySelectorAll('.check-text,.checkout-text')];
+      if(ins.length){
+        target=ins.reduce((best,el)=>{
+          const b=el.getBoundingClientRect();
+          const d=Math.abs((b.top+b.bottom)/2-e.clientY);
+          return (!best||d<best.d)?{el,d}:best;
+        },null).el;
+      }
+    }
+  }
+  if(target){e.preventDefault();focusAtEnd(target);}
+});
 function syncWeeklyToDaily(dateStr,force=false){
   const wk=weekKey(new Date(dateStr));
   const wEntry=getWeeklyEntry(wk);
