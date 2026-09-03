@@ -778,7 +778,7 @@ function renderInboundTbody(){
       </tr>`;
     }
     return`<tr>
-      <td>${r.date}</td><td>${r.herb}</td><td class="num">${r.count>1?`${fmt(r.unitQty)} * ${r.count}`:fmt(r.qty)}</td>
+      <td>${r.date}</td><td>${r.herb}</td><td class="num">${r.count>1?`${fmt(r.unitQty)} × ${r.count}`:fmt(r.qty)}</td>
       <td class="num">${r.price>0?fmt(r.price):'-'}</td>
       <td class="num">${r.amount>0?fmt(r.amount):'-'}</td>
       <td>${r.supplier||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
