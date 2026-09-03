@@ -789,7 +789,7 @@ function renderInboundTbody(){
           <div class="ei-qty-total" style="font-size:11px;color:var(--violet-d);text-align:right;margin-top:2px;font-weight:600"></div>
         </td>
         <td><input class="settings-inp ei-price" type="number" step="0.1" value="${r.price||''}" placeholder="-" style="width:70px;text-align:right"></td>
-        <td><input class="settings-inp ei-amount" type="number" step="1" value="${eUnitAmount||''}" placeholder="-" style="width:82px;text-align:right"></td>
+        <td><span style="display:inline-flex;align-items:center;justify-content:flex-end;gap:2px;width:100%"><input class="settings-inp ei-amount" type="number" step="1" value="${eUnitAmount||''}" placeholder="-" style="width:64px;text-align:right"><span style="font-size:11px;color:var(--text-3);flex:none">/개</span></span></td>
         <td><select class="settings-inp ei-sup" style="width:78px">${sOpts}</select></td>
         <td><input class="settings-inp ei-note" type="text" value="${r.note||''}" style="min-width:80px;width:100%"></td>
         <td style="white-space:nowrap">
