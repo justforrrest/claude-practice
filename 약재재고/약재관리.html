@@ -752,13 +752,23 @@ function renderInboundTbody(){
   tbody.innerHTML=filtered.length===0?'<tr><td colspan="8" class="empty">입고 이력이 없습니다</td></tr>':filtered.map(r=>{
     if(editingInboundId===r.id){
       const hOpts=herbsData.map(h=>`<option${h===r.herb?' selected':''}>${h}</option>`).join('');
+      const eCount=r.count>1?r.count:1;
+      const eUnitQty=r.unitQty>0?r.unitQty:r.qty;
+      const eUnitAmount=eCount>1?Math.round((r.amount||0)/eCount):(r.amount||0);
       const sOpts=suppliersData.map(s=>`<option${s===r.supplier?' selected':''}>${s}</option>`).join('');
       return`<tr style="background:var(--violet-light)">
         <td><input class="settings-inp ei-date" type="date" value="${r.date}" style="width:116px"></td>
         <td><select class="settings-inp ei-herb" style="width:88px">${hOpts}</select></td>
-        <td><input class="settings-inp ei-qty" type="number" step="0.1" value="${r.qty}" style="width:70px;text-align:right"></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
+            <input class="settings-inp ei-qty" type="number" step="0.1" value="${eUnitQty}" style="width:58px;text-align:right">
+            <span style="font-size:12px;color:var(--text-3)">×</span>
+            <input class="settings-inp ei-qty-n" type="number" min="1" step="1" value="${eCount}" style="width:36px;text-align:right">
+          </div>
+          <div class="ei-qty-total" style="font-size:11px;color:var(--violet-d);text-align:right;margin-top:2px;font-weight:600"></div>
+        </td>
         <td><input class="settings-inp ei-price" type="number" step="0.1" value="${r.price||''}" placeholder="-" style="width:70px;text-align:right"></td>
-        <td><input class="settings-inp ei-amount" type="number" step="1" value="${r.amount||''}" placeholder="-" style="width:82px;text-align:right"></td>
+        <td><input class="settings-inp ei-amount" type="number" step="1" value="${eUnitAmount||''}" placeholder="-" style="width:82px;text-align:right"></td>
         <td><select class="settings-inp ei-sup" style="width:78px">${sOpts}</select></td>
         <td><input class="settings-inp ei-note" type="text" value="${r.note||''}" style="min-width:80px;width:100%"></td>
         <td style="white-space:nowrap">
@@ -768,7 +778,7 @@ function renderInboundTbody(){
       </tr>`;
     }
     return`<tr>
-      <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}</td>
+      <td>${r.date}</td><td>${r.herb}</td><td class="num">${fmt(r.qty)}${r.count>1?`<span style="color:var(--text-3);font-size:11px;margin-left:4px;font-weight:400">${fmt(r.unitQty)}×${r.count}</span>`:''}</td>
       <td class="num">${r.price>0?fmt(r.price):'-'}</td>
       <td class="num">${r.amount>0?fmt(r.amount):'-'}</td>
       <td>${r.supplier||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
@@ -789,15 +799,17 @@ function renderInboundTbody(){
     btn.addEventListener('click',async()=>{
       const tr=btn.closest('tr');
       const herb=tr.querySelector('.ei-herb').value;
-      const qty=parseFloat(tr.querySelector('.ei-qty').value);
+      const unitQty=parseFloat(tr.querySelector('.ei-qty').value);
+      const count=parseInt(tr.querySelector('.ei-qty-n').value)||1;
+      const qty=unitQty*count;
       const price=parseFloat(tr.querySelector('.ei-price').value)||0;
-      const amount=parseFloat(tr.querySelector('.ei-amount').value)||0;
+      const amount=(parseFloat(tr.querySelector('.ei-amount').value)||0)*count;
       const date=tr.querySelector('.ei-date').value;
       const supplier=tr.querySelector('.ei-sup').value;
       const note=tr.querySelector('.ei-note').value.trim();
       if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
       const prevHerb=inboundData.find(r=>r.id===btn.dataset.id)?.herb;
-      inboundData=inboundData.map(r=>r.id===btn.dataset.id?{...r,herb,qty,price,amount,date,supplier,note}:r);
+      inboundData=inboundData.map(r=>r.id===btn.dataset.id?{...r,herb,qty,price,amount,date,supplier,note,unitQty,count}:r);
       await save(KEYS.inbound,inboundData);
       refreshAvgPrice(prevHerb,herb);await save(KEYS.settings,settingsData);
       editingInboundId=null;renderInbound();
@@ -805,13 +817,23 @@ function renderInboundTbody(){
   });
 
   // 편집 행 자동계산
-  const eiQty=tbody.querySelector('.ei-qty'),eiPrice=tbody.querySelector('.ei-price'),eiAmt=tbody.querySelector('.ei-amount');
+  const eiQty=tbody.querySelector('.ei-qty'),eiQtyN=tbody.querySelector('.ei-qty-n'),eiPrice=tbody.querySelector('.ei-price'),eiAmt=tbody.querySelector('.ei-amount'),eiTotal=tbody.querySelector('.ei-qty-total');
   if(eiQty&&eiPrice&&eiAmt){
-    const eCalcAmt=()=>{const q=parseFloat(eiQty.value),p=parseFloat(eiPrice.value);if(q>0&&p>0)eiAmt.value=Math.round(q*p);};
-    const eCalcPrc=()=>{const q=parseFloat(eiQty.value),a=parseFloat(eiAmt.value);if(q>0&&a>0)eiPrice.value=+(a/q).toFixed(2);};
-    eiPrice.addEventListener('input',eCalcAmt);
-    eiAmt.addEventListener('input',eCalcPrc);
-    eiQty.addEventListener('input',()=>{if(eiPrice.value)eCalcAmt();else if(eiAmt.value)eCalcPrc();});
+    // 반올림된 단가로 금액을 되계산하면 오차가 생기므로 원값을 따로 보관
+    let eExact=null;
+    {const q0=parseFloat(eiQty.value),a0=parseFloat(eiAmt.value);if(q0>0&&a0>0)eExact=a0/q0;}
+    const eTot=()=>{
+      if(!eiTotal)return;
+      const q=parseFloat(eiQty.value)||0,n=parseInt(eiQtyN?.value)||1,a=parseFloat(eiAmt.value)||0;
+      eiTotal.textContent=(q>0&&n>1)?`= ${fmt(q*n)}g${a>0?' / '+fmt(Math.round(a*n))+'원':''}`:'';
+    };
+    const eCalcAmt=()=>{const q=parseFloat(eiQty.value),p=eExact!=null?eExact:parseFloat(eiPrice.value);if(q>0&&p>0)eiAmt.value=Math.round(q*p);};
+    const eCalcPrc=()=>{const q=parseFloat(eiQty.value),a=parseFloat(eiAmt.value);if(q>0&&a>0){eExact=a/q;eiPrice.value=+(a/q).toFixed(2);}};
+    eiPrice.addEventListener('input',()=>{eExact=null;eCalcAmt();eTot();});
+    eiAmt.addEventListener('input',()=>{eCalcPrc();eTot();});
+    eiQty.addEventListener('input',()=>{if(eiPrice.value)eCalcAmt();else if(eiAmt.value)eCalcPrc();eTot();});
+    if(eiQtyN)eiQtyN.addEventListener('input',eTot);
+    eTot();
   }
 
   const ibEditTr=tbody.querySelector('.ib-save')?.closest('tr');
@@ -822,16 +844,18 @@ function renderInboundTbody(){
         clearTimeout(ibAutoTimer);
         ibAutoTimer=setTimeout(async()=>{
           const herb=ibEditTr.querySelector('.ei-herb').value;
-          const qty=parseFloat(ibEditTr.querySelector('.ei-qty').value);
+          const unitQty=parseFloat(ibEditTr.querySelector('.ei-qty').value);
+          const count=parseInt(ibEditTr.querySelector('.ei-qty-n').value)||1;
+          const qty=unitQty*count;
           const date=ibEditTr.querySelector('.ei-date').value;
           if(!herb||!qty||isNaN(qty)||!date)return;
           const price=parseFloat(ibEditTr.querySelector('.ei-price').value)||0;
-          const amount=parseFloat(ibEditTr.querySelector('.ei-amount').value)||0;
+          const amount=(parseFloat(ibEditTr.querySelector('.ei-amount').value)||0)*count;
           const sup=ibEditTr.querySelector('.ei-sup')?.value||'';
           const note=ibEditTr.querySelector('.ei-note')?.value.trim()||'';
           const id=ibEditTr.querySelector('.ib-save').dataset.id;
           const prevHerb=inboundData.find(r=>r.id===id)?.herb;
-          inboundData=inboundData.map(r=>r.id===id?{...r,herb,qty,price,amount,date,supplier:sup,note}:r);
+          inboundData=inboundData.map(r=>r.id===id?{...r,herb,qty,price,amount,date,supplier:sup,note,unitQty,count}:r);
           await save(KEYS.inbound,inboundData);
           refreshAvgPrice(prevHerb,herb);await save(KEYS.settings,settingsData);
         },1000);
@@ -904,11 +928,13 @@ function renderInbound(){
   const qtyTotalEl=document.getElementById('in-qty-total');
   const priceEl=document.getElementById('in-price');
   const amountEl=document.getElementById('in-amount');
+  // 화면의 단가는 소수 2자리로 반올림되므로, 금액 재계산에는 반올림 없는 원값을 쓴다
+  let exactPrice=null;
   const getTotalQty=()=>{const q=parseFloat(qtyEl.value)||0,n=parseInt(qtyNEl.value)||1;return q*n;};
   const updateQtyTotal=()=>{const q=parseFloat(qtyEl.value)||0,n=parseInt(qtyNEl.value)||1;qtyTotalEl.textContent=(q>0&&n>1)?`= ${fmt(q*n)}g`:'';};
-  const calcAmt=()=>{const q=parseFloat(qtyEl.value)||0,p=parseFloat(priceEl.value);if(q>0&&p>0)amountEl.value=Math.round(q*p);};
-  const calcPrc=()=>{const q=parseFloat(qtyEl.value)||0,a=parseFloat(amountEl.value);if(q>0&&a>0)priceEl.value=+(a/q).toFixed(2);};
-  priceEl.addEventListener('input',calcAmt);
+  const calcAmt=()=>{const q=parseFloat(qtyEl.value)||0,p=exactPrice!=null?exactPrice:parseFloat(priceEl.value);if(q>0&&p>0)amountEl.value=Math.round(q*p);};
+  const calcPrc=()=>{const q=parseFloat(qtyEl.value)||0,a=parseFloat(amountEl.value);if(q>0&&a>0){exactPrice=a/q;priceEl.value=+(a/q).toFixed(2);}};
+  priceEl.addEventListener('input',()=>{exactPrice=null;calcAmt();});
   amountEl.addEventListener('input',calcPrc);
   qtyEl.addEventListener('input',()=>{updateQtyTotal();if(priceEl.value)calcAmt();else if(amountEl.value)calcPrc();});
   qtyNEl.addEventListener('input',()=>{updateQtyTotal();if(priceEl.value)calcAmt();else if(amountEl.value)calcPrc();});
@@ -926,10 +952,14 @@ function renderInbound(){
     const ibTs=ibLast?new Date(ibLast.date).getTime():0;
     const src=histTs>ibTs?hist:ibLast;
     if(!src)return;
-    qtyEl.value=src.qty;
-    qtyNEl.value='';
-    amountEl.value=src.amount;
-    priceEl.value=src.price!=null?src.price:Math.round(src.amount/src.qty*10)/10;
+    const n=src.count>1?src.count:1;                        // 개수 (과거 기록·계산이력에는 없음 → 1)
+    const uq=src.unitQty>0?src.unitQty:src.qty;             // 1개당 수량 (없으면 총량)
+    const ua=n>1?Math.round(src.amount/n):src.amount;       // 1개당 금액
+    qtyEl.value=uq;
+    qtyNEl.value=n>1?n:'';
+    amountEl.value=ua;
+    exactPrice=(uq>0&&src.amount>0)?src.amount/(uq*n):null;
+    priceEl.value=exactPrice!=null?+exactPrice.toFixed(2):(src.price!=null?src.price:Math.round(src.amount/src.qty*10)/10);
     updateQtyTotal();
   }
   setupHerbDropdown(document.getElementById('in-herb'),document.getElementById('in-herb-dd'),autofillInbound);
@@ -939,13 +969,14 @@ function renderInbound(){
     const herb=document.getElementById('in-herb').value;
     const qty=getTotalQty();
     const n=parseInt(qtyNEl.value)||1;
+    const unitQty=parseFloat(qtyEl.value)||0;
     const price=parseFloat(priceEl.value)||0;
     const amount=(parseFloat(amountEl.value)||0)*n;
     const date=document.getElementById('in-date').value;
     const supplier=document.getElementById('in-sup').value;
     const note=document.getElementById('in-note').value.trim();
     if(!herb||!qty||isNaN(qty)||!date){alert('약재, 수량, 날짜를 입력해주세요.');return;}
-    inboundData.push({id:uid(),herb,qty,price,amount,date,supplier,note});
+    inboundData.push({id:uid(),herb,qty,price,amount,date,supplier,note,unitQty,count:n});
     await save(KEYS.inbound,inboundData);
     if(price>0){
       refreshAvgPrice(herb);           // 누적평균으로 단가 갱신
@@ -956,7 +987,7 @@ function renderInbound(){
         await save(KEYS.pricelist,pricelistData);
       }
     }
-    qtyEl.value='';qtyNEl.value='';qtyTotalEl.textContent='';priceEl.value='';amountEl.value='';
+    qtyEl.value='';qtyNEl.value='';qtyTotalEl.textContent='';priceEl.value='';amountEl.value='';exactPrice=null;
     document.getElementById('in-note').value='';
     renderInbound();
   });
