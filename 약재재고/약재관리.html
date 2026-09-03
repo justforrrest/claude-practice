@@ -79,6 +79,10 @@ label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercas
 input[type=text],input[type=number],input[type=date],select{border:1px solid var(--border-2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--font-sans);outline:none;background:var(--surface);color:var(--text-1);width:100%;}
 input:focus,select:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
 .section-title{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.75rem;}
+/* 입고 이력 수량: 숫자는 우측 정렬로 자리를 맞추고, 개수는 고정폭 뱃지 자리에 */
+.qty-cell{display:inline-flex;align-items:center;justify-content:flex-end;gap:5px;}
+.qty-mult-slot{display:inline-block;width:28px;text-align:left;flex:none;}
+.qty-mult{display:inline-block;background:var(--violet-light);color:var(--violet-d);font-size:11px;font-weight:600;line-height:1;padding:2px 5px;border-radius:4px;letter-spacing:-.01em;}
 input.settings-inp{border:none;background:transparent;text-align:right;width:76px;font-family:var(--font-sans);font-size:12px;outline:none;padding:0;color:inherit;-webkit-appearance:none;appearance:none;cursor:text;}
 input.settings-inp:focus{border:none;background:transparent;outline:none;box-shadow:none;}
 input.pl-inp{border:none;background:transparent;text-align:right;width:100%;font-family:var(--font-sans);font-size:13px;outline:none;padding:0;color:inherit;-webkit-appearance:none;appearance:none;cursor:text;}
@@ -792,7 +796,7 @@ function renderInboundTbody(){
       </tr>`;
     }
     return`<tr>
-      <td>${r.date}</td><td>${r.herb}</td><td class="num">${r.count>1?`${fmt(r.unitQty)} × ${r.count}`:fmt(r.qty)}</td>
+      <td>${r.date}</td><td>${r.herb}</td><td class="num"><span class="qty-cell"><span>${fmt(r.count>1?r.unitQty:r.qty)}</span><span class="qty-mult-slot">${r.count>1?`<span class="qty-mult">×${r.count}</span>`:''}</span></span></td>
       <td class="num">${r.price>0?fmt(r.price):'-'}</td>
       <td class="num">${r.amount>0?fmt(r.amount):'-'}</td>
       <td>${r.supplier||''}</td><td style="color:var(--text-3);font-size:12px">${r.note||''}</td>
