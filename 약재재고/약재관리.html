@@ -738,6 +738,20 @@ function setupHerbDropdown(inp,dd,onSelect){
   });
 }
 
+/* ── 인라인 편집 행: Enter로 저장 ── */
+// 캡처 단계로 행에 붙인다 — 약재 자동완성 드롭다운의 Enter 핸들러보다 먼저 돌아야
+// 드롭다운이 열려 있는지 판별할 수 있다 (열려 있으면 항목 선택에 양보).
+function bindRowEnterSave(tr,saveBtn){
+  if(!tr||!saveBtn)return;
+  tr.addEventListener('keydown',e=>{
+    if(e.key!=='Enter'||e.isComposing)return;
+    const dd=e.target.closest?.('.herb-ac-wrap')?.querySelector('.herb-dropdown');
+    if(dd&&dd.classList.contains('open'))return;
+    e.preventDefault();
+    saveBtn.click();
+  },true);
+}
+
 /* ── 입고 ── */
 // 입고 이력 tbody만 갱신 (검색창/입력 요소는 보존 → 한글 조합 유지)
 function renderInboundTbody(){
@@ -836,32 +850,9 @@ function renderInboundTbody(){
     eTot();
   }
 
+  // Enter 또는 ✓ 버튼을 눌러야만 저장 (자동저장 없음)
   const ibEditTr=tbody.querySelector('.ib-save')?.closest('tr');
-  if(ibEditTr){
-    let ibAutoTimer=null;
-    ibEditTr.querySelectorAll('input,select').forEach(i=>{
-      i.addEventListener('input',()=>{
-        clearTimeout(ibAutoTimer);
-        ibAutoTimer=setTimeout(async()=>{
-          const herb=ibEditTr.querySelector('.ei-herb').value;
-          const unitQty=parseFloat(ibEditTr.querySelector('.ei-qty').value);
-          const count=parseInt(ibEditTr.querySelector('.ei-qty-n').value)||1;
-          const qty=unitQty*count;
-          const date=ibEditTr.querySelector('.ei-date').value;
-          if(!herb||!qty||isNaN(qty)||!date)return;
-          const price=parseFloat(ibEditTr.querySelector('.ei-price').value)||0;
-          const amount=(parseFloat(ibEditTr.querySelector('.ei-amount').value)||0)*count;
-          const sup=ibEditTr.querySelector('.ei-sup')?.value||'';
-          const note=ibEditTr.querySelector('.ei-note')?.value.trim()||'';
-          const id=ibEditTr.querySelector('.ib-save').dataset.id;
-          const prevHerb=inboundData.find(r=>r.id===id)?.herb;
-          inboundData=inboundData.map(r=>r.id===id?{...r,herb,qty,price,amount,date,supplier:sup,note,unitQty,count}:r);
-          await save(KEYS.inbound,inboundData);
-          refreshAvgPrice(prevHerb,herb);await save(KEYS.settings,settingsData);
-        },1000);
-      });
-    });
-  }
+  if(ibEditTr)bindRowEnterSave(ibEditTr,ibEditTr.querySelector('.ib-save'));
 
   tbody.querySelectorAll('.btn-del[data-type="ib"]').forEach(btn=>{
     btn.addEventListener('click',async()=>{
@@ -1054,26 +1045,9 @@ function renderOutboundTbody(){
     });
   });
 
+  // Enter 또는 ✓ 버튼을 눌러야만 저장 (자동저장 없음)
   const obEditTr=tbody.querySelector('.ob-save')?.closest('tr');
-  if(obEditTr){
-    let obAutoTimer=null;
-    obEditTr.querySelectorAll('input,select').forEach(i=>{
-      i.addEventListener('input',()=>{
-        clearTimeout(obAutoTimer);
-        obAutoTimer=setTimeout(async()=>{
-          const herb=obEditTr.querySelector('.eo-herb').value;
-          const qty=parseFloat(obEditTr.querySelector('.eo-qty').value);
-          const date=obEditTr.querySelector('.eo-date').value;
-          if(!herb||!qty||isNaN(qty)||!date)return;
-          const purpose=obEditTr.querySelector('.eo-purpose')?.value.trim()||'';
-          const note=obEditTr.querySelector('.eo-note')?.value.trim()||'';
-          const id=obEditTr.querySelector('.ob-save').dataset.id;
-          outboundData=outboundData.map(r=>r.id===id?{...r,herb,qty,date,purpose,note}:r);
-          await save(KEYS.outbound,outboundData);
-        },1000);
-      });
-    });
-  }
+  if(obEditTr)bindRowEnterSave(obEditTr,obEditTr.querySelector('.ob-save'));
 
   tbody.querySelectorAll('.btn-del[data-type="ob"]').forEach(btn=>{
     btn.addEventListener('click',async()=>{
@@ -1369,27 +1343,24 @@ function renderSettings(){
     renderStock();
   };
 
-  let stAutoTimer=null;
-  el.querySelectorAll('.settings-inp').forEach(inp=>{
-    inp.addEventListener('input',()=>{
-      clearTimeout(stAutoTimer);
-      stAutoTimer=setTimeout(stSaveAll,1000);
-    });
-  });
-
   el.querySelectorAll('.settings-inp[data-field="price"],.settings-inp[data-field="min"]').forEach(inp=>{
     inp.addEventListener('focus',()=>inp.select());
   });
   el.querySelectorAll('.settings-inp[data-field="price"]').forEach(inp=>{
     inp.addEventListener('keydown',async e=>{
-      if(e.key==='Enter'&&!e.isComposing){e.preventDefault();clearTimeout(stAutoTimer);await stSaveAll();inp.blur();}
+      if(e.key==='Enter'&&!e.isComposing){e.preventDefault();await stSaveAll();inp.blur();}
+    });
+  });
+  el.querySelectorAll('.settings-inp[data-field="memo"]').forEach(inp=>{
+    inp.addEventListener('keydown',async e=>{
+      if(e.key==='Enter'&&!e.isComposing){e.preventDefault();await stSaveAll();inp.blur();}
     });
   });
   const allMinInps=[...el.querySelectorAll('.settings-inp[data-field="min"]')];
   allMinInps.forEach((inp,idx)=>{
     inp.addEventListener('keydown',async e=>{
       if(e.key==='Enter'&&!e.isComposing){
-        e.preventDefault();clearTimeout(stAutoTimer);await stSaveAll();
+        e.preventDefault();await stSaveAll();
         const next=allMinInps[idx+1];
         if(next){next.focus();next.select();}else inp.blur();
       }
@@ -1569,7 +1540,7 @@ function renderPricelist(){
   plSrEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){pricelistSearch=plSrEl.value;renderPricelist();focusEnd('pl-search');}});
   plSrEl.addEventListener('input',e=>{if(e.target.value===''){pricelistSearch='';renderPricelist();focusEnd('pl-search');}});
 
-  document.getElementById('pl-save').addEventListener('click',async()=>{
+  const plSaveAll=async(rerender=true)=>{
     el.querySelectorAll('.pl-inp').forEach(inp=>{
       const h=inp.dataset.herb,s=inp.dataset.sup,v=parseFloat(inp.value);
       if(!pricelistData[h])pricelistData[h]={};
@@ -1577,10 +1548,13 @@ function renderPricelist(){
       else delete pricelistData[h][s];
     });
     await save(KEYS.pricelist,pricelistData);
+    if(!rerender)return;
     const pl=await load(KEYS.pricelist);
     if(pl&&typeof pl==='object'&&!Array.isArray(pl))pricelistData=pl;
     renderPricelist();
-  });
+  };
+  window._plSaveAll=plSaveAll;   // 단가 계산 팝오버의 "적용"에서 호출
+  document.getElementById('pl-save').addEventListener('click',()=>plSaveAll());
 
   el.querySelectorAll('.pl-inp').forEach(inp=>{
     inp.addEventListener('click',e=>{e.stopPropagation();window._plCalcPop.show(inp);});
@@ -1590,18 +1564,10 @@ function renderPricelist(){
     td.addEventListener('click',e=>{e.stopPropagation();window._plMemoPop.show(td.dataset.herb,td);});
   });
 
-  let plAutoTimer=null;
+  // Enter 또는 저장 버튼을 눌러야만 반영 (자동저장 없음)
   el.querySelectorAll('.pl-inp').forEach(inp=>{
-    inp.addEventListener('input',()=>{
-      clearTimeout(plAutoTimer);
-      plAutoTimer=setTimeout(async()=>{
-        el.querySelectorAll('.pl-inp').forEach(i=>{
-          const h=i.dataset.herb,s=i.dataset.sup,v=parseFloat(i.value);
-          if(!pricelistData[h])pricelistData[h]={};
-          if(v>0)pricelistData[h][s]=v;else delete pricelistData[h][s];
-        });
-        await save(KEYS.pricelist,pricelistData);
-      },1000);
+    inp.addEventListener('keydown',async e=>{
+      if(e.key==='Enter'&&!e.isComposing){e.preventDefault();await plSaveAll();}
     });
   });
 
@@ -1717,6 +1683,7 @@ function renderPricelist(){
       const q=parseFloat(qtyEl.value),a=parseFloat(amtEl.value);
       saveHist(_inp.dataset.herb,_inp.dataset.sup,q,a,memoEl.value.trim());
       _inp.value=p;_inp.dispatchEvent(new Event('input',{bubbles:true}));const t=_inp;hide();t.focus();
+      if(window._plSaveAll)window._plSaveAll(false);
     }
   }
   qtyEl.addEventListener('input',calc);
