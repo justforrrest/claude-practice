@@ -588,6 +588,9 @@ function applyManualPrice(h,v){
 }
 function getMinStock(h){return settingsData.minStock[h]??0;}
 function isHidden(h){return !!(settingsData.hidden&&settingsData.hidden[h]);}
+// 약재 목록은 항상 ㄱㄴㄷ 순 — herbsData 배열 순서(추가·이름변경·동기화 시점에 따라 달라짐)에 의존하지 않는다
+const sortKo=list=>[...list].sort((a,b)=>a.localeCompare(b,'ko'));
+const visibleHerbs=()=>sortKo(herbsData.filter(h=>!isHidden(h)));
 function toggleHerbHidden(name){
   if(!settingsData.hidden)settingsData.hidden={};
   if(settingsData.hidden[name])delete settingsData.hidden[name];
@@ -609,7 +612,7 @@ let stockSearch='',showLowOnly=false,showZeroOnly=false,stockConsonant='',showUn
 function renderStock(){
   const el=document.getElementById('view-stock');
   const stock=calcStock();
-  const baseHerbs=herbsData.filter(h=>!isHidden(h));
+  const baseHerbs=visibleHerbs();
   const zeroCount=baseHerbs.filter(h=>stock[h]<=0).length;
   const lowCount=baseHerbs.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]>0&&stock[h]<m;}).length;
   let herbs=baseHerbs;
@@ -716,7 +719,7 @@ function renderStock(){
 function setupHerbDropdown(inp,dd,onSelect){
   let hlIdx=-1;
   function open(q){
-    const list=(q?herbsData.filter(h=>h.includes(q)):herbsData).filter(h=>!isHidden(h));
+    const list=sortKo((q?herbsData.filter(h=>h.includes(q)):herbsData).filter(h=>!isHidden(h)));
     if(!list.length){dd.classList.remove('open');return;}
     dd.innerHTML=list.map(h=>`<li data-v="${h}">${h}</li>`).join('');
     dd.classList.add('open');
@@ -769,7 +772,7 @@ function renderInboundTbody(){
   const filtered=ibQ?ibBase.filter(r=>r.herb.includes(ibQ)):(inboundMonth?ibBase:ibBase.slice(0,50));
   tbody.innerHTML=filtered.length===0?'<tr><td colspan="8" class="empty">입고 이력이 없습니다</td></tr>':filtered.map(r=>{
     if(editingInboundId===r.id){
-      const hOpts=herbsData.map(h=>`<option${h===r.herb?' selected':''}>${h}</option>`).join('');
+      const hOpts=sortKo(herbsData).map(h=>`<option${h===r.herb?' selected':''}>${h}</option>`).join('');
       const eCount=r.count>1?r.count:1;
       const eUnitQty=r.unitQty>0?r.unitQty:r.qty;
       const eUnitAmount=eCount>1?Math.round((r.amount||0)/eCount):(r.amount||0);
@@ -876,7 +879,7 @@ function renderInbound(){
   const ibMonths=[...new Set(allSorted.map(r=>r.date.slice(0,7)))];
   if(inboundMonth&&!ibMonths.includes(inboundMonth))inboundMonth='';
   const monthOpts=`<option value="">전체 (최근 50건)</option>${ibMonths.map(m=>`<option value="${m}"${inboundMonth===m?' selected':''}>${m}</option>`).join('')}`;
-  const herbOpts=`<option value="">약재 선택</option>${herbsData.map(h=>`<option>${h}</option>`).join('')}`;
+  const herbOpts=`<option value="">약재 선택</option>${sortKo(herbsData).map(h=>`<option>${h}</option>`).join('')}`;
   const supOpts=suppliersData.map(s=>`<option>${s}</option>`).join('');
   el.innerHTML=`
   <div class="card">
@@ -1069,7 +1072,7 @@ function renderOutbound(){
   const obMonths=[...new Set(allSorted.map(r=>r.date.slice(0,7)))];
   if(outboundMonth&&!obMonths.includes(outboundMonth))outboundMonth='';
   const monthOpts=`<option value="">전체 (최근 50건)</option>${obMonths.map(m=>`<option value="${m}"${outboundMonth===m?' selected':''}>${m}</option>`).join('')}`;
-  const herbOpts=`<option value="">약재 선택</option>${herbsData.map(h=>`<option>${h}</option>`).join('')}`;
+  const herbOpts=`<option value="">약재 선택</option>${sortKo(herbsData).map(h=>`<option>${h}</option>`).join('')}`;
   el.innerHTML=`
   <div class="card">
     <div class="section-title">출고 등록</div>
@@ -1246,7 +1249,7 @@ function renderSettings(){
   if(settingsSearch)herbs=herbs.filter(h=>h.includes(settingsSearch));
   if(settingsSort==='inbound'){const ibQty=h=>inboundData.filter(r=>r.herb===h).reduce((s,r)=>s+Number(r.qty||0),0);herbs=[...herbs].sort((a,b)=>ibQty(b)-ibQty(a));}
   else if(settingsSort==='price'){herbs=[...herbs].sort((a,b)=>getPrice(b)-getPrice(a));}
-  else herbs=[...herbs].sort((a,b)=>a.localeCompare(b,'ko'));
+  else herbs=sortKo(herbs);
   el.innerHTML=`
   <div class="card mt">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
@@ -1379,7 +1382,7 @@ function renderSettings(){
     if(!name){inp.focus();return;}
     if(herbsData.includes(name)){alert('이미 존재하는 약재명입니다.');return;}
     herbsData.push(name);
-    herbsData.sort((a,b)=>a.localeCompare(b,'ko'));
+    herbsData=sortKo(herbsData);
     await save(KEYS.herbs,herbsData);
     inp.value='';
     renderSettings();
@@ -1477,7 +1480,7 @@ function calcPriceList(){
 function renderPricelist(){
   const el=document.getElementById('view-pricelist');
   const derived=calcPriceList();
-  let herbs=herbsData.filter(h=>!isHidden(h));
+  let herbs=visibleHerbs();
   if(pricelistConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===pricelistConsonant);
   if(pricelistSearch)herbs=herbs.filter(h=>h.includes(pricelistSearch));
 
