@@ -581,7 +581,7 @@ function attachRowListeners(tr){
       rxHerbs=rxHerbs.filter(r=>r.id!==rid);
       tr.remove();
       calcSummary();
-      if(rxHerbs.length===0)addHerbRow('','','',undefined,true);
+      if(rxHerbs.length===0)addHerbRow('','','',undefined,false);
       return;
     }
     const row=rxHerbs.find(r=>r.id===rid);
