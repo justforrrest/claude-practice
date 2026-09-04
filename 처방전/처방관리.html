@@ -1821,6 +1821,7 @@ function loadRefRx(rxId){
     tableWrap.innerHTML=`<table><thead><tr><th>약재명</th><th>첩당g</th><th>총량g</th><th>첩당g차이</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
     summaryEl.innerHTML=
       `<div class="rc-sum-line">`+
+        (rx.days?`<span><b>${rx.days}</b>일</span>`:'')+
         `<span><b>${packs}</b>첩</span>`+
         (totalPacks?`<span><b>${totalPacks}</b>팩</span>`:'')+
         `<span>총 <b>${fmt(prevTotalG)}</b>g</span>`+
