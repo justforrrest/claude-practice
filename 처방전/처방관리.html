@@ -109,8 +109,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 #rx-cmp-controls{padding:8px 10px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
 #rx-cmp-search{width:100%;box-sizing:border-box;padding:5px 8px;font-size:12px;border:1px solid var(--border-2);border-radius:6px;background:var(--surface);color:var(--text-1);outline:none;}
 #rx-cmp-select{width:100%;height:auto;padding:5px 8px;font-size:12px;border-radius:6px;}
-#rx-cmp-summary{font-size:11px;color:var(--text-3);display:flex;gap:8px;flex-wrap:wrap;}
-#rx-cmp-summary b{font-weight:700;}
+#rx-cmp-summary{font-size:12px;color:var(--text-2);display:flex;flex-direction:column;gap:3px;}
+#rx-cmp-summary .rc-sum-line{display:flex;flex-wrap:wrap;gap:0 10px;font-variant-numeric:tabular-nums;}
+#rx-cmp-summary .rc-sum-sub{color:var(--text-3);}
+#rx-cmp-summary b{font-weight:600;color:var(--text-1);}
+#rx-cmp-summary .rc-sum-sub b{color:var(--text-2);}
 #rx-cmp-table-wrap{flex:1;overflow-y:auto;min-height:120px;}
 #rx-cmp-table-wrap table{width:100%;border-collapse:collapse;font-size:12px;}
 #rx-cmp-table-wrap th{position:sticky;top:0;background:var(--surface);text-align:right;padding:5px 8px;font-size:10px;font-weight:600;color:var(--text-3);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.03em;z-index:1;}
@@ -1816,7 +1819,18 @@ function loadRefRx(rxId){
       }
     });
     tableWrap.innerHTML=`<table><thead><tr><th>약재명</th><th>첩당g</th><th>총량g</th><th>첩당g차이</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
-    summaryEl.innerHTML=`<div style="margin-bottom:2px">${packs}첩${totalPacks?' / '+totalPacks+'팩':''} · 총 <b>${fmt(prevTotalG)}g</b></div>이전 <b>${prev.length}</b>종 · 입력 <b style="color:var(--green)">${entered}</b> · 미입력 <b style="color:var(--text-3)">${prev.length-entered}</b> · 추가 <b style="color:var(--violet-d)">${added}</b>`;
+    summaryEl.innerHTML=
+      `<div class="rc-sum-line">`+
+        `<span><b>${packs}</b>첩</span>`+
+        (totalPacks?`<span><b>${totalPacks}</b>팩</span>`:'')+
+        `<span>총 <b>${fmt(prevTotalG)}</b>g</span>`+
+        `<span><b>${prev.length}</b>종</span>`+
+      `</div>`+
+      `<div class="rc-sum-line rc-sum-sub">`+
+        `<span>입력 <b>${entered}</b></span>`+
+        `<span>미입력 <b>${prev.length-entered}</b></span>`+
+        `<span>추가 <b>${added}</b></span>`+
+      `</div>`;
   }
 
   sel.addEventListener('change',()=>{selId=sel.value;refresh();});
