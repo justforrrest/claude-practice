@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="22" fill="#7C3AED"/>
+  <!-- 쌓이는 카드(축적) -->
+  <rect x="24" y="30" width="52" height="40" rx="7" fill="white" opacity="0.35"/>
+  <rect x="20" y="38" width="52" height="40" rx="7" fill="white" opacity="0.6"/>
+  <rect x="16" y="46" width="52" height="40" rx="7" fill="white" opacity="0.95"/>
+  <!-- 질문 부호 -->
+  <path d="M34 60 a7 7 0 1 1 9 6.7 c-1.6 0.9 -2 1.8 -2 3.3 v1"
+        fill="none" stroke="#7C3AED" stroke-width="4.2" stroke-linecap="round"/>
+  <circle cx="41" cy="77" r="2.6" fill="#7C3AED"/>
+</svg>

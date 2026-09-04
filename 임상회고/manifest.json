@@ -1,0 +1,11 @@
+{
+  "name": "임상회고",
+  "short_name": "임상회고",
+  "start_url": "./임상회고.html",
+  "display": "standalone",
+  "background_color": "#F7F7F8",
+  "theme_color": "#7C3AED",
+  "icons": [
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}
