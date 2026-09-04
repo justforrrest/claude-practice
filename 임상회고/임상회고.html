@@ -288,6 +288,8 @@ const PROMPTS = [
   {key:'q2', title:'나는 어떻게 판단했고, 무엇이 불확실했나?', hint:'나의 판단 · 판단의 근거 · 남은 의문'},
   {key:'q3', title:'다음에는 무엇을 확인해볼까?', hint:'다음 환자에서 확인할 것 · 공부해볼 것'},
 ];
+// 환자 칸(Q1) 자동 채우기 골격 템플릿
+const Q1_TEMPLATE = '▸ 환자: (68F 등)\n▸ 주소증: \n▸ 치료횟수: \n▸ 경과: \n▸ 오늘 진료: \n▸ 걸린 점: ';
 
 // ══════════════════════ Utils ══════════════════════
 function today(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -351,10 +353,11 @@ function dayHtml(date){
   if(hasReflection || isToday){
     PROMPTS.forEach((p,i)=>{
       const val=(d&&d[p.key])||'';
+      const display=(isToday && p.key==='q1' && !val) ? Q1_TEMPLATE : val;
       h+=`<div class="prompt">
         <div class="prompt-head"><span class="pnum">${i+1}</span><span class="ptitle">${p.title}</span></div>`;
       if(isToday){
-        h+=`<textarea class="pbox" data-date="${date}" data-key="${p.key}" rows="1" placeholder="${esc(p.hint)}">${esc(val)}</textarea>`;
+        h+=`<textarea class="pbox" data-date="${date}" data-key="${p.key}" rows="1" placeholder="${esc(p.hint)}">${esc(display)}</textarea>`;
       } else {
         h+= val ? `<div class="ptext">${esc(val)}</div>` : `<div class="ptext empty">— (비어 있음)</div>`;
       }
@@ -391,7 +394,7 @@ function bindJournal(){
   wrapEl().querySelectorAll('.pbox').forEach(ta=>{
     autoGrow(ta);
     ta.addEventListener('input',()=>autoGrow(ta));
-    bindBlur(ta,el=>{ const d=ensureDay(el.dataset.date); if(d[el.dataset.key]!==el.value){ d[el.dataset.key]=el.value; d.updated=today(); saveData(); } });
+    bindBlur(ta,el=>{ const d=ensureDay(el.dataset.date); let v=el.value; if(el.dataset.key==='q1' && v===Q1_TEMPLATE) v=''; if(d[el.dataset.key]!==v){ d[el.dataset.key]=v; d.updated=today(); saveData(); } });
   });
   wrapEl().querySelectorAll('[data-link]').forEach(b=>b.addEventListener('click',()=>openLinkModal(b.dataset.link)));
   wrapEl().querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openDetail(b.dataset.open)));
