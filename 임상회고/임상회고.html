@@ -21,7 +21,6 @@
   --text-1:#0f0f10;--text-2:#374151;--text-3:#6b7280;--text-4:#9ca3af;
   --font-sans:'Inter','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   --mono:'SFMono-Regular',Consolas,monospace;--radius:10px;
-  /* status */
   --s-throw:#64748b;--s-throw-bg:#f1f5f9;
   --s-think:#7c3aed;--s-think-bg:#f5f3ff;
   --s-apply:#0891b2;--s-apply-bg:#ecfeff;
@@ -34,7 +33,10 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 /* ── Header ── */
 .app-header{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
 .brand{font-size:19px;font-weight:700;letter-spacing:-.4px;background:linear-gradient(135deg,var(--violet-d) 0%,#EC4899 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;cursor:pointer;}
-.search-wrap{flex:1;position:relative;max-width:420px;}
+.tabs{display:flex;gap:2px;background:var(--surface-2);border-radius:9px;padding:3px;}
+.tab{padding:6px 15px;border:none;background:none;font-size:13px;font-weight:600;color:var(--text-3);border-radius:7px;cursor:pointer;font-family:var(--font-sans);transition:all .12s;white-space:nowrap;}
+.tab.active{background:var(--surface);color:var(--violet-d);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.search-wrap{flex:1;position:relative;max-width:360px;}
 .search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-4);pointer-events:none;}
 .search-inp{width:100%;padding:8px 11px 8px 33px;border:1px solid var(--border-2);border-radius:8px;font-size:13px;font-family:var(--font-sans);color:var(--text-1);background:var(--surface-2);outline:none;transition:border-color .15s,background .15s;}
 .search-inp:focus{border-color:var(--violet-d);background:var(--surface);box-shadow:0 0 0 2px var(--violet-light);}
@@ -46,68 +48,103 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .icon-btn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-2);border:1px solid var(--border-2);border-radius:8px;color:var(--text-2);cursor:pointer;transition:background .12s;flex-shrink:0;}
 .icon-btn:hover{background:var(--violet-light);color:var(--violet-d);}
 
-/* ── Filter bar ── */
-.filterbar{display:flex;align-items:center;gap:7px;padding:9px 18px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;white-space:nowrap;}
-.filterbar::-webkit-scrollbar{height:0;}
-.fchip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--surface);border:1px solid var(--border-2);border-radius:20px;font-size:12px;font-weight:500;color:var(--text-2);cursor:pointer;transition:all .12s;flex-shrink:0;}
+.scroll{flex:1;overflow-y:auto;}
+.wrap{max-width:720px;margin:0 auto;padding:22px 20px 90px;}
+
+/* ── Journal (일지) ── */
+.journal-head{display:flex;align-items:baseline;gap:9px;margin:2px 0 14px;}
+.journal-head h1{font-size:17px;font-weight:700;letter-spacing:-.3px;}
+.journal-head .sub{font-size:12.5px;color:var(--text-4);}
+
+.day{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+.day.today{box-shadow:0 6px 22px rgba(124,58,237,.10);border-color:var(--violet-light);}
+.day-head{display:flex;align-items:center;gap:9px;margin-bottom:4px;}
+.day-date{font-size:15px;font-weight:700;letter-spacing:-.2px;}
+.day-dow{font-size:12.5px;color:var(--text-4);}
+.day-today-badge{font-size:11px;font-weight:700;color:var(--violet-d);background:var(--violet-faint);border-radius:20px;padding:2px 9px;}
+.day-rel{font-size:11.5px;color:var(--text-4);margin-left:auto;}
+
+.prompt{margin-top:15px;}
+.prompt-head{display:flex;align-items:baseline;gap:8px;margin-bottom:7px;}
+.pnum{flex-shrink:0;width:21px;height:21px;border-radius:50%;background:var(--violet-faint);color:var(--violet-d);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;line-height:1;}
+.ptitle{font-size:13.5px;font-weight:600;color:var(--text-1);}
+.phint{font-size:11.5px;color:var(--text-4);}
+.pbox{width:100%;background:var(--surface-2);border:1px solid transparent;border-radius:9px;padding:10px 12px;font-size:13.5px;line-height:1.65;color:var(--text-1);font-family:var(--font-sans);outline:none;resize:none;overflow:hidden;transition:border-color .14s,background .14s,box-shadow .14s;}
+.pbox::placeholder{color:var(--text-4);}
+.pbox:focus{background:var(--surface);border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
+/* 지난 날짜(읽기 모드) 텍스트 */
+.ptext{font-size:13.5px;line-height:1.68;color:var(--text-2);white-space:pre-wrap;padding:1px 2px;}
+.ptext.empty{color:var(--text-4);font-style:normal;}
+
+.link-cta{margin-top:9px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--violet-d);background:var(--violet-faint);border:none;border-radius:8px;padding:7px 12px;cursor:pointer;font-family:var(--font-sans);transition:background .12s;}
+.link-cta:hover{background:var(--violet-light);}
+
+/* 그날 연결된 질문 */
+.day-qs{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border-2);}
+.day-qs-label{font-size:11px;font-weight:700;color:var(--text-4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.qref{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:9px;cursor:pointer;transition:background .1s;}
+.qref:hover{background:var(--surface-2);}
+.qref .qref-dot{margin-top:5px;width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.qref-main{flex:1;min-width:0;}
+.qref-kind{font-size:10.5px;font-weight:700;color:var(--text-4);margin-right:5px;}
+.qref-born{font-size:10.5px;font-weight:700;color:var(--violet-d);background:var(--violet-faint);border-radius:5px;padding:1px 6px;margin-right:5px;}
+.qref-title{font-size:13px;color:var(--text-1);line-height:1.5;}
+.qref-body{font-size:12px;color:var(--text-3);line-height:1.55;margin-top:2px;white-space:pre-wrap;}
+.qref-id{font-family:var(--mono);font-size:10.5px;color:var(--text-4);}
+
+/* ── Questions list ── */
+.qfilter{display:flex;align-items:center;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
+.fchip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--surface);border:1px solid var(--border-2);border-radius:20px;font-size:12px;font-weight:500;color:var(--text-2);cursor:pointer;transition:all .12s;}
 .fchip:hover{border-color:var(--violet-d);color:var(--violet-d);}
 .fchip.active{background:var(--violet-d);border-color:var(--violet-d);color:#fff;}
 .fchip .x{opacity:.75;font-size:13px;line-height:1;}
-.fchip-label{color:var(--text-4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-right:2px;flex-shrink:0;}
+.fchip-label{color:var(--text-4);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
 
-/* ── Board (kanban) ── */
-.board{flex:1;display:flex;gap:14px;padding:16px 18px;overflow-x:auto;overflow-y:hidden;}
-.col{flex:1;min-width:255px;max-width:360px;display:flex;flex-direction:column;background:var(--surface-2);border-radius:12px;overflow:hidden;}
-.col-head{display:flex;align-items:center;gap:8px;padding:12px 14px 10px;flex-shrink:0;}
-.col-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.col-title{font-size:13px;font-weight:700;color:var(--text-1);}
-.col-count{font-size:12px;font-weight:600;color:var(--text-4);background:var(--surface);border-radius:20px;padding:1px 8px;}
-.col-body{flex:1;overflow-y:auto;padding:0 10px 12px;display:flex;flex-direction:column;gap:9px;}
-.col-empty{font-size:12px;color:var(--text-4);text-align:center;padding:22px 8px;line-height:1.5;}
+.qgroup{margin-bottom:20px;}
+.qgroup-head{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.qgroup-dot{width:9px;height:9px;border-radius:50%;}
+.qgroup-title{font-size:13px;font-weight:700;}
+.qgroup-count{font-size:12px;font-weight:600;color:var(--text-4);background:var(--surface-2);border-radius:20px;padding:1px 8px;}
 
-/* ── Card ── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 13px;cursor:pointer;transition:box-shadow .14s,transform .1s;box-shadow:0 1px 2px rgba(0,0,0,.04);}
-.card:hover{box-shadow:0 4px 14px rgba(0,0,0,.09);transform:translateY(-1px);}
-.card:active{transform:translateY(0);}
-.card-top{display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:wrap;}
-.card-id{font-family:var(--mono);font-size:11px;color:var(--text-4);font-weight:500;}
+.qcard{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 15px;cursor:pointer;margin-bottom:9px;transition:box-shadow .14s,transform .1s;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.qcard:hover{box-shadow:0 4px 14px rgba(0,0,0,.08);transform:translateY(-1px);}
+.qcard-top{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
+.qcard-id{font-family:var(--mono);font-size:11px;color:var(--text-4);}
 .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;line-height:1.4;}
 .badge-region{background:var(--violet-faint);color:var(--violet);}
 .badge-stale{background:var(--amber-bg);color:var(--amber);}
-.card-q{font-size:13.5px;line-height:1.5;color:var(--text-1);font-weight:500;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
-.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
+.qcard-title{font-size:14px;line-height:1.5;color:var(--text-1);font-weight:500;}
+.qcard-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
 .tag{font-size:10.5px;color:var(--text-3);background:var(--surface-2);border-radius:5px;padding:1px 6px;}
-.card-foot{display:flex;align-items:center;gap:10px;margin-top:9px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text-4);}
-.card-foot .cf{display:inline-flex;align-items:center;gap:3px;}
-.card-foot .cf b{color:var(--text-3);font-weight:600;}
-.card-foot .cf-date{margin-left:auto;}
+.qcard-foot{display:flex;align-items:center;gap:10px;margin-top:9px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text-4);}
+.qcard-foot b{color:var(--text-3);font-weight:600;}
+.qcard-foot .cf-date{margin-left:auto;}
 
-/* ── Empty state ── */
-.empty-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;color:var(--text-3);}
+/* ── Empty ── */
+.empty-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:60px 24px;color:var(--text-3);}
 .empty-wrap h2{font-size:18px;color:var(--text-1);font-weight:600;}
 .empty-wrap p{font-size:13.5px;line-height:1.7;max-width:440px;}
-.empty-wrap .row{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;}
 .btn-ghost{padding:8px 14px;background:var(--surface);border:1px solid var(--border-2);border-radius:8px;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;font-family:var(--font-sans);}
 .btn-ghost:hover{border-color:var(--violet-d);color:var(--violet-d);}
 
-/* ── Detail ── */
-.detail{flex:1;overflow-y:auto;background:var(--bg);}
-.detail-inner{max-width:760px;margin:0 auto;padding:20px 22px 80px;}
-.detail-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-3);background:none;border:none;cursor:pointer;padding:6px 2px;font-family:var(--font-sans);margin-bottom:8px;}
+/* ── Question detail ── */
+.detail-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-3);background:none;border:none;cursor:pointer;padding:6px 2px;font-family:var(--font-sans);margin-bottom:10px;}
 .detail-back:hover{color:var(--violet-d);}
 .detail-topline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:12px;}
 .detail-id{font-family:var(--mono);font-size:12px;color:var(--text-4);}
 .status-sel{font-size:12px;font-weight:600;padding:5px 10px;border-radius:20px;border:none;cursor:pointer;font-family:var(--font-sans);outline:none;-webkit-appearance:none;appearance:none;padding-right:26px;background-repeat:no-repeat;background-position:right 8px center;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");}
 
 .q-title{width:100%;font-size:20px;line-height:1.45;font-weight:600;color:var(--text-1);border:none;outline:none;background:transparent;font-family:var(--font-sans);resize:none;overflow:hidden;padding:2px 0;margin-bottom:6px;}
-.meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--text-3);margin-bottom:18px;}
+.meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--text-3);margin-bottom:6px;}
 .meta-row .lab{color:var(--text-4);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
-/* inline input: 테두리·글로우 없이 투명 */
 .inline-inp{border:none;outline:none;background:transparent;font-family:var(--font-sans);font-size:12.5px;color:var(--text-1);border-radius:0;padding:2px 3px;min-width:60px;}
 .inline-inp:focus{background:var(--surface);box-shadow:inset 0 -1px 0 var(--violet-d);}
+.origin-line{font-size:12px;color:var(--text-4);margin-bottom:20px;}
+.origin-line a{color:var(--violet-d);cursor:pointer;font-weight:600;text-decoration:none;}
+.origin-line a:hover{text-decoration:underline;}
 
 .section{margin-bottom:22px;}
-.sec-head{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.sec-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .sec-title{font-size:13px;font-weight:700;color:var(--text-1);letter-spacing:-.2px;}
 .sec-hint{font-size:11px;color:var(--text-4);}
 .sec-add{margin-left:auto;font-size:12px;font-weight:600;color:var(--violet-d);background:var(--violet-faint);border:none;border-radius:7px;padding:5px 11px;cursor:pointer;font-family:var(--font-sans);transition:background .12s;}
@@ -118,30 +155,33 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .field:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
 .field.concl{background:var(--violet-faint);font-weight:500;}
 
-/* 가설 버전 */
-.hyp{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:9px;}
-.hyp-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
-.hyp-v{font-size:12px;font-weight:700;color:var(--violet-d);background:var(--violet-faint);border-radius:6px;padding:2px 8px;}
-.hyp-date{font-size:11.5px;color:var(--text-4);font-family:var(--mono);}
-.hyp-trigger{font-size:12.5px;color:var(--amber);background:var(--amber-bg);border-radius:7px;padding:7px 10px;margin-bottom:8px;line-height:1.5;}
-.hyp-trigger b{font-weight:600;}
-.hyp-body{font-size:13.5px;line-height:1.65;color:var(--text-1);white-space:pre-wrap;}
-
-/* 고민 로그 */
-.log{display:flex;gap:12px;margin-bottom:2px;}
-.log-rail{display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding-top:4px;}
-.log-dot{width:9px;height:9px;border-radius:50%;background:var(--violet-d);flex-shrink:0;}
-.log-line{width:2px;flex:1;background:var(--border-2);margin-top:3px;min-height:8px;}
-.log-body{flex:1;padding-bottom:14px;}
-.log-date{font-size:11.5px;color:var(--text-4);font-family:var(--mono);margin-bottom:4px;}
-.log-text{font-size:13.5px;line-height:1.65;color:var(--text-1);white-space:pre-wrap;}
+/* progress timeline */
+.prog{display:flex;gap:12px;}
+.prog-rail{display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding-top:3px;}
+.prog-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;border:2px solid var(--surface);box-shadow:0 0 0 1.5px var(--border-2);}
+.prog-line{width:2px;flex:1;background:var(--border-2);margin-top:3px;min-height:10px;}
+.prog-body{flex:1;padding-bottom:16px;min-width:0;}
+.prog-meta{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap;}
+.prog-date{font-size:11.5px;color:var(--text-4);font-family:var(--mono);}
+.prog-kind{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:5px;}
+.k-가설{background:var(--violet-faint);color:var(--violet-d);}
+.k-고민{background:var(--surface-2);color:var(--text-2);}
+.k-적용{background:var(--s-apply-bg);color:var(--s-apply);}
+.k-반응{background:var(--s-done-bg);color:var(--s-done);}
+.prog-trigger{font-size:12.5px;color:var(--amber);background:var(--amber-bg);border-radius:7px;padding:6px 10px;margin-bottom:7px;line-height:1.5;}
+.prog-trigger b{font-weight:600;}
+.prog-text{font-size:13.5px;line-height:1.65;color:var(--text-1);white-space:pre-wrap;}
 .emptyline{font-size:12.5px;color:var(--text-4);padding:6px 2px;}
 
-/* add panel (inline) */
-.addpanel{background:var(--surface);border:1px dashed var(--border-2);border-radius:10px;padding:12px;margin-bottom:9px;}
-.addpanel .field{border-style:solid;margin-bottom:8px;}
+/* add panel */
+.addpanel{background:var(--surface);border:1px dashed var(--border-2);border-radius:10px;padding:13px;margin-bottom:12px;}
+.kind-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.kind-btn{padding:5px 12px;border:1px solid var(--border-2);background:var(--surface);border-radius:20px;font-size:12.5px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:var(--font-sans);transition:all .12s;}
+.kind-btn.active{background:var(--violet-d);border-color:var(--violet-d);color:#fff;}
+.addpanel .field{margin-bottom:8px;}
 .addpanel .field.trig{border-color:var(--amber);}
-.addpanel-actions{display:flex;gap:8px;justify-content:flex-end;}
+.addpanel-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center;}
+.addpanel-actions .adate{margin-right:auto;font-size:11.5px;color:var(--text-4);font-family:var(--mono);}
 .btn-sm{padding:6px 13px;border-radius:7px;font-size:12.5px;font-weight:600;font-family:var(--font-sans);cursor:pointer;border:none;}
 .btn-sm.save{background:var(--violet-d);color:#fff;}
 .btn-sm.save:hover{opacity:.9;}
@@ -157,12 +197,11 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .mfield{margin-bottom:14px;}
 .mfield label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;}
 .mfield input,.mfield textarea,.mfield select{width:100%;border:1px solid var(--border-2);border-radius:9px;padding:10px 12px;font-size:13.5px;font-family:var(--font-sans);color:var(--text-1);outline:none;background:var(--surface);}
-.mfield textarea{resize:vertical;min-height:78px;line-height:1.6;}
+.mfield textarea{resize:vertical;min-height:70px;line-height:1.6;}
 .mfield input:focus,.mfield textarea:focus,.mfield select:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);}
 .mfield .sub{font-size:11px;color:var(--text-4);margin-top:5px;}
 .modal-foot{display:flex;gap:9px;justify-content:flex-end;padding:6px 18px 18px;}
 
-/* sync modal specifics */
 .sync-code-box{display:flex;align-items:center;gap:10px;background:var(--violet-faint);border-radius:10px;padding:14px 16px;margin-bottom:8px;}
 .sync-code-val{font-size:24px;font-weight:700;letter-spacing:5px;color:var(--violet-d);font-family:var(--mono);}
 .sync-status{font-size:12px;color:var(--text-3);}
@@ -171,24 +210,19 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .menu-item:hover{background:var(--surface-2);}
 .menu-item svg{color:var(--text-3);flex-shrink:0;}
 .menu-item .mi-sub{font-size:11.5px;color:var(--text-4);margin-top:1px;}
-.menu-item.danger{color:#dc2626;}
-.menu-item.danger svg{color:#dc2626;}
 .divider{height:1px;background:var(--border);margin:6px 0;}
 
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;font-size:13px;padding:10px 18px;border-radius:9px;z-index:80;box-shadow:0 8px 24px rgba(0,0,0,.3);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
 
-/* ── Mobile ── */
 @media (max-width:720px){
   .app-header{gap:8px;padding:10px 13px;flex-wrap:wrap;}
   .brand{font-size:17px;}
-  .search-wrap{order:3;flex-basis:100%;max-width:none;}
+  .search-wrap{order:5;flex-basis:100%;max-width:none;}
   .btn-primary span{display:none;}
   .btn-primary{padding:8px 11px;}
-  .board{flex-direction:column;overflow-y:auto;overflow-x:hidden;gap:12px;padding:13px;}
-  .col{max-width:none;min-width:0;}
-  .col-body{max-height:none;}
-  .detail-inner{padding:16px 15px 80px;}
+  .wrap{padding:16px 14px 90px;}
+  .day{padding:15px 15px;}
   .q-title{font-size:18px;}
 }
 </style>
@@ -197,17 +231,19 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 
 <header class="app-header">
   <div class="brand" id="brandBtn">임상회고</div>
-  <div class="search-wrap" id="searchWrap">
+  <div class="tabs">
+    <button class="tab active" id="tabJournal">일지</button>
+    <button class="tab" id="tabQuestions">질문</button>
+  </div>
+  <div class="search-wrap" id="searchWrap" hidden>
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
     <input class="search-inp" id="searchInp" placeholder="질문·태그·부위 검색" autocomplete="off" spellcheck="false">
   </div>
-  <button class="btn-primary" id="newBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg><span>새 질문</span></button>
+  <div class="spacer"></div>
   <button class="icon-btn" id="menuBtn" title="메뉴"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
 </header>
 
-<div class="filterbar" id="filterbar"></div>
-<main class="board" id="board"></main>
-<section class="detail" id="detail" hidden></section>
+<div class="scroll"><div class="wrap" id="wrap"></div></div>
 
 <div id="modalRoot"></div>
 <div class="toast" id="toast"></div>
@@ -221,25 +257,18 @@ try {
 } catch(e) {
   _fdb = {collection:()=>({doc:()=>({get:async()=>({exists:false}),set:async()=>{}})})};
 }
-// 공부노트와 같은 동기화 코드를 공유(같은 기기=같은 코드). 데이터는 별도 키로 분리.
-const SYNC_LS_KEY = 'study-notes-sync';
+const SYNC_LS_KEY = 'study-notes-sync';   // 공부노트와 코드 공유
 const DATA_LS_KEY = 'clinical-reflection-data';
 const STALE_DAYS = 14;
 
-function getSyncCode(){
-  let c = localStorage.getItem(SYNC_LS_KEY);
-  if(!c){ c = rnd3()+rnd3(); localStorage.setItem(SYNC_LS_KEY,c); }
-  return c;
-}
+function getSyncCode(){ let c=localStorage.getItem(SYNC_LS_KEY); if(!c){ c=rnd3()+rnd3(); localStorage.setItem(SYNC_LS_KEY,c); } return c; }
 function rnd3(){ return Math.random().toString(36).substr(2,3).toUpperCase(); }
-let syncState = '동기화 대기';
+let syncState='동기화 대기';
 function setSyncState(t){ syncState=t; const el=document.getElementById('syncStateTxt'); if(el) el.textContent=t; }
-
 async function loadFromCloud(){
-  try{
-    const doc = await _fdb.collection('users').doc(getSyncCode()).collection('data').doc(DATA_LS_KEY).get();
-    if(doc.exists){ const v=doc.data().value; localStorage.setItem(DATA_LS_KEY,JSON.stringify(v)); setSyncState('☁ 동기화됨'); return v; }
-  }catch(e){ setSyncState('오프라인'); }
+  try{ const doc=await _fdb.collection('users').doc(getSyncCode()).collection('data').doc(DATA_LS_KEY).get();
+    if(doc.exists){ const v=doc.data().value; localStorage.setItem(DATA_LS_KEY,JSON.stringify(v)); setSyncState('☁ 동기화됨'); return v; } }
+  catch(e){ setSyncState('오프라인'); }
   try{ const v=localStorage.getItem(DATA_LS_KEY); return v?JSON.parse(v):null; }catch(e){ return null; }
 }
 async function saveToCloud(data){
@@ -249,463 +278,396 @@ async function saveToCloud(data){
 }
 
 // ══════════════════════ Data ══════════════════════
-let db = { questions:[] };
-function saveData(){ db.questions.sort((a,b)=> b.updated.localeCompare(a.updated)); saveToCloud(db); }
-
+let db = { days:[], questions:[] };
+function saveData(){ saveToCloud(db); }
 const STATUSES = ['던짐','고민중','적용중','결론'];
-const STATUS_STYLE = {
-  '던짐':{c:'var(--s-throw)',bg:'var(--s-throw-bg)'},
-  '고민중':{c:'var(--s-think)',bg:'var(--s-think-bg)'},
-  '적용중':{c:'var(--s-apply)',bg:'var(--s-apply-bg)'},
-  '결론':{c:'var(--s-done)',bg:'var(--s-done-bg)'},
-};
+const STATUS_STYLE = { '던짐':{c:'var(--s-throw)',bg:'var(--s-throw-bg)'},'고민중':{c:'var(--s-think)',bg:'var(--s-think-bg)'},'적용중':{c:'var(--s-apply)',bg:'var(--s-apply-bg)'},'결론':{c:'var(--s-done)',bg:'var(--s-done-bg)'} };
+const KINDS = ['가설','고민','적용','반응'];
+const PROMPTS = [
+  {key:'q1', title:'오늘 걸렸던 환자/장면은?', hint:'예상과 달랐거나, 판단이 어려웠던 것'},
+  {key:'q2', title:'나는 어떻게 판단했고, 무엇이 불확실했나?', hint:'나의 판단 · 판단의 근거 · 남은 의문'},
+  {key:'q3', title:'다음에는 무엇을 확인해볼까?', hint:'다음 환자에서 확인할 것 · 공부해볼 것'},
+];
 
 // ══════════════════════ Utils ══════════════════════
 function today(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function nextId(){
-  const y=new Date().getFullYear(); let max=0;
-  db.questions.forEach(q=>{ const m=/^(\d{4})-(\d{4})$/.exec(q.id||''); if(m && +m[1]===y) max=Math.max(max,+m[2]); });
-  return y+'-'+String(max+1).padStart(4,'0');
-}
-function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function dow(dateStr){ return ['일','월','화','수','목','금','토'][new Date(dateStr+'T00:00:00').getDay()]; }
 function daysBetween(dateStr){ const a=new Date(dateStr+'T00:00:00'), b=new Date(today()+'T00:00:00'); return Math.round((b-a)/86400000); }
+function relLabel(dateStr){ const d=daysBetween(dateStr); if(d===0) return '오늘'; if(d===1) return '어제'; if(d===2) return '그제'; if(d>0) return d+'일 전'; return ''; }
+function nextId(){ const y=new Date().getFullYear(); let max=0; db.questions.forEach(q=>{ const m=/^(\d{4})-(\d{4})$/.exec(q.id||''); if(m&&+m[1]===y) max=Math.max(max,+m[2]); }); return y+'-'+String(max+1).padStart(4,'0'); }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function isStale(q){ return q.status==='고민중' && daysBetween(q.updated) >= STALE_DAYS; }
 function getQ(id){ return db.questions.find(q=>q.id===id); }
+function getDay(date){ return db.days.find(d=>d.date===date); }
+function ensureDay(date){ let d=getDay(date); if(!d){ d={date,q1:'',q2:'',q3:'',created:today(),updated:today()}; db.days.push(d); } return d; }
 function parseTags(str){ return (str||'').split(',').map(t=>t.trim()).filter(Boolean); }
-function touch(q){ q.updated = today(); }
-function autoGrow(ta){ ta.style.height='auto'; ta.style.height=(ta.scrollHeight)+'px'; }
-function growOnly(ta){ if(ta.scrollHeight>ta.offsetHeight) ta.style.height=ta.scrollHeight+'px'; }
-
-let toastT;
-function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),1900); }
+function touchQ(q){ q.updated=today(); }
+function autoGrow(ta){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; }
+function lastHypVersion(q){ let v=0; (q.progress||[]).forEach(p=>{ if(p.kind==='가설'&&p.version) v=Math.max(v,p.version); }); return v; }
+let toastT; function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),1900); }
+function bindBlur(el,fn){ el.addEventListener('blur',()=>fn(el)); }
 
 // ══════════════════════ State ══════════════════════
-const state = { view:'list', currentId:null, filter:{status:null, region:null, tag:null, staleOnly:false}, search:'' };
+const state = { view:'journal', currentId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, search:'' };
+const wrapEl = ()=>document.getElementById('wrap');
 
-// ══════════════════════ List / Board ══════════════════════
+function render(){
+  const searchWrap=document.getElementById('searchWrap');
+  document.getElementById('tabJournal').classList.toggle('active', state.view==='journal');
+  document.getElementById('tabQuestions').classList.toggle('active', state.view!=='journal');
+  searchWrap.hidden = state.view!=='questions';
+  if(state.view==='journal') renderJournal();
+  else if(state.view==='questions') renderQuestions();
+  else renderDetail();
+}
+
+// ══════════════════════ Journal view ══════════════════════
+function renderJournal(){
+  ensureToday();
+  // 회고가 있는 날 + 질문이 태어난 날 + 진행이 더해진 날 = 활동이 있는 모든 날짜
+  const set=new Set(db.days.map(d=>d.date));
+  db.questions.forEach(q=>{ if(q.originDate) set.add(q.originDate); (q.progress||[]).forEach(p=>{ if(p.date) set.add(p.date); }); });
+  const dates=[...set].sort((a,b)=>b.localeCompare(a));
+  let h=`<div class="journal-head"><h1>일일 임상 회고</h1><span class="sub">하루를 돌아보고, 질문을 이어가세요</span></div>`;
+  h+=dates.map(dayHtml).join('');
+  wrapEl().innerHTML=h;
+  bindJournal();
+}
+function ensureToday(){ if(!getDay(today())){ ensureDay(today()); } }
+
+function questionsBornOn(date){ return db.questions.filter(q=>q.originDate===date); }
+function progressOn(date){ const out=[]; db.questions.forEach(q=>(q.progress||[]).forEach((p,idx)=>{ if(p.date===date && !(q.originDate===date && idx===0 && p.kind==='가설' && p.version===1)) out.push({q,p}); })); return out; }
+
+function dayHtml(date){
+  const d=getDay(date);
+  const isToday=date===today();
+  const hasReflection=!!d;
+  let h=`<div class="day ${isToday?'today':''}" data-date="${date}">
+    <div class="day-head">
+      <span class="day-date">${date}</span><span class="day-dow">(${dow(date)})</span>
+      ${isToday?'<span class="day-today-badge">오늘</span>':''}
+      <span class="day-rel">${isToday?'':relLabel(date)}</span>
+    </div>`;
+  if(hasReflection || isToday){
+    PROMPTS.forEach((p,i)=>{
+      const val=(d&&d[p.key])||'';
+      h+=`<div class="prompt">
+        <div class="prompt-head"><span class="pnum">${i+1}</span><span class="ptitle">${p.title}</span></div>`;
+      if(isToday){
+        h+=`<textarea class="pbox" data-date="${date}" data-key="${p.key}" rows="1" placeholder="${esc(p.hint)}">${esc(val)}</textarea>`;
+      } else {
+        h+= val ? `<div class="ptext">${esc(val)}</div>` : `<div class="ptext empty">— (비어 있음)</div>`;
+      }
+      h+=`</div>`;
+    });
+    // Q3 있으면 질문으로 잇기 CTA
+    if((d&&(d.q3||'').trim()) || isToday){
+      h+=`<button class="link-cta" data-link="${date}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>이 회고에서 질문 잇기</button>`;
+    }
+  } else {
+    h+=`<div class="ptext empty" style="margin-top:6px;">이 날은 회고 기록 없이 질문 진행만 있었습니다.</div>`;
+  }
+  // 그날 연결된 질문 / 진행
+  const born=questionsBornOn(date), progs=progressOn(date);
+  if(born.length || progs.length){
+    h+=`<div class="day-qs"><div class="day-qs-label">이 날의 질문</div>`;
+    born.forEach(q=>{ const stl=STATUS_STYLE[q.status];
+      h+=`<div class="qref" data-open="${q.id}"><span class="qref-dot" style="background:${stl.c}"></span>
+        <div class="qref-main"><div><span class="qref-born">질문 탄생</span><span class="qref-id">${q.id}</span></div>
+        <div class="qref-title">${esc(q.title)}</div></div></div>`;
+    });
+    progs.forEach(({q,p})=>{
+      h+=`<div class="qref" data-open="${q.id}"><span class="qref-dot" style="background:var(--border-2)"></span>
+        <div class="qref-main"><div><span class="qref-kind">${p.kind}${p.kind==='가설'&&p.version?' v'+p.version:''}</span><span class="qref-id">${q.id}</span></div>
+        <div class="qref-body">${esc((p.body||'').slice(0,120))}${(p.body||'').length>120?'…':''}</div></div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+  return h;
+}
+
+function bindJournal(){
+  wrapEl().querySelectorAll('.pbox').forEach(ta=>{
+    autoGrow(ta);
+    ta.addEventListener('input',()=>autoGrow(ta));
+    bindBlur(ta,el=>{ const d=ensureDay(el.dataset.date); if(d[el.dataset.key]!==el.value){ d[el.dataset.key]=el.value; d.updated=today(); saveData(); } });
+  });
+  wrapEl().querySelectorAll('[data-link]').forEach(b=>b.addEventListener('click',()=>openLinkModal(b.dataset.link)));
+  wrapEl().querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openDetail(b.dataset.open)));
+}
+
+// ══════════════════════ Link → new question ══════════════════════
+function openLinkModal(date){
+  const d=getDay(date)||{};
+  const root=document.getElementById('modalRoot');
+  root.innerHTML=`<div class="overlay" id="ov"><div class="modal">
+    <div class="modal-head"><span class="modal-title">${date} 회고에서 질문 잇기</span><button class="modal-close" id="mc">×</button></div>
+    <div class="modal-body">
+      <div class="mfield"><label>임상 질문 <span style="color:#dc2626">*</span></label>
+        <textarea id="lQ" placeholder="이 회고에서 이어질 하나의 질문">${esc((d.q3||'').trim())}</textarea>
+        <div class="sub">이 질문은 ${date} 회고를 발단으로, 이후 날짜에서 가설·고민·적용·반응으로 이어집니다.</div></div>
+      <div class="mfield" style="display:flex;gap:12px;">
+        <div style="flex:1;"><label>부위</label><input id="lRegion" placeholder="예: 요추"></div>
+        <div style="flex:2;"><label>태그</label><input id="lTags" placeholder="쉼표로 구분"></div>
+      </div>
+      <div class="mfield"><label>초기 가설 v1 <span style="font-weight:400;color:var(--text-4)">(선택)</span></label>
+        <textarea id="lHyp" placeholder="지금 시점의 첫 가설. 비워두면 나중에 추가."></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn-ghost" id="lCancel">취소</button><button class="btn-primary" id="lCreate">질문 만들기</button></div>
+  </div></div>`;
+  const close=()=>root.innerHTML='';
+  root.querySelector('#mc').onclick=close; root.querySelector('#lCancel').onclick=close;
+  root.querySelector('#ov').addEventListener('mousedown',e=>{ if(e.target.id==='ov') close(); });
+  root.querySelector('#lQ').focus();
+  root.querySelector('#lCreate').onclick=()=>{
+    const title=root.querySelector('#lQ').value.trim();
+    if(!title){ toast('질문을 입력하세요'); return; }
+    const q={ id:nextId(), title, status:'던짐', region:root.querySelector('#lRegion').value.trim(),
+      tags:parseTags(root.querySelector('#lTags').value), originDate:date, created:today(), updated:today(),
+      progress:[], 결론:'' };
+    const h1=root.querySelector('#lHyp').value.trim();
+    if(h1) q.progress.push({date, kind:'가설', version:1, trigger:'', body:h1});
+    db.questions.push(q); saveData(); close();
+    openDetail(q.id); toast('질문을 이었습니다');
+  };
+}
+
+// ══════════════════════ Questions view ══════════════════════
 function allRegions(){ return [...new Set(db.questions.map(q=>q.region).filter(Boolean))]; }
 function allTags(){ const s=new Set(); db.questions.forEach(q=>(q.tags||[]).forEach(t=>s.add(t))); return [...s]; }
-
-function matches(q){
+function matchesQ(q){
   const f=state.filter;
   if(f.region && q.region!==f.region) return false;
   if(f.tag && !(q.tags||[]).includes(f.tag)) return false;
   if(f.staleOnly && !isStale(q)) return false;
-  if(state.search){
-    const s=state.search.toLowerCase();
-    const hay=[q.question,q.region,(q.tags||[]).join(' '),q.발단,q.적용,q.반응,q.현재결론].join(' ').toLowerCase();
-    if(!hay.includes(s)) return false;
-  }
+  if(state.search){ const s=state.search.toLowerCase();
+    const hay=[q.title,q.region,(q.tags||[]).join(' '),(q.progress||[]).map(p=>p.body).join(' '),q.결론].join(' ').toLowerCase();
+    if(!hay.includes(s)) return false; }
   return true;
 }
-
-function renderFilterbar(){
-  const bar=document.getElementById('filterbar');
-  const f=state.filter;
-  const regions=allRegions(), tags=allTags();
-  let h='';
-  const staleCount=db.questions.filter(isStale).length;
-  if(staleCount>0){
-    h+=`<button class="fchip ${f.staleOnly?'active':''}" data-stale>⏳ 방치 ${staleCount}</button>`;
-  }
-  if(regions.length){
-    h+='<span class="fchip-label">부위</span>';
-    regions.forEach(r=>{ h+=`<button class="fchip ${f.region===r?'active':''}" data-region="${esc(r)}">${esc(r)}${f.region===r?' <span class="x">×</span>':''}</button>`; });
-  }
-  if(tags.length){
-    h+='<span class="fchip-label">태그</span>';
-    tags.forEach(t=>{ h+=`<button class="fchip ${f.tag===t?'active':''}" data-tag="${esc(t)}">#${esc(t)}${f.tag===t?' <span class="x">×</span>':''}</button>`; });
-  }
-  if(!h) h='<span class="fchip-label" style="text-transform:none;">필터 · 질문을 추가하면 부위·태그가 여기 모입니다</span>';
-  bar.innerHTML=h;
-  bar.querySelector('[data-stale]')?.addEventListener('click',()=>{ f.staleOnly=!f.staleOnly; renderFilterbar(); renderBoard(); });
-  bar.querySelectorAll('[data-region]').forEach(b=>b.addEventListener('click',()=>{ f.region=f.region===b.dataset.region?null:b.dataset.region; renderFilterbar(); renderBoard(); }));
-  bar.querySelectorAll('[data-tag]').forEach(b=>b.addEventListener('click',()=>{ f.tag=f.tag===b.dataset.tag?null:b.dataset.tag; renderFilterbar(); renderBoard(); }));
-}
-
-function cardHtml(q){
-  const hypN=(q.가설||[]).length, logN=(q.고민로그||[]).length;
-  const lastV = hypN?('v'+q.가설[hypN-1].version):'가설 없음';
-  const tags=(q.tags||[]).slice(0,4).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
-  return `<div class="card" data-id="${esc(q.id)}">
-    <div class="card-top">
-      <span class="card-id">${esc(q.id)}</span>
-      ${q.region?`<span class="badge badge-region">${esc(q.region)}</span>`:''}
-      ${isStale(q)?`<span class="badge badge-stale">방치 ${daysBetween(q.updated)}일</span>`:''}
-    </div>
-    <div class="card-q">${esc(q.question)||'<span style="color:var(--text-4)">(질문 미입력)</span>'}</div>
-    ${tags?`<div class="card-tags">${tags}</div>`:''}
-    <div class="card-foot">
-      <span class="cf"><b>${lastV}</b></span>
-      <span class="cf">고민 <b>${logN}</b></span>
-      <span class="cf cf-date">${esc(q.updated)}</span>
-    </div>
-  </div>`;
-}
-
-function renderBoard(){
-  const board=document.getElementById('board');
+function renderQuestions(){
   if(db.questions.length===0){
-    board.classList.remove('board');
-    board.innerHTML=`<div class="empty-wrap">
-      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="var(--violet-d)" stroke-width="1.4"><path d="M12 3a9 9 0 0 0-9 9c0 4.97 4.03 9 9 9 .7 0 1.38-.08 2.03-.23"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.24c-.9.5-1.1 1-1.1 1.76v.5"/><circle cx="12" cy="17" r=".9" fill="var(--violet-d)" stroke="none"/></svg>
-      <div><h2>아직 던진 질문이 없습니다</h2>
-      <p>오늘 본 case에서 시작하세요. 하나의 임상 질문을 던져 놓으면, 가설이 버전으로 쌓이고 고민이 이어지며 질문의 일생이 여기 축적됩니다.</p></div>
-      <div class="row">
-        <button class="btn-primary" onclick="openNewModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg><span>첫 질문 던지기</span></button>
-        <button class="btn-ghost" onclick="seedExample()">예시 질문 넣어보기</button>
-      </div>
-    </div>`;
+    wrapEl().innerHTML=`<div class="empty-wrap">
+      <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="var(--violet-d)" stroke-width="1.4"><path d="M12 3a9 9 0 0 0-9 9c0 4.97 4.03 9 9 9 .7 0 1.38-.08 2.03-.23"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.24c-.9.5-1.1 1-1.1 1.76v.5"/><circle cx="12" cy="17" r=".9" fill="var(--violet-d)" stroke="none"/></svg>
+      <div><h2>아직 이어진 질문이 없습니다</h2><p>일지에서 하루를 회고하고 "질문 잇기"로 질문을 만들면, 여기 쌓이고 날짜를 따라 자랍니다.</p></div>
+      <button class="btn-ghost" id="goJournal">일지로 가기</button></div>`;
+    document.getElementById('goJournal').onclick=()=>{ state.view='journal'; render(); };
     return;
   }
-  board.classList.add('board');
-  const filtered=db.questions.filter(matches);
-  let h='';
+  const f=state.filter, regions=allRegions(), tags=allTags();
+  const staleCount=db.questions.filter(isStale).length;
+  let fh='';
+  if(staleCount>0) fh+=`<button class="fchip ${f.staleOnly?'active':''}" data-stale>⏳ 방치 ${staleCount}</button>`;
+  if(regions.length){ fh+='<span class="fchip-label">부위</span>'; regions.forEach(r=>fh+=`<button class="fchip ${f.region===r?'active':''}" data-region="${esc(r)}">${esc(r)}${f.region===r?' <span class="x">×</span>':''}</button>`); }
+  if(tags.length){ fh+='<span class="fchip-label">태그</span>'; tags.forEach(t=>fh+=`<button class="fchip ${f.tag===t?'active':''}" data-tag="${esc(t)}">#${esc(t)}${f.tag===t?' <span class="x">×</span>':''}</button>`); }
+
+  const filtered=db.questions.filter(matchesQ);
+  let gh='';
   STATUSES.forEach(st=>{
-    const items=filtered.filter(q=>q.status===st);
+    const items=filtered.filter(q=>q.status===st).sort((a,b)=>b.updated.localeCompare(a.updated));
+    if(!items.length) return;
     const stl=STATUS_STYLE[st];
-    h+=`<div class="col">
-      <div class="col-head">
-        <span class="col-dot" style="background:${stl.c}"></span>
-        <span class="col-title">${st}</span>
-        <span class="col-count">${items.length}</span>
-      </div>
-      <div class="col-body">
-        ${items.length?items.map(cardHtml).join(''):`<div class="col-empty">비어 있음</div>`}
-      </div>
-    </div>`;
+    gh+=`<div class="qgroup"><div class="qgroup-head"><span class="qgroup-dot" style="background:${stl.c}"></span><span class="qgroup-title">${st}</span><span class="qgroup-count">${items.length}</span></div>`;
+    gh+=items.map(qcardHtml).join('')+`</div>`;
   });
-  board.innerHTML=h;
-  board.querySelectorAll('.card').forEach(c=>c.addEventListener('click',()=>openDetail(c.dataset.id)));
+  if(!gh) gh=`<div class="emptyline" style="text-align:center;padding:30px;">조건에 맞는 질문이 없습니다.</div>`;
+  wrapEl().innerHTML=(fh?`<div class="qfilter">${fh}</div>`:'')+gh;
+
+  const w=wrapEl();
+  w.querySelector('[data-stale]')?.addEventListener('click',()=>{ f.staleOnly=!f.staleOnly; renderQuestions(); });
+  w.querySelectorAll('[data-region]').forEach(b=>b.addEventListener('click',()=>{ f.region=f.region===b.dataset.region?null:b.dataset.region; renderQuestions(); }));
+  w.querySelectorAll('[data-tag]').forEach(b=>b.addEventListener('click',()=>{ f.tag=f.tag===b.dataset.tag?null:b.dataset.tag; renderQuestions(); }));
+  w.querySelectorAll('.qcard').forEach(c=>c.addEventListener('click',()=>openDetail(c.dataset.id)));
+}
+function qcardHtml(q){
+  const hypV=lastHypVersion(q), progN=(q.progress||[]).length;
+  const tags=(q.tags||[]).slice(0,4).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
+  return `<div class="qcard" data-id="${esc(q.id)}">
+    <div class="qcard-top"><span class="qcard-id">${esc(q.id)}</span>
+      ${q.region?`<span class="badge badge-region">${esc(q.region)}</span>`:''}
+      ${isStale(q)?`<span class="badge badge-stale">방치 ${daysBetween(q.updated)}일</span>`:''}</div>
+    <div class="qcard-title">${esc(q.title)||'<span style="color:var(--text-4)">(제목 없음)</span>'}</div>
+    ${tags?`<div class="qcard-tags">${tags}</div>`:''}
+    <div class="qcard-foot"><span>${hypV?'가설 <b>v'+hypV+'</b>':'가설 없음'}</span><span>진행 <b>${progN}</b></span><span class="cf-date">${esc(q.originDate)} 발단 · ${esc(q.updated)} 갱신</span></div>
+  </div>`;
 }
 
-// ══════════════════════ Detail ══════════════════════
-function openDetail(id){
-  state.view='detail'; state.currentId=id;
-  document.getElementById('board').hidden=true;
-  document.getElementById('filterbar').hidden=true;
-  document.getElementById('detail').hidden=false;
-  document.getElementById('detail').scrollTop=0;
-  renderDetail();
-}
-function backToList(){
-  state.view='list'; state.currentId=null;
-  document.getElementById('detail').hidden=true;
-  document.getElementById('board').hidden=false;
-  document.getElementById('filterbar').hidden=false;
-  renderFilterbar(); renderBoard();
-}
+// ══════════════════════ Question detail ══════════════════════
+function openDetail(id){ if(state.view!=='detail') state._backTo=state.view; state.view='detail'; state.currentId=id; document.querySelector('.scroll').scrollTop=0; render(); }
+function backFromDetail(){ state.view = state._backTo||'questions'; state._backTo=null; state.currentId=null; render(); }
 
-let addingHyp=false, addingLog=false;
 function renderDetail(){
-  const q=getQ(state.currentId); if(!q){ backToList(); return; }
+  const q=getQ(state.currentId); if(!q){ state.view='questions'; render(); return; }
   const stl=STATUS_STYLE[q.status];
   const statusOpts=STATUSES.map(s=>`<option value="${s}" ${s===q.status?'selected':''}>${s}</option>`).join('');
-  const d=document.getElementById('detail');
-  d.innerHTML=`<div class="detail-inner">
-    <button class="detail-back" id="backBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>목록</button>
-    <div class="detail-topline">
-      <span class="detail-id">${esc(q.id)}</span>
+  let h=`<button class="detail-back" id="backBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>뒤로</button>
+    <div class="detail-topline"><span class="detail-id">${esc(q.id)}</span>
       <select class="status-sel" id="statusSel" style="color:${stl.c};background-color:${stl.bg};">${statusOpts}</select>
-      ${isStale(q)?`<span class="badge badge-stale">방치 ${daysBetween(q.updated)}일</span>`:''}
-    </div>
+      ${isStale(q)?`<span class="badge badge-stale">방치 ${daysBetween(q.updated)}일</span>`:''}</div>
+    <textarea class="q-title" id="qTitle" rows="1" placeholder="임상 질문">${esc(q.title)}</textarea>
+    <div class="meta-row"><span class="lab">부위</span><input class="inline-inp" id="qRegion" value="${esc(q.region)}" placeholder="예: 요추" size="8">
+      <span style="color:var(--border-2)">·</span><span class="lab">태그</span>
+      <input class="inline-inp" id="qTags" value="${esc((q.tags||[]).join(', '))}" placeholder="쉼표로 구분" style="flex:1;min-width:120px;"></div>
+    <div class="origin-line">발단: <a id="originLink">${esc(q.originDate)} 회고</a> 에서 시작 · 수정 ${esc(q.updated)}</div>
 
-    <textarea class="q-title" id="qTitle" placeholder="임상 질문을 한 문장으로…" rows="1">${esc(q.question)}</textarea>
-    <div class="meta-row">
-      <span class="lab">부위</span>
-      <input class="inline-inp" id="qRegion" value="${esc(q.region)}" placeholder="예: 요추" size="8">
-      <span style="color:var(--border-2)">·</span>
-      <span class="lab">태그</span>
-      <input class="inline-inp" id="qTags" value="${esc((q.tags||[]).join(', '))}" placeholder="쉼표로 구분" style="flex:1;min-width:120px;">
-      <span style="color:var(--border-2)">·</span>
-      <span style="font-size:11.5px;color:var(--text-4);">생성 ${esc(q.created)} · 수정 <span id="updLabel">${esc(q.updated)}</span></span>
-    </div>
+    <div class="section"><div class="sec-head"><span class="sec-title">진행</span><span class="sec-hint">날짜를 따라 이어지는 생각의 이동</span>
+      <button class="sec-add" id="addProgBtn">＋ 진행 추가</button></div>
+      <div id="progWrap">${renderProgress(q)}</div><div id="progAdd"></div></div>
 
-    <div class="section">
-      <div class="sec-head"><span class="sec-title">발단</span><span class="sec-hint">출발점이 된 case</span></div>
-      <textarea class="field" id="sec-발단" placeholder="어떤 환자, 어떤 상황에서 이 질문이 나왔나. (예: 68F, 오래된 L4/5 stenosis…)">${esc(q.발단)}</textarea>
-    </div>
+    <div class="section"><div class="sec-head"><span class="sec-title">현재 결론</span><span class="sec-hint">한 문장. 아직 없으면 비워둠</span></div>
+      <textarea class="field concl" id="qConcl" placeholder="지금 시점의 잠정 결론">${esc(q.결론)}</textarea></div>
 
-    <div class="section">
-      <div class="sec-head"><span class="sec-title">가설</span><span class="sec-hint">생각이 이동하는 과정을 버전으로</span>
-        <button class="sec-add" id="addHypBtn">＋ 버전 추가</button></div>
-      <div id="hypWrap">${renderHyps(q)}</div>
-      <div id="hypAdd"></div>
-    </div>
+    <div style="margin-top:24px;text-align:center;"><button class="btn-ghost" id="delBtn" style="color:#dc2626;border-color:#fca5a5;">이 질문 삭제</button></div>`;
+  wrapEl().innerHTML=h;
 
-    <div class="section">
-      <div class="sec-head"><span class="sec-title">고민 로그</span><span class="sec-hint">꼬리를 무는 생각·근거·의문</span>
-        <button class="sec-add" id="addLogBtn">＋ 기록 추가</button></div>
-      <div id="logWrap">${renderLogs(q)}</div>
-      <div id="logAdd"></div>
-    </div>
-
-    <div class="section">
-      <div class="sec-head"><span class="sec-title">적용</span><span class="sec-hint">언제·누구에게·무엇을 바꿔</span></div>
-      <textarea class="field" id="sec-적용" placeholder="실제 진료에 어떻게 적용했나">${esc(q.적용)}</textarea>
-    </div>
-    <div class="section">
-      <div class="sec-head"><span class="sec-title">반응</span><span class="sec-hint">적용 후 실제 경과</span></div>
-      <textarea class="field" id="sec-반응" placeholder="적용 후 환자 반응·경과">${esc(q.반응)}</textarea>
-    </div>
-    <div class="section">
-      <div class="sec-head"><span class="sec-title">현재 결론</span><span class="sec-hint">한 문장. 아직 없으면 비워둠</span></div>
-      <textarea class="field concl" id="sec-현재결론" placeholder="지금 시점의 잠정 결론">${esc(q.현재결론)}</textarea>
-    </div>
-
-    <div style="margin-top:26px;text-align:center;">
-      <button class="btn-ghost" id="delBtn" style="color:#dc2626;border-color:#fca5a5;">이 질문 삭제</button>
-    </div>
-  </div>`;
-
-  d.querySelector('#backBtn').addEventListener('click',backToList);
-  d.querySelector('#statusSel').addEventListener('change',e=>{ q.status=e.target.value; touch(q); saveData(); const s=STATUS_STYLE[q.status]; e.target.style.color=s.c; e.target.style.backgroundColor=s.bg; document.getElementById('updLabel').textContent=q.updated; });
-
-  const qt=d.querySelector('#qTitle'); autoGrow(qt); qt.addEventListener('input',()=>autoGrow(qt));
-  bindBlur(qt,()=>{ if(q.question!==qt.value){ q.question=qt.value; touch(q); saveData(); document.getElementById('updLabel').textContent=q.updated; } });
-
-  bindBlur(d.querySelector('#qRegion'),el=>{ if(q.region!==el.value.trim()){ q.region=el.value.trim(); touch(q); saveData(); } });
-  bindBlur(d.querySelector('#qTags'),el=>{ const t=parseTags(el.value); if((q.tags||[]).join(',')!==t.join(',')){ q.tags=t; touch(q); saveData(); } });
-
-  ['발단','적용','반응','현재결론'].forEach(sec=>{
-    const ta=d.querySelector('#sec-'+sec); autoGrow(ta);
-    ta.addEventListener('input',()=>autoGrow(ta));
-    bindBlur(ta,()=>{ if(q[sec]!==ta.value){ q[sec]=ta.value; touch(q); saveData(); document.getElementById('updLabel').textContent=q.updated; } });
-  });
-
-  d.querySelector('#addHypBtn').addEventListener('click',showAddHyp);
-  d.querySelector('#addLogBtn').addEventListener('click',showAddLog);
-  d.querySelector('#delBtn').addEventListener('click',()=>{
-    openConfirm('이 질문을 삭제할까요?','삭제하면 되돌릴 수 없습니다.',()=>{ db.questions=db.questions.filter(x=>x.id!==q.id); saveData(); backToList(); toast('삭제됨'); });
-  });
+  const w=wrapEl();
+  w.querySelector('#backBtn').addEventListener('click',backFromDetail);
+  w.querySelector('#originLink').addEventListener('click',()=>{ state.view='journal'; render(); setTimeout(()=>{ const el=document.querySelector(`.day[data-date="${q.originDate}"]`); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },60); });
+  w.querySelector('#statusSel').addEventListener('change',e=>{ q.status=e.target.value; touchQ(q); saveData(); const s=STATUS_STYLE[q.status]; e.target.style.color=s.c; e.target.style.backgroundColor=s.bg; });
+  const qt=w.querySelector('#qTitle'); autoGrow(qt); qt.addEventListener('input',()=>autoGrow(qt));
+  bindBlur(qt,el=>{ if(q.title!==el.value){ q.title=el.value; touchQ(q); saveData(); } });
+  bindBlur(w.querySelector('#qRegion'),el=>{ if(q.region!==el.value.trim()){ q.region=el.value.trim(); touchQ(q); saveData(); } });
+  bindBlur(w.querySelector('#qTags'),el=>{ const t=parseTags(el.value); if((q.tags||[]).join(',')!==t.join(',')){ q.tags=t; touchQ(q); saveData(); } });
+  const cc=w.querySelector('#qConcl'); autoGrow(cc); cc.addEventListener('input',()=>autoGrow(cc));
+  bindBlur(cc,el=>{ if(q.결론!==el.value){ q.결론=el.value; touchQ(q); saveData(); } });
+  w.querySelector('#addProgBtn').addEventListener('click',showAddProg);
+  w.querySelector('#delBtn').addEventListener('click',()=>openConfirm('이 질문을 삭제할까요?','되돌릴 수 없습니다.',()=>{ db.questions=db.questions.filter(x=>x.id!==q.id); saveData(); state.view='questions'; render(); toast('삭제됨'); }));
 }
 
-function renderHyps(q){
-  const hs=q.가설||[];
-  if(!hs.length) return `<div class="emptyline">아직 가설이 없습니다. 첫 가설(v1)을 세워보세요.</div>`;
-  return hs.map(h=>`<div class="hyp">
-    <div class="hyp-head"><span class="hyp-v">v${h.version}</span><span class="hyp-date">${esc(h.date)}</span></div>
-    ${h.trigger?`<div class="hyp-trigger"><b>→ 바뀐 계기:</b> ${esc(h.trigger)}</div>`:''}
-    <div class="hyp-body">${esc(h.body)}</div>
-  </div>`).join('');
-}
-function renderLogs(q){
-  const ls=q.고민로그||[];
-  if(!ls.length) return `<div class="emptyline">고민 로그가 비어 있습니다.</div>`;
-  return ls.map((l,i)=>`<div class="log">
-    <div class="log-rail"><span class="log-dot"></span>${i<ls.length-1?'<span class="log-line"></span>':''}</div>
-    <div class="log-body"><div class="log-date">${esc(l.date)}</div><div class="log-text">${esc(l.body)}</div></div>
-  </div>`).join('');
+function renderProgress(q){
+  const ps=(q.progress||[]).slice().sort((a,b)=> a.date===b.date?0:a.date.localeCompare(b.date));
+  if(!ps.length) return `<div class="emptyline">아직 진행이 없습니다. 첫 가설이나 고민을 더해보세요.</div>`;
+  return ps.map((p,i)=>{
+    const dotC = p.kind==='가설'?'var(--violet-d)':p.kind==='적용'?'var(--s-apply)':p.kind==='반응'?'var(--s-done)':'var(--text-4)';
+    return `<div class="prog"><div class="prog-rail"><span class="prog-dot" style="background:${dotC}"></span>${i<ps.length-1?'<span class="prog-line"></span>':''}</div>
+      <div class="prog-body"><div class="prog-meta"><span class="prog-kind k-${p.kind}">${p.kind}${p.kind==='가설'&&p.version?' v'+p.version:''}</span><span class="prog-date">${esc(p.date)}</span></div>
+      ${p.trigger?`<div class="prog-trigger"><b>→ 바뀐 계기:</b> ${esc(p.trigger)}</div>`:''}
+      <div class="prog-text">${esc(p.body)}</div></div></div>`;
+  }).join('');
 }
 
-function showAddHyp(){
+let addKind='가설';
+function showAddProg(){
   const q=getQ(state.currentId);
-  const nextV=(q.가설||[]).length+1;
-  const wrap=document.getElementById('hypAdd');
+  addKind='가설';
+  const wrap=document.getElementById('progAdd');
+  const nextV=lastHypVersion(q)+1;
   wrap.innerHTML=`<div class="addpanel">
-    <div class="hyp-head" style="margin-bottom:8px;"><span class="hyp-v">v${nextV}</span><span class="hyp-date">${today()}</span></div>
-    ${nextV>1?`<textarea class="field trig" id="hypTrig" placeholder="→ 무엇을 알게 되어 이전 버전에서 바뀌었나? (트리거 · 필수)"></textarea>`:''}
-    <textarea class="field" id="hypBody" placeholder="이번 가설 내용"></textarea>
-    <div class="addpanel-actions">
-      <button class="btn-sm cancel" id="hypCancel">취소</button>
-      <button class="btn-sm save" id="hypSave">가설 추가</button>
-    </div>
+    <div class="kind-row">${KINDS.map(k=>`<button class="kind-btn ${k===addKind?'active':''}" data-kind="${k}">${k}</button>`).join('')}</div>
+    <div id="trigRow" ${nextV>1?'':'style="display:none"'}><textarea class="field trig" id="pTrig" placeholder="→ 무엇을 알게 되어 이전 가설에서 바뀌었나? (트리거)"></textarea></div>
+    <textarea class="field" id="pBody" placeholder="내용"></textarea>
+    <div class="addpanel-actions"><span class="adate">날짜: ${today()}</span>
+      <button class="btn-sm cancel" id="pCancel">취소</button><button class="btn-sm save" id="pSave">추가</button></div>
   </div>`;
-  const body=wrap.querySelector('#hypBody'); body.focus();
+  const body=wrap.querySelector('#pBody'); body.focus();
   wrap.querySelectorAll('.field').forEach(t=>t.addEventListener('input',()=>autoGrow(t)));
-  wrap.querySelector('#hypCancel').onclick=()=>wrap.innerHTML='';
-  wrap.querySelector('#hypSave').onclick=()=>{
-    const trig=nextV>1?wrap.querySelector('#hypTrig').value.trim():'';
-    const bodyV=body.value.trim();
-    if(nextV>1 && !trig){ toast('바뀐 계기(트리거)를 적어주세요'); wrap.querySelector('#hypTrig').focus(); return; }
-    if(!bodyV){ toast('가설 내용을 적어주세요'); body.focus(); return; }
-    q.가설=q.가설||[]; q.가설.push({version:nextV,date:today(),trigger:trig,body:bodyV});
-    touch(q); saveData(); renderDetail();
-  };
-}
-function showAddLog(){
-  const q=getQ(state.currentId);
-  const wrap=document.getElementById('logAdd');
-  wrap.innerHTML=`<div class="addpanel">
-    <div class="log-date" style="margin-bottom:6px;">${today()}</div>
-    <textarea class="field" id="logBody" placeholder="오늘의 고민·찾은 근거·남은 의문…"></textarea>
-    <div class="addpanel-actions">
-      <button class="btn-sm cancel" id="logCancel">취소</button>
-      <button class="btn-sm save" id="logSave">기록 추가</button>
-    </div>
-  </div>`;
-  const body=wrap.querySelector('#logBody'); body.focus();
-  body.addEventListener('input',()=>autoGrow(body));
-  wrap.querySelector('#logCancel').onclick=()=>wrap.innerHTML='';
-  wrap.querySelector('#logSave').onclick=()=>{
-    const v=body.value.trim(); if(!v){ toast('내용을 적어주세요'); return; }
-    q.고민로그=q.고민로그||[]; q.고민로그.push({date:today(),body:v});
-    touch(q); saveData(); renderDetail();
+  wrap.querySelectorAll('.kind-btn').forEach(b=>b.addEventListener('click',()=>{
+    addKind=b.dataset.kind; wrap.querySelectorAll('.kind-btn').forEach(x=>x.classList.toggle('active',x.dataset.kind===addKind));
+    wrap.querySelector('#trigRow').style.display=(addKind==='가설'&&nextV>1)?'':'none';
+  }));
+  wrap.querySelector('#pCancel').onclick=()=>wrap.innerHTML='';
+  wrap.querySelector('#pSave').onclick=()=>{
+    const bodyV=body.value.trim(); if(!bodyV){ toast('내용을 적어주세요'); return; }
+    const item={date:today(), kind:addKind, body:bodyV};
+    if(addKind==='가설'){ item.version=nextV; const t=wrap.querySelector('#pTrig').value.trim(); if(nextV>1&&!t){ toast('가설이 바뀐 계기(트리거)를 적어주세요'); wrap.querySelector('#pTrig').focus(); return; } item.trigger=t; }
+    q.progress=q.progress||[]; q.progress.push(item);
+    // 상태 자연 전이 제안: 가설 추가 시 던짐→고민중
+    if(addKind==='가설' && q.status==='던짐') q.status='고민중';
+    if(addKind==='적용' && (q.status==='던짐'||q.status==='고민중')) q.status='적용중';
+    touchQ(q); saveData(); renderDetail();
   };
 }
 
-// blur helper (grow-only 유지: input 시 autoGrow 이미 처리)
-function bindBlur(el,fn){ el.addEventListener('blur',()=>fn(el)); }
-
-// ══════════════════════ New question modal ══════════════════════
-function openNewModal(){
-  const root=document.getElementById('modalRoot');
-  root.innerHTML=`<div class="overlay" id="ov">
-    <div class="modal">
-      <div class="modal-head"><span class="modal-title">새 임상 질문 던지기</span><button class="modal-close" id="mc">×</button></div>
-      <div class="modal-body">
-        <div class="mfield"><label>임상 질문 <span style="color:#dc2626">*</span></label>
-          <textarea id="nQ" placeholder="예: L4/5 stenosis에서 neurogenic claudication을 어떻게 감별하나?"></textarea></div>
-        <div class="mfield" style="display:flex;gap:12px;">
-          <div style="flex:1;"><label>부위</label><input id="nRegion" placeholder="예: 요추"></div>
-          <div style="flex:2;"><label>태그</label><input id="nTags" placeholder="쉼표로 구분 (stenosis, 감별진단)"></div>
-        </div>
-        <div class="mfield"><label>발단 <span style="font-weight:400;color:var(--text-4)">(출발점이 된 case · 선택)</span></label>
-          <textarea id="nBal" placeholder="어떤 환자·상황에서 나온 질문인가 (익명 요약: 68F 등)"></textarea></div>
-        <div class="mfield"><label>초기 가설 v1 <span style="font-weight:400;color:var(--text-4)">(선택)</span></label>
-          <textarea id="nHyp" placeholder="지금 시점의 첫 가설. 나중에 v2, v3로 쌓입니다."></textarea>
-          <div class="sub">상태는 '던짐'으로 시작합니다. 나중에 고민중 → 적용중 → 결론으로 옮기세요.</div></div>
-      </div>
-      <div class="modal-foot"><button class="btn-ghost" id="mCancel">취소</button><button class="btn-primary" id="mCreate">질문 만들기</button></div>
-    </div>
-  </div>`;
-  const close=()=>root.innerHTML='';
-  root.querySelector('#mc').onclick=close; root.querySelector('#mCancel').onclick=close;
-  root.querySelector('#ov').addEventListener('mousedown',e=>{ if(e.target.id==='ov') close(); });
-  root.querySelector('#nQ').focus();
-  root.querySelector('#mCreate').onclick=()=>{
-    const question=root.querySelector('#nQ').value.trim();
-    if(!question){ toast('임상 질문을 입력하세요'); root.querySelector('#nQ').focus(); return; }
-    const q={ id:nextId(), question, status:'던짐', region:root.querySelector('#nRegion').value.trim(),
-      tags:parseTags(root.querySelector('#nTags').value), created:today(), updated:today(),
-      발단:root.querySelector('#nBal').value.trim(), 가설:[], 고민로그:[], 적용:'', 반응:'', 현재결론:'' };
-    const h1=root.querySelector('#nHyp').value.trim();
-    if(h1) q.가설.push({version:1,date:today(),trigger:'',body:h1});
-    db.questions.push(q); saveData(); close();
-    renderFilterbar(); renderBoard(); openDetail(q.id); toast('질문을 던졌습니다');
-  };
-}
-
-// ══════════════════════ Confirm ══════════════════════
+// ══════════════════════ Confirm / Menu ══════════════════════
 function openConfirm(title,msg,onYes){
   const root=document.getElementById('modalRoot');
   root.innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:400px;">
-    <div class="modal-body"><div style="font-size:15px;font-weight:600;margin-bottom:8px;">${esc(title)}</div>
-    <div style="font-size:13px;color:var(--text-3);line-height:1.6;">${esc(msg)}</div></div>
-    <div class="modal-foot"><button class="btn-ghost" id="cNo">취소</button><button class="btn-sm save" id="cYes" style="background:#dc2626;padding:8px 16px;">삭제</button></div>
-  </div></div>`;
+    <div class="modal-body"><div style="font-size:15px;font-weight:600;margin-bottom:8px;">${esc(title)}</div><div style="font-size:13px;color:var(--text-3);line-height:1.6;">${esc(msg)}</div></div>
+    <div class="modal-foot"><button class="btn-ghost" id="cNo">취소</button><button class="btn-sm save" id="cYes" style="background:#dc2626;padding:8px 16px;">삭제</button></div></div></div>`;
   const close=()=>root.innerHTML='';
   root.querySelector('#cNo').onclick=close;
   root.querySelector('#ov').addEventListener('mousedown',e=>{ if(e.target.id==='ov') close(); });
   root.querySelector('#cYes').onclick=()=>{ close(); onYes(); };
 }
-
-// ══════════════════════ Menu / Sync / Export ══════════════════════
 function openMenu(){
   const root=document.getElementById('modalRoot');
   root.innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:440px;">
     <div class="modal-head"><span class="modal-title">메뉴</span><button class="modal-close" id="mc">×</button></div>
     <div class="modal-body">
-      <div class="sync-code-box">
-        <div><div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:2px;">동기화 코드</div>
-        <div class="sync-code-val" id="syncCodeVal">${esc(getSyncCode())}</div></div>
-        <div style="margin-left:auto;text-align:right;"><div class="sync-status" id="syncStateTxt">${esc(syncState)}</div></div>
-      </div>
-      <div style="font-size:11.5px;color:var(--text-4);line-height:1.55;margin-bottom:10px;">이 코드를 다른 기기에 입력하면 같은 데이터가 동기화됩니다. (공부노트와 코드를 공유합니다.)</div>
+      <div class="sync-code-box"><div><div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:2px;">동기화 코드</div><div class="sync-code-val" id="syncCodeVal">${esc(getSyncCode())}</div></div>
+        <div style="margin-left:auto;text-align:right;"><div class="sync-status" id="syncStateTxt">${esc(syncState)}</div></div></div>
+      <div style="font-size:11.5px;color:var(--text-4);line-height:1.55;margin-bottom:10px;">이 코드를 다른 기기에 입력하면 같은 데이터가 동기화됩니다. (공부노트와 코드 공유)</div>
       <div class="menu-list">
-        <button class="menu-item" id="miSync">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-          <div><div>동기화 코드 변경</div><div class="mi-sub">다른 기기의 코드로 연결</div></div>
-        </button>
+        <button class="menu-item" id="miSync"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg><div><div>동기화 코드 변경</div><div class="mi-sub">다른 기기의 코드로 연결</div></div></button>
         <div class="divider"></div>
-        <button class="menu-item" id="miZip">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-          <div><div>전체 .md 내보내기 (폴더/zip)</div><div class="mi-sub">질문 1개 = 파일 1개 · 옵시디언·백업용</div></div>
-        </button>
-        <button class="menu-item" id="miOne">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>
-          <div><div>하나의 .md로 내보내기</div><div class="mi-sub">전체를 한 파일로 · Claude에게 통째로 넘기기</div></div>
-        </button>
+        <button class="menu-item" id="miZip"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><div><div>전체 .md 내보내기 (zip)</div><div class="mi-sub">일지/*.md · 질문/*.md · 옵시디언·백업용</div></div></button>
+        <button class="menu-item" id="miOne"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><div><div>하나의 .md로 내보내기</div><div class="mi-sub">전체를 한 파일로 · Claude에게 통째로</div></div></button>
         <div class="divider"></div>
-        <button class="menu-item" id="miReload">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>
-          <div><div>클라우드에서 새로고침</div><div class="mi-sub">다른 기기의 최신 내용 다시 불러오기</div></div>
-        </button>
-      </div>
-    </div>
-  </div></div>`;
+        <button class="menu-item" id="miReload"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg><div><div>클라우드에서 새로고침</div><div class="mi-sub">다른 기기의 최신 내용 불러오기</div></div></button>
+      </div></div></div></div>`;
   const close=()=>root.innerHTML='';
   root.querySelector('#mc').onclick=close;
   root.querySelector('#ov').addEventListener('mousedown',e=>{ if(e.target.id==='ov') close(); });
   root.querySelector('#miSync').onclick=()=>{ close(); openSyncModal(); };
   root.querySelector('#miZip').onclick=()=>{ close(); exportZip(); };
   root.querySelector('#miOne').onclick=()=>{ close(); exportOneFile(); };
-  root.querySelector('#miReload').onclick=async()=>{ close(); toast('불러오는 중…'); const v=await loadFromCloud(); if(v){ db=normalize(v); if(state.view==='detail') renderDetail(); else { renderFilterbar(); renderBoard(); } } toast('최신 내용을 불러왔습니다'); };
+  root.querySelector('#miReload').onclick=async()=>{ close(); toast('불러오는 중…'); const v=await loadFromCloud(); if(v){ db=normalize(v); render(); } toast('최신 내용을 불러왔습니다'); };
 }
-
 function openSyncModal(){
   const root=document.getElementById('modalRoot');
   root.innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:400px;">
     <div class="modal-head"><span class="modal-title">동기화 코드 변경</span><button class="modal-close" id="mc">×</button></div>
-    <div class="modal-body">
-      <div class="mfield"><label>연결할 코드 (6자리)</label>
-        <input id="scInp" maxlength="6" value="${esc(getSyncCode())}" style="text-transform:uppercase;letter-spacing:4px;text-align:center;font-size:20px;font-weight:700;color:var(--violet-d);" autocomplete="off" spellcheck="false">
-        <div class="sub">다른 기기와 같은 코드를 쓰면 데이터가 합쳐집니다. 변경 후 해당 코드의 데이터를 불러옵니다.</div></div>
-    </div>
-    <div class="modal-foot"><button class="btn-ghost" id="scCancel">취소</button><button class="btn-primary" id="scSave">연결</button></div>
-  </div></div>`;
+    <div class="modal-body"><div class="mfield"><label>연결할 코드 (6자리)</label>
+      <input id="scInp" maxlength="6" value="${esc(getSyncCode())}" style="text-transform:uppercase;letter-spacing:4px;text-align:center;font-size:20px;font-weight:700;color:var(--violet-d);" autocomplete="off" spellcheck="false">
+      <div class="sub">다른 기기와 같은 코드를 쓰면 데이터가 합쳐집니다.</div></div></div>
+    <div class="modal-foot"><button class="btn-ghost" id="scCancel">취소</button><button class="btn-primary" id="scSave">연결</button></div></div></div>`;
   const close=()=>root.innerHTML='';
   root.querySelector('#mc').onclick=close; root.querySelector('#scCancel').onclick=close;
   root.querySelector('#ov').addEventListener('mousedown',e=>{ if(e.target.id==='ov') close(); });
-  root.querySelector('#scSave').onclick=async()=>{
-    const code=root.querySelector('#scInp').value.trim().toUpperCase();
-    if(code.length<4){ toast('코드를 확인하세요'); return; }
-    localStorage.setItem(SYNC_LS_KEY,code); close(); toast('연결 중…');
-    const v=await loadFromCloud(); db = v?normalize(v):{questions:[]};
-    backToList();
-  };
+  root.querySelector('#scSave').onclick=async()=>{ const code=root.querySelector('#scInp').value.trim().toUpperCase(); if(code.length<4){ toast('코드를 확인하세요'); return; } localStorage.setItem(SYNC_LS_KEY,code); close(); toast('연결 중…'); const v=await loadFromCloud(); db=v?normalize(v):{days:[],questions:[]}; state.view='journal'; render(); };
 }
 
-// ── Markdown serialize ──
-function toMarkdown(q){
-  const fm=['---','id: '+q.id,'question: >'];
-  (q.question||'').split('\n').forEach(l=>fm.push('  '+l));
-  fm.push('status: '+q.status,'region: '+(q.region||''),'tags: ['+(q.tags||[]).join(', ')+']','created: '+q.created,'updated: '+q.updated,'---','');
-  const b=[];
-  b.push('## 발단', q.발단||'', '');
-  b.push('## 가설');
-  (q.가설||[]).forEach(h=>{ b.push('### v'+h.version+' · '+h.date); if(h.trigger) b.push('→ 바뀐 계기: '+h.trigger); b.push(h.body||'',''); });
-  if(!(q.가설||[]).length) b.push('');
-  b.push('## 고민 로그');
-  (q.고민로그||[]).forEach(l=>{ b.push('### '+l.date, l.body||'', ''); });
-  if(!(q.고민로그||[]).length) b.push('');
-  b.push('## 적용', q.적용||'', '');
-  b.push('## 반응', q.반응||'', '');
-  b.push('## 현재 결론', q.현재결론?('> '+q.현재결론.replace(/\n/g,'\n> ')):'', '');
+// ══════════════════════ Markdown export ══════════════════════
+function dayToMd(d){
+  const fm=['---','date: '+d.date,'type: daily-reflection','updated: '+(d.updated||d.date),'---',''];
+  const b=[`# ${d.date} (${dow(d.date)}) 임상 회고`,''];
+  PROMPTS.forEach((p,i)=>{ b.push(`## ${i+1}. ${p.title}`, `> ${p.hint}`, '', d[p.key]||'', ''); });
+  return fm.join('\n')+'\n'+b.join('\n');
+}
+function questionToMd(q){
+  const fm=['---','id: '+q.id,'title: >'];
+  (q.title||'').split('\n').forEach(l=>fm.push('  '+l));
+  fm.push('status: '+q.status,'region: '+(q.region||''),'tags: ['+(q.tags||[]).join(', ')+']','origin: '+q.originDate,'created: '+q.created,'updated: '+q.updated,'---','');
+  const b=[`## 발단`, `${q.originDate} 회고에서 시작`, ''];
+  b.push('## 진행');
+  (q.progress||[]).slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(p=>{
+    b.push(`### ${p.date} · ${p.kind}${p.kind==='가설'&&p.version?' v'+p.version:''}`);
+    if(p.trigger) b.push('→ 바뀐 계기: '+p.trigger);
+    b.push(p.body||'', '');
+  });
+  if(!(q.progress||[]).length) b.push('');
+  b.push('## 현재 결론', q.결론?('> '+q.결론.replace(/\n/g,'\n> ')):'', '');
   return fm.join('\n')+'\n'+b.join('\n');
 }
 function download(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); }
-
 function exportOneFile(){
-  if(!db.questions.length){ toast('내보낼 질문이 없습니다'); return; }
-  const parts=db.questions.map(q=>toMarkdown(q));
-  const txt='# 임상회고 — 전체 질문 ('+today()+')\n\n'+parts.join('\n\n---\n\n');
+  if(!db.days.length && !db.questions.length){ toast('내보낼 내용이 없습니다'); return; }
+  const days=[...db.days].sort((a,b)=>b.date.localeCompare(a.date)).map(dayToMd);
+  const qs=db.questions.map(questionToMd);
+  const txt=`# 임상회고 (${today()})\n\n# ── 일지 ──\n\n`+days.join('\n\n---\n\n')+`\n\n# ── 질문 ──\n\n`+qs.join('\n\n---\n\n');
   download(new Blob([txt],{type:'text/markdown;charset=utf-8'}), '임상회고_전체_'+today()+'.md');
   toast('한 파일로 내보냈습니다');
 }
 function exportZip(){
-  if(!db.questions.length){ toast('내보낼 질문이 없습니다'); return; }
-  const files=db.questions.map(q=>({name:q.id+'.md', content:toMarkdown(q)}));
+  const files=[];
+  [...db.days].sort((a,b)=>b.date.localeCompare(a.date)).forEach(d=>files.push({name:'일지/'+d.date+'.md', content:dayToMd(d)}));
+  db.questions.forEach(q=>files.push({name:'질문/'+q.id+'.md', content:questionToMd(q)}));
+  if(!files.length){ toast('내보낼 내용이 없습니다'); return; }
   download(makeZip(files), '임상회고_'+today()+'.zip');
-  toast(files.length+'개 .md 파일을 zip으로 내보냈습니다');
+  toast(files.length+'개 파일을 zip으로 내보냈습니다');
 }
-
-// ── minimal store-only ZIP (no dependency) ──
-function crc32(bytes){
-  let t=crc32.t; if(!t){ t=crc32.t=[]; for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } }
-  let crc=0xFFFFFFFF; for(let i=0;i<bytes.length;i++) crc=(crc>>>8)^t[(crc^bytes[i])&0xFF];
-  return (crc^0xFFFFFFFF)>>>0;
-}
+function crc32(bytes){ let t=crc32.t; if(!t){ t=crc32.t=[]; for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } } let crc=0xFFFFFFFF; for(let i=0;i<bytes.length;i++) crc=(crc>>>8)^t[(crc^bytes[i])&0xFF]; return (crc^0xFFFFFFFF)>>>0; }
 function makeZip(files){
   const enc=new TextEncoder(), u16=n=>[n&255,(n>>>8)&255], u32=n=>[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255];
   const chunks=[], central=[]; let offset=0;
@@ -714,58 +676,47 @@ function makeZip(files){
     const local=new Uint8Array([].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0)));
     chunks.push(local,name,data);
     const cen=new Uint8Array([].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset)));
-    central.push(cen,name);
-    offset+=local.length+name.length+data.length;
+    central.push(cen,name); offset+=local.length+name.length+data.length;
   }
   let cenSize=0; central.forEach(c=>cenSize+=c.length);
-  let cenCount=files.length;
-  const end=new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(cenCount),u16(cenCount),u32(cenSize),u32(offset),u16(0)));
+  const end=new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cenSize),u32(offset),u16(0)));
   return new Blob([...chunks,...central,end],{type:'application/zip'});
 }
 
-// ══════════════════════ Example seed ══════════════════════
-function seedExample(){
-  const q={ id:nextId(),
-    question:'L4/5 stenosis 환자에서 신경학적 결손이 뚜렷하지 않은데 보행거리가 줄 때, neurogenic claudication을 어떻게 감별하나?',
-    status:'고민중', region:'요추', tags:['stenosis','claudication','감별진단'],
-    created:'2026-09-04', updated:today(),
-    발단:'68F. 오래된 L4/5 stenosis. 최근 보행거리 감소. 하지 증상 심한데 neurological deficit은 뚜렷하지 않음.',
-    가설:[
-      {version:1,date:'2026-09-04',trigger:'',body:'neurogenic claudication으로 봄. 자세 의존적 악화가 단서.'},
-      {version:2,date:'2026-09-11',trigger:'굴곡에서도 완화가 뚜렷하지 않음을 재확인.',body:'혈관성 claudication 배제가 덜 됨. ABI 확인 필요.'}
-    ],
-    고민로그:[{date:'2026-09-04',body:'자세 의존성(전굴 완화)을 다시 물어봐야. 보행 부하검사 고려.'}],
-    적용:'', 반응:'', 현재결론:'' };
-  db.questions.push(q); saveData(); renderFilterbar(); renderBoard(); toast('예시 질문을 넣었습니다');
-}
-
-// ══════════════════════ Normalize / Init ══════════════════════
+// ══════════════════════ Normalize ══════════════════════
 function normalize(v){
-  const out={questions:[]};
-  const arr = v && Array.isArray(v.questions) ? v.questions : (Array.isArray(v)?v:[]);
-  arr.forEach(q=>{ out.questions.push({
-    id:q.id||nextId(), question:q.question||'', status:STATUSES.includes(q.status)?q.status:'던짐',
-    region:q.region||'', tags:Array.isArray(q.tags)?q.tags:[], created:q.created||today(), updated:q.updated||q.created||today(),
-    발단:q.발단||'', 가설:Array.isArray(q.가설)?q.가설:[], 고민로그:Array.isArray(q.고민로그)?q.고민로그:[],
-    적용:q.적용||'', 반응:q.반응||'', 현재결론:q.현재결론||'' }); });
+  const out={days:[],questions:[]};
+  if(v && Array.isArray(v.days)) v.days.forEach(d=>out.days.push({date:d.date, q1:d.q1||'', q2:d.q2||'', q3:d.q3||'', created:d.created||d.date, updated:d.updated||d.date}));
+  const qarr = v && Array.isArray(v.questions) ? v.questions : [];
+  qarr.forEach(q=>{
+    let progress=Array.isArray(q.progress)?q.progress.slice():[];
+    // 하위호환: 구 스키마(가설/고민로그) → progress 흡수
+    if(!progress.length && (Array.isArray(q.가설)||Array.isArray(q.고민로그))){
+      (q.가설||[]).forEach(h=>progress.push({date:h.date||q.created||today(), kind:'가설', version:h.version, trigger:h.trigger||'', body:h.body||''}));
+      (q.고민로그||[]).forEach(l=>progress.push({date:l.date||q.created||today(), kind:'고민', body:l.body||''}));
+      if((q.적용||'').trim()) progress.push({date:q.updated||today(), kind:'적용', body:q.적용});
+      if((q.반응||'').trim()) progress.push({date:q.updated||today(), kind:'반응', body:q.반응});
+    }
+    out.questions.push({ id:q.id||nextId(), title:q.title||q.question||'', status:STATUSES.includes(q.status)?q.status:'던짐',
+      region:q.region||'', tags:Array.isArray(q.tags)?q.tags:[], originDate:q.originDate||q.created||today(),
+      created:q.created||today(), updated:q.updated||q.created||today(), progress, 결론:q.결론||q.현재결론||'' });
+  });
   return out;
 }
 
-// search (한글 IME 안전: input 요소는 재생성하지 않고 board만 갱신)
-let searchT;
-document.getElementById('searchInp').addEventListener('input',e=>{
-  clearTimeout(searchT);
-  searchT=setTimeout(()=>{ state.search=e.target.value.trim(); if(state.view==='list') renderBoard(); },120);
-});
-document.getElementById('newBtn').addEventListener('click',openNewModal);
+// ══════════════════════ Wiring ══════════════════════
+document.getElementById('tabJournal').addEventListener('click',()=>{ state.view='journal'; render(); });
+document.getElementById('tabQuestions').addEventListener('click',()=>{ state.view='questions'; render(); });
+document.getElementById('brandBtn').addEventListener('click',()=>{ state.view='journal'; render(); });
 document.getElementById('menuBtn').addEventListener('click',openMenu);
-document.getElementById('brandBtn').addEventListener('click',()=>{ if(state.view==='detail') backToList(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const root=document.getElementById('modalRoot'); if(root.innerHTML){ root.innerHTML=''; } else if(state.view==='detail'){ backToList(); } } });
+let searchT;
+document.getElementById('searchInp').addEventListener('input',e=>{ clearTimeout(searchT); searchT=setTimeout(()=>{ state.search=e.target.value.trim(); if(state.view==='questions') renderQuestions(); },120); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const root=document.getElementById('modalRoot'); if(root.innerHTML){ root.innerHTML=''; } else if(state.view==='detail'){ backFromDetail(); } } });
 
 async function init(){
   const v=await loadFromCloud();
-  db = v?normalize(v):{questions:[]};
-  renderFilterbar(); renderBoard();
+  db = v?normalize(v):{days:[],questions:[]};
+  render();
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 }
 init();
