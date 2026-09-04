@@ -94,9 +94,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 #rx-dose-guide td{padding:2px 4px;color:var(--text-2);border-bottom:1px solid var(--border);}
 #rx-dose-guide tr:last-child td{border-bottom:none;}
 #rx-dose-guide tr.dg-hl td{background:var(--violet-light);color:var(--violet-d);font-weight:700;}
-.dg-inp{border:1px solid transparent;border-radius:5px;padding:2px 3px;font-size:12px;font-family:var(--font-sans);background:transparent;color:inherit;outline:none;text-align:center;-moz-appearance:textfield;}
-.dg-inp:hover{border-color:var(--border-2);}
-.dg-inp:focus{border-color:var(--violet-d);background:var(--surface);}
+.dg-inp{border:none;border-radius:0;padding:2px 3px;font-size:12px;font-family:var(--font-sans);background:transparent;color:inherit;outline:none;text-align:center;-moz-appearance:textfield;}
+.dg-inp:focus{background:var(--surface);}
 /* 이전 처방 비교 떠있는 패널 */
 #rx-cmp-win{display:none;position:fixed;z-index:600;background:var(--surface);border:1px solid var(--border-2);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);width:320px;flex-direction:column;overflow:hidden;}
 #rx-cmp-win.open{display:flex;}
@@ -1788,7 +1787,10 @@ function loadRefRx(rxId){
     if(!win.classList.contains('open'))return;
     const rx=computeDisplayList().find(r=>r.id===selId);
     if(!rx){tableWrap.innerHTML='<div class="empty" style="padding:1.5rem 1rem">처방을 선택하세요</div>';summaryEl.textContent='';return;}
+    const packs=rx.packs||20;
+    const totalPacks=rx.totalPacks;
     const prev=(rx.herbs||[]).map(h=>({herb:(h.herb||'').trim(),g:Number(h.qtyPerPack)||0}));
+    const prevTotalG=prev.reduce((s,p)=>s+p.g,0)*packs;
     const cur=curHerbList();
     const curMap=new Map();cur.forEach(c=>{if(!curMap.has(c.herb))curMap.set(c.herb,c);});
     const prevSet=new Set(prev.map(p=>p.herb));
@@ -1802,19 +1804,19 @@ function loadRefRx(rxId){
         let diffHtml='–';
         if(diff>0)diffHtml=`<span class="rc-diff-up">+${fmt(diff)}</span>`;
         else if(diff<0)diffHtml=`<span class="rc-diff-down">${fmt(diff)}</span>`;
-        rows.push(`<tr><td>${p.herb}</td><td>${fmt(p.g)}</td><td>${fmt(c.g)}</td><td>${diffHtml}</td></tr>`);
+        rows.push(`<tr><td>${p.herb}</td><td>${fmt(p.g)}</td><td>${fmt(p.g*packs)}</td><td>${diffHtml}</td></tr>`);
       }else{
-        rows.push(`<tr class="rc-row-missing"><td>${p.herb}<span class="rc-tag rc-tag-miss">미입력</span></td><td>${fmt(p.g)}</td><td>–</td><td>–</td></tr>`);
+        rows.push(`<tr class="rc-row-missing"><td>${p.herb}<span class="rc-tag rc-tag-miss">미입력</span></td><td>${fmt(p.g)}</td><td>${fmt(p.g*packs)}</td><td>–</td></tr>`);
       }
     });
     cur.forEach(c=>{
       if(!prevSet.has(c.herb)){
         added++;
-        rows.push(`<tr class="rc-row-added"><td>${c.herb}<span class="rc-tag rc-tag-add">추가</span></td><td>–</td><td>${fmt(c.g)}</td><td>–</td></tr>`);
+        rows.push(`<tr class="rc-row-added"><td>${c.herb}<span class="rc-tag rc-tag-add">추가</span></td><td>–</td><td>–</td><td><span class="rc-diff-up">+${fmt(c.g)}</span></td></tr>`);
       }
     });
-    tableWrap.innerHTML=`<table><thead><tr><th>약재명</th><th>이전</th><th>신규</th><th>차이</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
-    summaryEl.innerHTML=`이전 <b>${prev.length}</b>종 · 입력 <b style="color:var(--green)">${entered}</b> · 미입력 <b style="color:var(--text-3)">${prev.length-entered}</b> · 추가 <b style="color:var(--violet-d)">${added}</b>`;
+    tableWrap.innerHTML=`<table><thead><tr><th>약재명</th><th>첩당g</th><th>총량g</th><th>첩당g차이</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+    summaryEl.innerHTML=`<div style="margin-bottom:2px">${packs}첩${totalPacks?' / '+totalPacks+'팩':''} · 총 <b>${fmt(prevTotalG)}g</b></div>이전 <b>${prev.length}</b>종 · 입력 <b style="color:var(--green)">${entered}</b> · 미입력 <b style="color:var(--text-3)">${prev.length-entered}</b> · 추가 <b style="color:var(--violet-d)">${added}</b>`;
   }
 
   sel.addEventListener('change',()=>{selId=sel.value;refresh();});
