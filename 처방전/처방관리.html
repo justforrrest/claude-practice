@@ -94,8 +94,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 #rx-dose-guide td{padding:2px 4px;color:var(--text-2);border-bottom:1px solid var(--border);}
 #rx-dose-guide tr:last-child td{border-bottom:none;}
 #rx-dose-guide tr.dg-hl td{background:var(--violet-light);color:var(--violet-d);font-weight:700;}
-.dg-inp{border:none;border-radius:0;padding:2px 3px;font-size:12px;font-family:var(--font-sans);background:transparent;color:inherit;outline:none;text-align:center;-moz-appearance:textfield;}
-.dg-inp:focus{background:var(--surface);}
+#rx-dose-guide .dg-inp{border:none;border-radius:0;height:auto;padding:2px 3px;font-size:12px;font-family:var(--font-sans);background:transparent;color:inherit;outline:none;box-shadow:none;text-align:center;-moz-appearance:textfield;}
+#rx-dose-guide .dg-inp:focus{border:none;box-shadow:none;background:var(--surface);}
 /* 이전 처방 비교 떠있는 패널 */
 #rx-cmp-win{display:none;position:fixed;z-index:600;background:var(--surface);border:1px solid var(--border-2);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);width:320px;flex-direction:column;overflow:hidden;}
 #rx-cmp-win.open{display:flex;}
