@@ -50,6 +50,13 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 
 .scroll{flex:1;overflow-y:auto;}
 .wrap{max-width:720px;margin:0 auto;padding:22px 20px 90px;}
+.wrap.wide{max-width:1000px;}
+
+/* ── Journal 2단 레이아웃 ── */
+.journal-layout{display:flex;gap:20px;align-items:flex-start;}
+.journal-main{flex:1;min-width:0;}
+.journal-main .day{margin-bottom:0;}
+.journal-side{width:300px;flex-shrink:0;position:sticky;top:0;}
 
 /* ── Journal (일지) ── */
 .journal-head{display:flex;align-items:baseline;gap:9px;margin:2px 0 14px;}
@@ -75,8 +82,18 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .cal-day.today{font-weight:700;color:var(--violet-d);}
 .cal-day.selected{background:var(--violet-d);color:#fff;font-weight:700;}
 .cal-day.selected.sun,.cal-day.selected.sat{color:#fff;}
-.cal-day .dot{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--violet-d);}
+.cal-day .dot{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--violet-d);}
 .cal-day.selected .dot{background:#fff;}
+/* 사이드에 놓인 작은 달력 */
+.journal-side .cal{padding:12px 12px 13px;margin-bottom:0;}
+.journal-side .cal-nav{margin-bottom:9px;gap:6px;}
+.journal-side .cal-title{font-size:13.5px;}
+.journal-side .cal-arrow{width:26px;height:26px;}
+.journal-side .cal-today-btn{font-size:11px;padding:5px 9px;}
+.journal-side .cal-grid{gap:2px;}
+.journal-side .cal-dow{font-size:10px;padding:2px 0 4px;}
+.journal-side .cal-day{font-size:12px;border-radius:7px;}
+.journal-side .cal-day .dot{bottom:3px;width:3.5px;height:3.5px;}
 
 .day{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.03);}
 .day.today{box-shadow:0 6px 22px rgba(124,58,237,.10);border-color:var(--violet-light);}
@@ -249,6 +266,9 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
   .cal{padding:12px 12px 13px;}
   .cal-day{font-size:12.5px;border-radius:8px;}
   .cal-grid{gap:2px;}
+  .journal-layout{flex-direction:column;gap:14px;}
+  .journal-side{width:100%;position:static;}
+  .journal-main .day{margin-bottom:0;}
 }
 </style>
 </head>
@@ -347,6 +367,7 @@ function render(){
   document.getElementById('tabJournal').classList.toggle('active', state.view==='journal');
   document.getElementById('tabQuestions').classList.toggle('active', state.view!=='journal');
   searchWrap.hidden = state.view!=='questions';
+  wrapEl().classList.toggle('wide', state.view==='journal');
   if(state.view==='journal') renderJournal();
   else if(state.view==='questions') renderQuestions();
   else renderDetail();
@@ -364,8 +385,7 @@ function renderJournal(){
   ensureToday();
   const set=activeDateSet();
   let h=`<div class="journal-head"><h1>일일 임상 회고</h1><span class="sub">하루를 돌아보고, 질문을 이어가세요</span></div>`;
-  h+=renderCalendar(set);
-  h+=dayHtml(state.selectedDate);
+  h+=`<div class="journal-layout"><div class="journal-main">${dayHtml(state.selectedDate)}</div><div class="journal-side">${renderCalendar(set)}</div></div>`;
   wrapEl().innerHTML=h;
   bindCalendar();
   bindJournal();
