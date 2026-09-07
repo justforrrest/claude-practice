@@ -56,6 +56,28 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .journal-head h1{font-size:17px;font-weight:700;letter-spacing:-.3px;}
 .journal-head .sub{font-size:12.5px;color:var(--text-4);}
 
+/* ── Calendar ── */
+.cal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px 16px;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+.cal-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.cal-title{font-size:15px;font-weight:700;letter-spacing:-.2px;}
+.cal-arrow{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-2);border:1px solid var(--border-2);border-radius:8px;color:var(--text-2);cursor:pointer;transition:background .12s;flex-shrink:0;}
+.cal-arrow:hover{background:var(--violet-light);color:var(--violet-d);}
+.cal-today-btn{margin-left:auto;font-size:12px;font-weight:600;color:var(--violet-d);background:var(--violet-faint);border:none;border-radius:7px;padding:6px 12px;cursor:pointer;font-family:var(--font-sans);transition:background .12s;}
+.cal-today-btn:hover{background:var(--violet-light);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--text-4);padding:4px 0 6px;}
+.cal-dow.sun{color:#dc2626;}.cal-dow.sat{color:#2563eb;}
+.cal-day{position:relative;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--text-2);border-radius:9px;cursor:pointer;transition:background .1s,color .1s;user-select:none;}
+.cal-day:hover{background:var(--surface-2);}
+.cal-day.empty{cursor:default;}
+.cal-day.empty:hover{background:none;}
+.cal-day.sun{color:#dc2626;}.cal-day.sat{color:#2563eb;}
+.cal-day.today{font-weight:700;color:var(--violet-d);}
+.cal-day.selected{background:var(--violet-d);color:#fff;font-weight:700;}
+.cal-day.selected.sun,.cal-day.selected.sat{color:#fff;}
+.cal-day .dot{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--violet-d);}
+.cal-day.selected .dot{background:#fff;}
+
 .day{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.03);}
 .day.today{box-shadow:0 6px 22px rgba(124,58,237,.10);border-color:var(--violet-light);}
 .day-head{display:flex;align-items:center;gap:9px;margin-bottom:4px;}
@@ -224,6 +246,9 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
   .wrap{padding:16px 14px 90px;}
   .day{padding:15px 15px;}
   .q-title{font-size:18px;}
+  .cal{padding:12px 12px 13px;}
+  .cal-day{font-size:12.5px;border-radius:8px;}
+  .cal-grid{gap:2px;}
 }
 </style>
 </head>
@@ -286,10 +311,13 @@ const KINDS = ['가설','고민','적용','반응'];
 const PROMPTS = [
   {key:'q1', title:'오늘 되돌아 볼 환자는?', hint:'예상과 달랐거나, 진행이 더디거나, 판단이 어려웠던 case'},
   {key:'q2', title:'나는 어떻게 판단했고, 무엇이 불확실했나?', hint:'나의 판단 · 판단의 근거 · 남은 의문'},
-  {key:'q3', title:'다음에는 무엇을 확인해볼까?', hint:'다음 환자에서 확인할 것 · 공부해볼 것'},
+  {key:'q3', title:'다음에는 무엇을 확인하고 적용해볼까?', hint:'다음 내원시 확인할 것, 적용할 것, 공부할 것'},
 ];
-// 환자 칸(Q1) 자동 채우기 골격 템플릿
-const Q1_TEMPLATE = '▸ 환자: (68F 등)\n▸ 주소증: \n▸ 치료횟수: \n▸ 경과: \n▸ 오늘 진료: \n▸ 걸린 점: ';
+// 프롬프트별 자동 채우기 골격 템플릿 (빈 칸일 때만)
+const TEMPLATES = {
+  q1: '▸ 환자: (68F 등)\n▸ 주소증: \n▸ 치료횟수: \n▸ 경과: \n▸ 오늘 진료: \n▸ 걸린 점: ',
+  q3: '▸ 다음 내원시 확인할 것: \n▸ 적용할 것: \n▸ 공부할 것: ',
+};
 
 // ══════════════════════ Utils ══════════════════════
 function today(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -310,7 +338,8 @@ let toastT; function toast(msg){ const el=document.getElementById('toast'); el.t
 function bindBlur(el,fn){ el.addEventListener('blur',()=>fn(el)); }
 
 // ══════════════════════ State ══════════════════════
-const state = { view:'journal', currentId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, search:'' };
+const _tD=new Date();
+const state = { view:'journal', currentId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth() };
 const wrapEl = ()=>document.getElementById('wrap');
 
 function render(){
@@ -324,16 +353,55 @@ function render(){
 }
 
 // ══════════════════════ Journal view ══════════════════════
+function activeDateSet(){
+  // 회고에 내용이 있는 날 + 질문이 태어난 날 + 진행이 더해진 날 = 활동이 있는 모든 날짜
+  const set=new Set();
+  db.days.forEach(d=>{ if((d.q1||'').trim()||(d.q2||'').trim()||(d.q3||'').trim()) set.add(d.date); });
+  db.questions.forEach(q=>{ if(q.originDate) set.add(q.originDate); (q.progress||[]).forEach(p=>{ if(p.date) set.add(p.date); }); });
+  return set;
+}
 function renderJournal(){
   ensureToday();
-  // 회고가 있는 날 + 질문이 태어난 날 + 진행이 더해진 날 = 활동이 있는 모든 날짜
-  const set=new Set(db.days.map(d=>d.date));
-  db.questions.forEach(q=>{ if(q.originDate) set.add(q.originDate); (q.progress||[]).forEach(p=>{ if(p.date) set.add(p.date); }); });
-  const dates=[...set].sort((a,b)=>b.localeCompare(a));
+  const set=activeDateSet();
   let h=`<div class="journal-head"><h1>일일 임상 회고</h1><span class="sub">하루를 돌아보고, 질문을 이어가세요</span></div>`;
-  h+=dates.map(dayHtml).join('');
+  h+=renderCalendar(set);
+  h+=dayHtml(state.selectedDate);
   wrapEl().innerHTML=h;
+  bindCalendar();
   bindJournal();
+}
+function renderCalendar(set){
+  const y=state.calY, m=state.calM;   // m: 0-based
+  const first=new Date(y,m,1), lead=first.getDay(), dim=new Date(y,m+1,0).getDate();
+  const DOW=['일','월','화','수','목','금','토'];
+  let g='';
+  DOW.forEach((d,i)=>g+=`<div class="cal-dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`);
+  for(let i=0;i<lead;i++) g+=`<div class="cal-day empty"></div>`;
+  for(let day=1;day<=dim;day++){
+    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    const wd=new Date(y,m,day).getDay();
+    const cls=['cal-day', wd===0?'sun':wd===6?'sat':'', ds===today()?'today':'', ds===state.selectedDate?'selected':''].filter(Boolean).join(' ');
+    g+=`<div class="${cls}" data-date="${ds}">${day}${set.has(ds)?'<span class="dot"></span>':''}</div>`;
+  }
+  return `<div class="cal">
+    <div class="cal-nav">
+      <button class="cal-arrow" data-mon="-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <span class="cal-title">${y}년 ${m+1}월</span>
+      <button class="cal-arrow" data-mon="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg></button>
+      <button class="cal-today-btn" id="calToday">오늘</button>
+    </div>
+    <div class="cal-grid">${g}</div>
+  </div>`;
+}
+function bindCalendar(){
+  const w=wrapEl();
+  w.querySelectorAll('[data-mon]').forEach(b=>b.addEventListener('click',()=>{
+    let m=state.calM+(+b.dataset.mon);
+    if(m<0){ m=11; state.calY--; } else if(m>11){ m=0; state.calY++; }
+    state.calM=m; renderJournal();
+  }));
+  w.querySelector('#calToday').addEventListener('click',()=>{ const d=new Date(); state.calY=d.getFullYear(); state.calM=d.getMonth(); state.selectedDate=today(); renderJournal(); });
+  w.querySelectorAll('.cal-day[data-date]').forEach(c=>c.addEventListener('click',()=>{ state.selectedDate=c.dataset.date; renderJournal(); }));
 }
 function ensureToday(){ if(!getDay(today())){ ensureDay(today()); } }
 
@@ -343,33 +411,22 @@ function progressOn(date){ const out=[]; db.questions.forEach(q=>(q.progress||[]
 function dayHtml(date){
   const d=getDay(date);
   const isToday=date===today();
-  const hasReflection=!!d;
   let h=`<div class="day ${isToday?'today':''}" data-date="${date}">
     <div class="day-head">
       <span class="day-date">${date}</span><span class="day-dow">(${dow(date)})</span>
       ${isToday?'<span class="day-today-badge">오늘</span>':''}
       <span class="day-rel">${isToday?'':relLabel(date)}</span>
     </div>`;
-  if(hasReflection || isToday){
-    PROMPTS.forEach((p,i)=>{
-      const val=(d&&d[p.key])||'';
-      const display=(isToday && p.key==='q1' && !val) ? Q1_TEMPLATE : val;
-      h+=`<div class="prompt">
-        <div class="prompt-head"><span class="pnum">${i+1}</span><span class="ptitle">${p.title}</span></div>`;
-      if(isToday){
-        h+=`<textarea class="pbox" data-date="${date}" data-key="${p.key}" rows="1" placeholder="${esc(p.hint)}">${esc(display)}</textarea>`;
-      } else {
-        h+= val ? `<div class="ptext">${esc(val)}</div>` : `<div class="ptext empty">— (비어 있음)</div>`;
-      }
-      h+=`</div>`;
-    });
-    // Q3 있으면 질문으로 잇기 CTA
-    if((d&&(d.q3||'').trim()) || isToday){
-      h+=`<button class="link-cta" data-link="${date}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>이 회고에서 질문 잇기</button>`;
-    }
-  } else {
-    h+=`<div class="ptext empty" style="margin-top:6px;">이 날은 회고 기록 없이 질문 진행만 있었습니다.</div>`;
-  }
+  PROMPTS.forEach((p,i)=>{
+    const val=(d&&d[p.key])||'';
+    const display=(isToday && TEMPLATES[p.key] && !val) ? TEMPLATES[p.key] : val;
+    h+=`<div class="prompt">
+      <div class="prompt-head"><span class="pnum">${i+1}</span><span class="ptitle">${p.title}</span></div>
+      <textarea class="pbox" data-date="${date}" data-key="${p.key}" rows="1" placeholder="${esc(p.hint)}">${esc(display)}</textarea>
+    </div>`;
+  });
+  // 질문으로 잇기 CTA (선택된 날에 항상)
+  h+=`<button class="link-cta" data-link="${date}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>이 회고에서 질문 잇기</button>`;
   // 그날 연결된 질문 / 진행
   const born=questionsBornOn(date), progs=progressOn(date);
   if(born.length || progs.length){
@@ -394,7 +451,7 @@ function bindJournal(){
   wrapEl().querySelectorAll('.pbox').forEach(ta=>{
     autoGrow(ta);
     ta.addEventListener('input',()=>autoGrow(ta));
-    bindBlur(ta,el=>{ const d=ensureDay(el.dataset.date); let v=el.value; if(el.dataset.key==='q1' && v===Q1_TEMPLATE) v=''; if(d[el.dataset.key]!==v){ d[el.dataset.key]=v; d.updated=today(); saveData(); } });
+    bindBlur(ta,el=>{ const d=ensureDay(el.dataset.date); let v=el.value; if(TEMPLATES[el.dataset.key] && v===TEMPLATES[el.dataset.key]) v=''; if(d[el.dataset.key]!==v){ d[el.dataset.key]=v; d.updated=today(); saveData(); } });
   });
   wrapEl().querySelectorAll('[data-link]').forEach(b=>b.addEventListener('click',()=>openLinkModal(b.dataset.link)));
   wrapEl().querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openDetail(b.dataset.open)));
@@ -526,7 +583,7 @@ function renderDetail(){
 
   const w=wrapEl();
   w.querySelector('#backBtn').addEventListener('click',backFromDetail);
-  w.querySelector('#originLink').addEventListener('click',()=>{ state.view='journal'; render(); setTimeout(()=>{ const el=document.querySelector(`.day[data-date="${q.originDate}"]`); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },60); });
+  w.querySelector('#originLink').addEventListener('click',()=>{ const od=q.originDate; if(od){ const dt=new Date(od+'T00:00:00'); state.calY=dt.getFullYear(); state.calM=dt.getMonth(); state.selectedDate=od; } state.view='journal'; render(); });
   w.querySelector('#statusSel').addEventListener('change',e=>{ q.status=e.target.value; touchQ(q); saveData(); const s=STATUS_STYLE[q.status]; e.target.style.color=s.c; e.target.style.backgroundColor=s.bg; });
   const qt=w.querySelector('#qTitle'); autoGrow(qt); qt.addEventListener('input',()=>autoGrow(qt));
   bindBlur(qt,el=>{ if(q.title!==el.value){ q.title=el.value; touchQ(q); saveData(); } });
