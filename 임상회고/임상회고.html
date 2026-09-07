@@ -131,6 +131,43 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .qref-body{font-size:12px;color:var(--text-3);line-height:1.55;margin-top:2px;white-space:pre-wrap;}
 .qref-id{font-family:var(--mono);font-size:10.5px;color:var(--text-4);}
 
+/* ── Entry (환자 회고) ── */
+.add-entry{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--violet-d);background:var(--violet-faint);border:none;border-radius:8px;padding:6px 11px;cursor:pointer;font-family:var(--font-sans);transition:background .12s;}
+.add-entry:hover{background:var(--violet-light);}
+.entry{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:14px 15px;margin-top:14px;}
+.entry-head{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
+.pchip{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--violet);background:var(--violet-faint);border:none;border-radius:20px;padding:4px 11px;cursor:pointer;font-family:var(--font-sans);transition:background .12s;}
+.pchip:hover{background:var(--violet-light);}
+.pchip svg{opacity:.8;}
+.pchip.pchip-empty{color:var(--text-3);background:var(--surface);border:1px dashed var(--border-2);}
+.pchip.pchip-static{cursor:default;}
+.fu-toggle{font-size:11.5px;font-weight:600;color:var(--text-3);background:var(--surface);border:1px solid var(--border-2);border-radius:20px;padding:4px 10px;cursor:pointer;font-family:var(--font-sans);transition:all .12s;}
+.fu-toggle:hover{border-color:var(--violet-d);color:var(--violet-d);}
+.entry-del{margin-left:auto;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;background:none;border:none;color:var(--text-4);cursor:pointer;border-radius:7px;transition:all .12s;flex-shrink:0;}
+.entry-del:hover{background:#fef2f2;color:#dc2626;}
+.fu-prev{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px 10px;margin:6px 0 10px;}
+.fu-item{display:flex;gap:9px;padding:5px 4px;border-radius:6px;cursor:pointer;font-size:12px;line-height:1.5;}
+.fu-item:hover{background:var(--surface-2);}
+.fu-date{flex-shrink:0;font-family:var(--mono);font-size:11px;color:var(--violet-d);font-weight:600;}
+.fu-sum{color:var(--text-3);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* 환자 선택 모달 */
+.patient-pick-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;}
+.patient-pick{display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--surface);border:1px solid var(--border-2);border-radius:9px;cursor:pointer;font-family:var(--font-sans);text-align:left;transition:all .12s;}
+.patient-pick:hover{border-color:var(--violet-d);background:var(--violet-faint);}
+.pp-name{font-size:13px;font-weight:600;color:var(--text-1);}
+.pp-region{font-size:11.5px;color:var(--violet);background:var(--violet-faint);border-radius:5px;padding:1px 7px;}
+.pp-count{margin-left:auto;font-size:11px;color:var(--text-4);}
+.pick-or{text-align:center;font-size:11.5px;color:var(--text-4);margin:6px 0 12px;}
+.link-patient{font-size:12.5px;color:var(--text-2);background:var(--violet-faint);border-radius:8px;padding:8px 11px;margin-bottom:12px;}
+/* 환자 타임라인 */
+.pt-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:9px;cursor:pointer;transition:box-shadow .14s,transform .1s;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+.pt-item:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);transform:translateY(-1px);}
+.pt-date{font-size:12.5px;font-weight:700;color:var(--text-1);margin-bottom:6px;}
+.pt-rel{font-size:11px;font-weight:500;color:var(--text-4);margin-left:4px;}
+.pt-q{display:flex;gap:7px;font-size:12.5px;line-height:1.55;color:var(--text-2);margin-top:3px;}
+.pt-qn{flex-shrink:0;width:16px;height:16px;border-radius:50%;background:var(--violet-faint);color:var(--violet-d);font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:1px;}
+.pt-qt{min-width:0;white-space:pre-wrap;}
+
 /* ── Questions list ── */
 .qfilter{display:flex;align-items:center;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
 .fchip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--surface);border:1px solid var(--border-2);border-radius:20px;font-size:12px;font-weight:500;color:var(--text-2);cursor:pointer;transition:all .12s;}
@@ -279,6 +316,7 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
   <div class="tabs">
     <button class="tab active" id="tabJournal">일지</button>
     <button class="tab" id="tabQuestions">질문</button>
+    <button class="tab" id="tabPatients">환자</button>
   </div>
   <div class="search-wrap" id="searchWrap" hidden>
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -323,7 +361,7 @@ async function saveToCloud(data){
 }
 
 // ══════════════════════ Data ══════════════════════
-let db = { days:[], questions:[] };
+let db = { entries:[], patients:[], questions:[] };
 function saveData(){ saveToCloud(db); }
 const STATUSES = ['던짐','고민중','적용중','결론'];
 const STATUS_STYLE = { '던짐':{c:'var(--s-throw)',bg:'var(--s-throw-bg)'},'고민중':{c:'var(--s-think)',bg:'var(--s-think-bg)'},'적용중':{c:'var(--s-apply)',bg:'var(--s-apply-bg)'},'결론':{c:'var(--s-done)',bg:'var(--s-done-bg)'} };
@@ -345,11 +383,20 @@ function dow(dateStr){ return ['일','월','화','수','목','금','토'][new Da
 function daysBetween(dateStr){ const a=new Date(dateStr+'T00:00:00'), b=new Date(today()+'T00:00:00'); return Math.round((b-a)/86400000); }
 function relLabel(dateStr){ const d=daysBetween(dateStr); if(d===0) return '오늘'; if(d===1) return '어제'; if(d===2) return '그제'; if(d>0) return d+'일 전'; return ''; }
 function nextId(){ const y=new Date().getFullYear(); let max=0; db.questions.forEach(q=>{ const m=/^(\d{4})-(\d{4})$/.exec(q.id||''); if(m&&+m[1]===y) max=Math.max(max,+m[2]); }); return y+'-'+String(max+1).padStart(4,'0'); }
+function nextEntryId(){ return 'e-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function nextPatientId(){ let max=0; db.patients.forEach(p=>{ const m=/^P-(\d{4})$/.exec(p.id||''); if(m) max=Math.max(max,+m[1]); }); return 'P-'+String(max+1).padStart(4,'0'); }
 function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function isStale(q){ return q.status==='고민중' && daysBetween(q.updated) >= STALE_DAYS; }
 function getQ(id){ return db.questions.find(q=>q.id===id); }
-function getDay(date){ return db.days.find(d=>d.date===date); }
-function ensureDay(date){ let d=getDay(date); if(!d){ d={date,q1:'',q2:'',q3:'',created:today(),updated:today()}; db.days.push(d); } return d; }
+function getEntry(id){ return db.entries.find(e=>e.id===id); }
+function entriesOn(date){ return db.entries.filter(e=>e.date===date).sort((a,b)=>(a.created||'').localeCompare(b.created||'')); }
+function entryHasContent(e){ return (e.q1||'').trim()||(e.q2||'').trim()||(e.q3||'').trim(); }
+function getPatient(id){ return db.patients.find(p=>p.id===id); }
+function patientLabel(id){ const p=getPatient(id); return p?(p.name||'(이름 없음)'):''; }
+function patientEntries(pid){ return db.entries.filter(e=>e.patientId===pid).sort((a,b)=>a.date.localeCompare(b.date)); }
+function patientQuestions(pid){ return db.questions.filter(q=>q.patientId===pid); }
+function createPatient(name,region,tags){ const p={id:nextPatientId(), name:name||'', region:region||'', tags:tags||[], created:today(), updated:today()}; db.patients.push(p); return p; }
+function touchPatient(p){ if(p) p.updated=today(); }
 function parseTags(str){ return (str||'').split(',').map(t=>t.trim()).filter(Boolean); }
 function touchQ(q){ q.updated=today(); }
 function autoGrow(ta){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; }
@@ -359,30 +406,34 @@ function bindBlur(el,fn){ el.addEventListener('blur',()=>fn(el)); }
 
 // ══════════════════════ State ══════════════════════
 const _tD=new Date();
-const state = { view:'journal', currentId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth() };
+const state = { view:'journal', currentId:null, currentPatientId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth(), fuOpen:new Set() };
 const wrapEl = ()=>document.getElementById('wrap');
 
 function render(){
   const searchWrap=document.getElementById('searchWrap');
   document.getElementById('tabJournal').classList.toggle('active', state.view==='journal');
-  document.getElementById('tabQuestions').classList.toggle('active', state.view!=='journal');
-  searchWrap.hidden = state.view!=='questions';
+  document.getElementById('tabQuestions').classList.toggle('active', state.view==='questions'||state.view==='detail');
+  document.getElementById('tabPatients').classList.toggle('active', state.view==='patients'||state.view==='pdetail');
+  const searchable = state.view==='questions'||state.view==='patients';
+  searchWrap.hidden = !searchable;
+  const si=document.getElementById('searchInp'); if(si) si.placeholder = state.view==='patients' ? '환자·별칭·부위 검색' : '질문·태그·부위 검색';
   wrapEl().classList.toggle('wide', state.view==='journal');
   if(state.view==='journal') renderJournal();
   else if(state.view==='questions') renderQuestions();
+  else if(state.view==='patients') renderPatients();
+  else if(state.view==='pdetail') renderPatientDetail();
   else renderDetail();
 }
 
 // ══════════════════════ Journal view ══════════════════════
 function activeDateSet(){
-  // 회고에 내용이 있는 날 + 질문이 태어난 날 + 진행이 더해진 날 = 활동이 있는 모든 날짜
+  // 내용 있는 회고가 있는 날 + 질문이 태어난 날 + 진행이 더해진 날 = 활동이 있는 모든 날짜
   const set=new Set();
-  db.days.forEach(d=>{ if((d.q1||'').trim()||(d.q2||'').trim()||(d.q3||'').trim()) set.add(d.date); });
+  db.entries.forEach(e=>{ if(entryHasContent(e)) set.add(e.date); });
   db.questions.forEach(q=>{ if(q.originDate) set.add(q.originDate); (q.progress||[]).forEach(p=>{ if(p.date) set.add(p.date); }); });
   return set;
 }
 function renderJournal(){
-  ensureToday();
   const set=activeDateSet();
   let h=`<div class="journal-head"><h1>일일 임상 회고</h1><span class="sub">하루를 돌아보고, 질문을 이어가세요</span></div>`;
   h+=`<div class="journal-layout"><div class="journal-main">${dayHtml(state.selectedDate)}</div><div class="journal-side">${renderCalendar(set)}</div></div>`;
@@ -423,37 +474,32 @@ function bindCalendar(){
   w.querySelector('#calToday').addEventListener('click',()=>{ const d=new Date(); state.calY=d.getFullYear(); state.calM=d.getMonth(); state.selectedDate=today(); renderJournal(); });
   w.querySelectorAll('.cal-day[data-date]').forEach(c=>c.addEventListener('click',()=>{ state.selectedDate=c.dataset.date; renderJournal(); }));
 }
-function ensureToday(){ if(!getDay(today())){ ensureDay(today()); } }
 
 function questionsBornOn(date){ return db.questions.filter(q=>q.originDate===date); }
 function progressOn(date){ const out=[]; db.questions.forEach(q=>(q.progress||[]).forEach((p,idx)=>{ if(p.date===date && !(q.originDate===date && idx===0 && p.kind==='가설' && p.version===1)) out.push({q,p}); })); return out; }
 
 function dayHtml(date){
-  const d=getDay(date);
   const isToday=date===today();
+  const entries=entriesOn(date);
   let h=`<div class="day ${isToday?'today':''}" data-date="${date}">
     <div class="day-head">
       <span class="day-date">${date}</span><span class="day-dow">(${dow(date)})</span>
       ${isToday?'<span class="day-today-badge">오늘</span>':''}
       <span class="day-rel">${isToday?'':relLabel(date)}</span>
+      <button class="add-entry" data-add-entry="${date}">＋ 환자 회고</button>
     </div>`;
-  PROMPTS.forEach((p,i)=>{
-    const val=(d&&d[p.key])||'';
-    const display=(isToday && TEMPLATES[p.key] && !val) ? TEMPLATES[p.key] : val;
-    h+=`<div class="prompt">
-      <div class="prompt-head"><span class="pnum">${i+1}</span><span class="ptitle">${p.title}</span></div>
-      <textarea class="pbox" data-date="${date}" data-key="${p.key}" rows="1" placeholder="${esc(p.hint)}">${esc(display)}</textarea>
-    </div>`;
-  });
-  // 질문으로 잇기 CTA (선택된 날에 항상)
-  h+=`<button class="link-cta" data-link="${date}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>이 회고에서 질문 잇기</button>`;
-  // 그날 연결된 질문 / 진행
+  if(entries.length){
+    h+=entries.map(e=>entryHtml(e,isToday)).join('');
+  } else {
+    h+=`<div class="ptext empty" style="margin-top:10px;">이 날 기록이 없습니다. <b>＋ 환자 회고</b>로 회고를 시작하세요.</div>`;
+  }
+  // 그날 연결된 질문 / 진행 (날짜 단위)
   const born=questionsBornOn(date), progs=progressOn(date);
   if(born.length || progs.length){
     h+=`<div class="day-qs"><div class="day-qs-label">이 날의 질문</div>`;
     born.forEach(q=>{ const stl=STATUS_STYLE[q.status];
       h+=`<div class="qref" data-open="${q.id}"><span class="qref-dot" style="background:${stl.c}"></span>
-        <div class="qref-main"><div><span class="qref-born">질문 탄생</span><span class="qref-id">${q.id}</span></div>
+        <div class="qref-main"><div><span class="qref-born">질문 탄생</span>${q.patientId?`<span class="qref-kind">${esc(patientLabel(q.patientId))}</span>`:''}<span class="qref-id">${q.id}</span></div>
         <div class="qref-title">${esc(q.title)}</div></div></div>`;
     });
     progs.forEach(({q,p})=>{
@@ -467,29 +513,124 @@ function dayHtml(date){
   return h;
 }
 
+function entryHtml(e,isToday){
+  const p=getPatient(e.patientId);
+  const past=e.patientId ? patientEntries(e.patientId).filter(x=>x.id!==e.id) : [];
+  const fuOpen=state.fuOpen.has(e.id);
+  let h=`<div class="entry" data-eid="${e.id}">
+    <div class="entry-head">`;
+  if(p){
+    h+=`<button class="pchip" data-patient="${p.id}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>${esc(p.name||'(이름 없음)')}${p.region?` · ${esc(p.region)}`:''}</button>`;
+  } else {
+    h+=`<button class="pchip pchip-empty" data-assign="${e.id}">＋ 환자 지정</button>`;
+  }
+  if(past.length){ h+=`<button class="fu-toggle" data-fu="${e.id}">이 환자 지난 기록 ${past.length} ${fuOpen?'▾':'▸'}</button>`; }
+  h+=`<button class="entry-del" data-del-entry="${e.id}" title="회고 삭제"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/></svg></button>`;
+  h+=`</div>`;
+  if(fuOpen && past.length){
+    h+=`<div class="fu-prev">`;
+    past.slice().reverse().forEach(x=>{
+      const sum=(x.q1||x.q2||x.q3||'').replace(/\s+/g,' ').trim().slice(0,110);
+      h+=`<div class="fu-item" data-goto="${x.date}"><span class="fu-date">${x.date} (${dow(x.date)})</span><span class="fu-sum">${esc(sum)||'—'}</span></div>`;
+    });
+    h+=`</div>`;
+  }
+  PROMPTS.forEach((pr,i)=>{
+    const val=e[pr.key]||'';
+    const display=(isToday && TEMPLATES[pr.key] && !val) ? TEMPLATES[pr.key] : val;
+    h+=`<div class="prompt">
+      <div class="prompt-head"><span class="pnum">${i+1}</span><span class="ptitle">${pr.title}</span></div>
+      <textarea class="pbox" data-eid="${e.id}" data-key="${pr.key}" rows="1" placeholder="${esc(pr.hint)}">${esc(display)}</textarea>
+    </div>`;
+  });
+  h+=`<button class="link-cta" data-link-entry="${e.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>이 회고에서 질문 잇기</button>`;
+  h+=`</div>`;
+  return h;
+}
+
 function bindJournal(){
-  wrapEl().querySelectorAll('.pbox').forEach(ta=>{
+  const w=wrapEl();
+  w.querySelectorAll('.pbox').forEach(ta=>{
     autoGrow(ta);
     ta.addEventListener('input',()=>autoGrow(ta));
-    bindBlur(ta,el=>{ const d=ensureDay(el.dataset.date); let v=el.value; if(TEMPLATES[el.dataset.key] && v===TEMPLATES[el.dataset.key]) v=''; if(d[el.dataset.key]!==v){ d[el.dataset.key]=v; d.updated=today(); saveData(); } });
+    bindBlur(ta,el=>{ const e=getEntry(el.dataset.eid); if(!e) return; let v=el.value; if(TEMPLATES[el.dataset.key] && v===TEMPLATES[el.dataset.key]) v=''; if(e[el.dataset.key]!==v){ e[el.dataset.key]=v; e.updated=today(); const p=getPatient(e.patientId); touchPatient(p); saveData(); } });
   });
-  wrapEl().querySelectorAll('[data-link]').forEach(b=>b.addEventListener('click',()=>openLinkModal(b.dataset.link)));
-  wrapEl().querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openDetail(b.dataset.open)));
+  w.querySelectorAll('[data-add-entry]').forEach(b=>b.addEventListener('click',()=>openAddEntry(b.dataset.addEntry)));
+  w.querySelectorAll('[data-patient]').forEach(b=>b.addEventListener('click',()=>openPatient(b.dataset.patient)));
+  w.querySelectorAll('[data-assign]').forEach(b=>b.addEventListener('click',()=>openAssignPatient(b.dataset.assign)));
+  w.querySelectorAll('[data-fu]').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.fu; if(state.fuOpen.has(id)) state.fuOpen.delete(id); else state.fuOpen.add(id); renderJournal(); }));
+  w.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',()=>gotoDate(b.dataset.goto)));
+  w.querySelectorAll('[data-del-entry]').forEach(b=>b.addEventListener('click',()=>{
+    const e=getEntry(b.dataset.delEntry); if(!e) return;
+    openConfirm('이 환자 회고를 삭제할까요?','이 날의 이 회고만 삭제됩니다. 되돌릴 수 없습니다.',()=>{ db.entries=db.entries.filter(x=>x.id!==e.id); state.fuOpen.delete(e.id); saveData(); renderJournal(); toast('삭제됨'); });
+  }));
+  w.querySelectorAll('[data-link-entry]').forEach(b=>b.addEventListener('click',()=>{ const e=getEntry(b.dataset.linkEntry); if(e) openLinkModal(e.date, e.patientId, (e.q3||'').trim()); }));
+  w.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openDetail(b.dataset.open)));
+}
+
+function gotoDate(date){ const dt=new Date(date+'T00:00:00'); state.calY=dt.getFullYear(); state.calM=dt.getMonth(); state.selectedDate=date; state.view='journal'; render(); document.querySelector('.scroll').scrollTop=0; }
+
+// ══════════════════════ 환자 회고 추가 / 지정 ══════════════════════
+function openPatientPicker(title, opts, onPick){
+  // opts: {allowNone:bool}
+  const root=document.getElementById('modalRoot');
+  const list=[...db.patients].sort((a,b)=>(b.updated||'').localeCompare(a.updated||''));
+  root.innerHTML=`<div class="overlay" id="ov"><div class="modal">
+    <div class="modal-head"><span class="modal-title">${esc(title)}</span><button class="modal-close" id="mc">×</button></div>
+    <div class="modal-body">
+      ${list.length?`<div class="mfield"><label>기존 환자 선택</label>
+        <div class="patient-pick-list" id="ppl">${list.map(p=>`<button class="patient-pick" data-pid="${p.id}"><span class="pp-name">${esc(p.name||'(이름 없음)')}</span>${p.region?`<span class="pp-region">${esc(p.region)}</span>`:''}<span class="pp-count">회고 ${patientEntries(p.id).length}</span></button>`).join('')}</div></div>
+        <div class="pick-or">또는 새 환자</div>`:''}
+      <div class="mfield"><label>새 환자 별칭 ${list.length?'':'<span style="color:#dc2626">*</span>'}</label>
+        <input id="npName" placeholder="예: 68F 요추 김OO (차트번호 대신 별칭)" autocomplete="off"></div>
+      <div class="mfield" style="display:flex;gap:12px;">
+        <div style="flex:1;"><label>부위</label><input id="npRegion" placeholder="예: 요추"></div>
+        <div style="flex:2;"><label>태그</label><input id="npTags" placeholder="쉼표로 구분"></div>
+      </div>
+    </div>
+    <div class="modal-foot">${opts.allowNone?'<button class="btn-ghost" id="ppNone">환자 없이</button>':''}<button class="btn-ghost" id="ppCancel">취소</button><button class="btn-primary" id="ppCreate">새 환자로 추가</button></div>
+  </div></div>`;
+  const close=()=>root.innerHTML='';
+  root.querySelector('#mc').onclick=close; root.querySelector('#ppCancel').onclick=close;
+  root.querySelector('#ov').addEventListener('mousedown',ev=>{ if(ev.target.id==='ov') close(); });
+  root.querySelectorAll('.patient-pick').forEach(b=>b.onclick=()=>{ close(); onPick(b.dataset.pid); });
+  const noneBtn=root.querySelector('#ppNone'); if(noneBtn) noneBtn.onclick=()=>{ close(); onPick(null); };
+  root.querySelector('#ppCreate').onclick=()=>{
+    const name=root.querySelector('#npName').value.trim();
+    if(!name){ toast('새 환자 별칭을 입력하거나 기존 환자를 선택하세요'); return; }
+    const p=createPatient(name, root.querySelector('#npRegion').value.trim(), parseTags(root.querySelector('#npTags').value));
+    close(); onPick(p.id);
+  };
+  const nm=root.querySelector('#npName'); if(!list.length) nm.focus();
+}
+function openAddEntry(date){
+  openPatientPicker(date+' — 환자 회고 추가', {allowNone:true}, (pid)=>{
+    const e={id:nextEntryId(), date, patientId:pid, q1:'',q2:'',q3:'', created:new Date().toISOString(), updated:today()};
+    db.entries.push(e); if(pid) touchPatient(getPatient(pid)); saveData();
+    state.selectedDate=date; renderJournal(); toast('회고를 추가했습니다');
+  });
+}
+function openAssignPatient(eid){
+  const e=getEntry(eid); if(!e) return;
+  openPatientPicker('환자 지정', {allowNone:false}, (pid)=>{
+    e.patientId=pid; e.updated=today(); touchPatient(getPatient(pid)); saveData(); renderJournal(); toast('환자를 지정했습니다');
+  });
 }
 
 // ══════════════════════ Link → new question ══════════════════════
-function openLinkModal(date){
-  const d=getDay(date)||{};
+function openLinkModal(date, patientId, q3prefill){
+  const p=getPatient(patientId);
   const root=document.getElementById('modalRoot');
   root.innerHTML=`<div class="overlay" id="ov"><div class="modal">
     <div class="modal-head"><span class="modal-title">${date} 회고에서 질문 잇기</span><button class="modal-close" id="mc">×</button></div>
     <div class="modal-body">
+      ${p?`<div class="link-patient">이 질문은 환자 <b>${esc(p.name||'(이름 없음)')}</b>에 연결됩니다.</div>`:''}
       <div class="mfield"><label>임상 질문 <span style="color:#dc2626">*</span></label>
-        <textarea id="lQ" placeholder="이 회고에서 이어질 하나의 질문">${esc((d.q3||'').trim())}</textarea>
+        <textarea id="lQ" placeholder="이 회고에서 이어질 하나의 질문">${esc(q3prefill||'')}</textarea>
         <div class="sub">이 질문은 ${date} 회고를 발단으로, 이후 날짜에서 가설·고민·적용·반응으로 이어집니다.</div></div>
       <div class="mfield" style="display:flex;gap:12px;">
-        <div style="flex:1;"><label>부위</label><input id="lRegion" placeholder="예: 요추"></div>
-        <div style="flex:2;"><label>태그</label><input id="lTags" placeholder="쉼표로 구분"></div>
+        <div style="flex:1;"><label>부위</label><input id="lRegion" placeholder="예: 요추" value="${p?esc(p.region||''):''}"></div>
+        <div style="flex:2;"><label>태그</label><input id="lTags" placeholder="쉼표로 구분" value="${p?esc((p.tags||[]).join(', ')):''}"></div>
       </div>
       <div class="mfield"><label>초기 가설 v1 <span style="font-weight:400;color:var(--text-4)">(선택)</span></label>
         <textarea id="lHyp" placeholder="지금 시점의 첫 가설. 비워두면 나중에 추가."></textarea></div>
@@ -504,7 +645,7 @@ function openLinkModal(date){
     const title=root.querySelector('#lQ').value.trim();
     if(!title){ toast('질문을 입력하세요'); return; }
     const q={ id:nextId(), title, status:'던짐', region:root.querySelector('#lRegion').value.trim(),
-      tags:parseTags(root.querySelector('#lTags').value), originDate:date, created:today(), updated:today(),
+      tags:parseTags(root.querySelector('#lTags').value), originDate:date, patientId:patientId||null, created:today(), updated:today(),
       progress:[], 결론:'' };
     const h1=root.querySelector('#lHyp').value.trim();
     if(h1) q.progress.push({date, kind:'가설', version:1, trigger:'', body:h1});
@@ -589,7 +730,7 @@ function renderDetail(){
     <div class="meta-row"><span class="lab">부위</span><input class="inline-inp" id="qRegion" value="${esc(q.region)}" placeholder="예: 요추" size="8">
       <span style="color:var(--border-2)">·</span><span class="lab">태그</span>
       <input class="inline-inp" id="qTags" value="${esc((q.tags||[]).join(', '))}" placeholder="쉼표로 구분" style="flex:1;min-width:120px;"></div>
-    <div class="origin-line">발단: <a id="originLink">${esc(q.originDate)} 회고</a> 에서 시작 · 수정 ${esc(q.updated)}</div>
+    <div class="origin-line">발단: <a id="originLink">${esc(q.originDate)} 회고</a> 에서 시작${q.patientId&&getPatient(q.patientId)?` · 환자 <a id="patientLink">${esc(patientLabel(q.patientId))}</a>`:''} · 수정 ${esc(q.updated)}</div>
 
     <div class="section"><div class="sec-head"><span class="sec-title">진행</span><span class="sec-hint">날짜를 따라 이어지는 생각의 이동</span>
       <button class="sec-add" id="addProgBtn">＋ 진행 추가</button></div>
@@ -603,7 +744,8 @@ function renderDetail(){
 
   const w=wrapEl();
   w.querySelector('#backBtn').addEventListener('click',backFromDetail);
-  w.querySelector('#originLink').addEventListener('click',()=>{ const od=q.originDate; if(od){ const dt=new Date(od+'T00:00:00'); state.calY=dt.getFullYear(); state.calM=dt.getMonth(); state.selectedDate=od; } state.view='journal'; render(); });
+  w.querySelector('#originLink').addEventListener('click',()=>{ gotoDate(q.originDate); });
+  w.querySelector('#patientLink')?.addEventListener('click',()=>openPatient(q.patientId));
   w.querySelector('#statusSel').addEventListener('change',e=>{ q.status=e.target.value; touchQ(q); saveData(); const s=STATUS_STYLE[q.status]; e.target.style.color=s.c; e.target.style.backgroundColor=s.bg; });
   const qt=w.querySelector('#qTitle'); autoGrow(qt); qt.addEventListener('input',()=>autoGrow(qt));
   bindBlur(qt,el=>{ if(q.title!==el.value){ q.title=el.value; touchQ(q); saveData(); } });
@@ -659,6 +801,89 @@ function showAddProg(){
   };
 }
 
+// ══════════════════════ Patients view ══════════════════════
+function openPatient(pid){ state._pback = (state.view==='pdetail') ? state._pback : state.view; state.view='pdetail'; state.currentPatientId=pid; document.querySelector('.scroll').scrollTop=0; render(); }
+function backFromPatient(){ state.view = (state._pback && state._pback!=='pdetail') ? state._pback : 'patients'; state._pback=null; state.currentPatientId=null; render(); }
+function patientLastDate(pid){ const es=patientEntries(pid); return es.length? es[es.length-1].date : ''; }
+function matchesP(p){
+  if(!state.search) return true;
+  const s=state.search.toLowerCase();
+  const hay=[p.name,p.region,(p.tags||[]).join(' ')].join(' ').toLowerCase();
+  return hay.includes(s);
+}
+function renderPatients(){
+  if(db.patients.length===0){
+    wrapEl().innerHTML=`<div class="empty-wrap">
+      <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="var(--violet-d)" stroke-width="1.4"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg>
+      <div><h2>아직 등록된 환자가 없습니다</h2><p>일지에서 "＋ 환자 회고"로 환자를 만들면, 같은 환자의 경과가 날짜를 따라 이어져 여기 모입니다.</p></div>
+      <button class="btn-ghost" id="goJournal2">일지로 가기</button></div>`;
+    document.getElementById('goJournal2').onclick=()=>{ state.view='journal'; render(); };
+    return;
+  }
+  const list=db.patients.filter(matchesP).sort((a,b)=>(patientLastDate(b.id)||'').localeCompare(patientLastDate(a.id)||''));
+  let h='';
+  if(!list.length){ h=`<div class="emptyline" style="text-align:center;padding:30px;">조건에 맞는 환자가 없습니다.</div>`; }
+  else h=list.map(p=>{
+    const n=patientEntries(p.id).length, qn=patientQuestions(p.id).length, last=patientLastDate(p.id);
+    const tags=(p.tags||[]).slice(0,4).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
+    return `<div class="qcard" data-pid="${p.id}">
+      <div class="qcard-top"><span class="pchip pchip-static"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>${esc(p.name||'(이름 없음)')}</span>
+        ${p.region?`<span class="badge badge-region">${esc(p.region)}</span>`:''}</div>
+      ${tags?`<div class="qcard-tags">${tags}</div>`:''}
+      <div class="qcard-foot"><span>회고 <b>${n}</b></span><span>질문 <b>${qn}</b></span><span class="cf-date">${last?esc(last)+' 마지막':'기록 없음'}</span></div>
+    </div>`;
+  }).join('');
+  wrapEl().innerHTML=h;
+  wrapEl().querySelectorAll('.qcard[data-pid]').forEach(c=>c.addEventListener('click',()=>openPatient(c.dataset.pid)));
+}
+function renderPatientDetail(){
+  const p=getPatient(state.currentPatientId); if(!p){ state.view='patients'; render(); return; }
+  const es=patientEntries(p.id).slice().reverse();   // 최신 위로
+  const qs=patientQuestions(p.id);
+  let h=`<button class="detail-back" id="pBack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>뒤로</button>
+    <div class="detail-topline"><span class="pchip pchip-static"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>환자</span><span class="detail-id">${esc(p.id)}</span></div>
+    <textarea class="q-title" id="pName" rows="1" placeholder="환자 별칭">${esc(p.name)}</textarea>
+    <div class="meta-row"><span class="lab">부위</span><input class="inline-inp" id="pRegion" value="${esc(p.region)}" placeholder="예: 요추" size="8">
+      <span style="color:var(--border-2)">·</span><span class="lab">태그</span>
+      <input class="inline-inp" id="pTags" value="${esc((p.tags||[]).join(', '))}" placeholder="쉼표로 구분" style="flex:1;min-width:120px;"></div>
+    <div class="origin-line">회고 ${es.length}건 · 연결 질문 ${qs.length}건</div>
+
+    <div class="section"><div class="sec-head"><span class="sec-title">회고 타임라인</span><span class="sec-hint">날짜순 경과 · 클릭하면 그 날 일지로</span></div>`;
+  if(!es.length) h+=`<div class="emptyline">아직 이 환자의 회고가 없습니다.</div>`;
+  else es.forEach(e=>{
+    h+=`<div class="pt-item" data-goto="${e.date}"><div class="pt-date">${e.date} (${dow(e.date)}) <span class="pt-rel">${relLabel(e.date)}</span></div>`;
+    PROMPTS.forEach((pr,i)=>{ const v=(e[pr.key]||'').trim(); if(v) h+=`<div class="pt-q"><span class="pt-qn">${i+1}</span><span class="pt-qt">${esc(v)}</span></div>`; });
+    if(!entryHasContent(e)) h+=`<div class="pt-q" style="color:var(--text-4)">(내용 없음)</div>`;
+    h+=`</div>`;
+  });
+  h+=`</div>`;
+
+  if(qs.length){
+    h+=`<div class="section"><div class="sec-head"><span class="sec-title">연결된 질문</span></div>`;
+    qs.slice().sort((a,b)=>b.updated.localeCompare(a.updated)).forEach(q=>{ const stl=STATUS_STYLE[q.status];
+      h+=`<div class="qcard" data-openq="${q.id}"><div class="qcard-top"><span class="qcard-id">${esc(q.id)}</span><span class="badge" style="color:${stl.c};background:${stl.bg}">${q.status}</span></div>
+        <div class="qcard-title">${esc(q.title)||'(제목 없음)'}</div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`<div style="margin-top:24px;text-align:center;"><button class="btn-ghost" id="pDel" style="color:#dc2626;border-color:#fca5a5;">이 환자 삭제</button></div>`;
+  wrapEl().innerHTML=h;
+
+  const w=wrapEl();
+  w.querySelector('#pBack').addEventListener('click',backFromPatient);
+  const nm=w.querySelector('#pName'); autoGrow(nm); nm.addEventListener('input',()=>autoGrow(nm));
+  bindBlur(nm,el=>{ if(p.name!==el.value){ p.name=el.value; touchPatient(p); saveData(); } });
+  bindBlur(w.querySelector('#pRegion'),el=>{ if(p.region!==el.value.trim()){ p.region=el.value.trim(); touchPatient(p); saveData(); } });
+  bindBlur(w.querySelector('#pTags'),el=>{ const t=parseTags(el.value); if((p.tags||[]).join(',')!==t.join(',')){ p.tags=t; touchPatient(p); saveData(); } });
+  w.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',()=>gotoDate(b.dataset.goto)));
+  w.querySelectorAll('[data-openq]').forEach(b=>b.addEventListener('click',()=>openDetail(b.dataset.openq)));
+  w.querySelector('#pDel').addEventListener('click',()=>openConfirm('이 환자를 삭제할까요?','환자만 삭제되고, 회고 기록은 "환자 미지정"으로 남습니다. 연결된 질문의 환자 연결도 해제됩니다.',()=>{
+    db.entries.forEach(e=>{ if(e.patientId===p.id) e.patientId=null; });
+    db.questions.forEach(q=>{ if(q.patientId===p.id) q.patientId=null; });
+    db.patients=db.patients.filter(x=>x.id!==p.id); saveData(); state.view='patients'; render(); toast('환자 삭제됨');
+  }));
+}
+
 // ══════════════════════ Confirm / Menu ══════════════════════
 function openConfirm(title,msg,onYes){
   const root=document.getElementById('modalRoot');
@@ -705,16 +930,32 @@ function openSyncModal(){
   const close=()=>root.innerHTML='';
   root.querySelector('#mc').onclick=close; root.querySelector('#scCancel').onclick=close;
   root.querySelector('#ov').addEventListener('mousedown',e=>{ if(e.target.id==='ov') close(); });
-  root.querySelector('#scSave').onclick=async()=>{ const code=root.querySelector('#scInp').value.trim().toUpperCase(); if(code.length<4){ toast('코드를 확인하세요'); return; } localStorage.setItem(SYNC_LS_KEY,code); close(); toast('연결 중…'); const v=await loadFromCloud(); db=v?normalize(v):{days:[],questions:[]}; state.view='journal'; render(); };
+  root.querySelector('#scSave').onclick=async()=>{ const code=root.querySelector('#scInp').value.trim().toUpperCase(); if(code.length<4){ toast('코드를 확인하세요'); return; } localStorage.setItem(SYNC_LS_KEY,code); close(); toast('연결 중…'); const v=await loadFromCloud(); db=v?normalize(v):{entries:[],patients:[],questions:[]}; state.view='journal'; render(); };
 }
 
 // ══════════════════════ Markdown export ══════════════════════
-function dayToMd(d){
-  const fm=['---','date: '+d.date,'type: daily-reflection','updated: '+(d.updated||d.date),'---',''];
-  const b=[`# ${d.date} (${dow(d.date)}) 임상 회고`,''];
-  PROMPTS.forEach((p,i)=>{ b.push(`## ${i+1}. ${p.title}`, `> ${p.hint}`, '', d[p.key]||'', ''); });
+function safeName(s){ return (s||'무제').replace(/[\\/:*?"<>|]/g,'_').replace(/\s+/g,' ').trim().slice(0,60)||'무제'; }
+function entryToMd(e){
+  const b=[`## ${e.patientId?('환자: '+patientLabel(e.patientId)):'환자 미지정'}`,''];
+  PROMPTS.forEach((p,i)=>{ b.push(`### ${i+1}. ${p.title}`, e[p.key]||'', ''); });
+  return b.join('\n');
+}
+function dateToMd(date){
+  const es=entriesOn(date);
+  const fm=['---','date: '+date,'type: daily-reflection','---',''];
+  const b=[`# ${date} (${dow(date)}) 임상 회고`,''];
+  es.forEach(e=>{ b.push(entryToMd(e), ''); });
   return fm.join('\n')+'\n'+b.join('\n');
 }
+function patientToMd(p){
+  const fm=['---','id: '+p.id,'name: '+(p.name||''),'region: '+(p.region||''),'tags: ['+(p.tags||[]).join(', ')+']','---',''];
+  const b=[`# 환자: ${p.name||'(이름 없음)'}`,''];
+  patientEntries(p.id).forEach(e=>{ b.push(`## ${e.date} (${dow(e.date)})`); PROMPTS.forEach((pr,i)=>{ const v=(e[pr.key]||'').trim(); if(v) b.push(`- **${i+1}. ${pr.title}**`, v, ''); }); b.push(''); });
+  const qs=patientQuestions(p.id);
+  if(qs.length){ b.push('## 연결된 질문'); qs.forEach(q=>b.push(`- [${q.status}] ${q.title} (${q.id})`)); }
+  return fm.join('\n')+'\n'+b.join('\n');
+}
+function datesWithEntries(){ return [...new Set(db.entries.map(e=>e.date))].sort((a,b)=>b.localeCompare(a)); }
 function questionToMd(q){
   const fm=['---','id: '+q.id,'title: >'];
   (q.title||'').split('\n').forEach(l=>fm.push('  '+l));
@@ -732,16 +973,18 @@ function questionToMd(q){
 }
 function download(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); }
 function exportOneFile(){
-  if(!db.days.length && !db.questions.length){ toast('내보낼 내용이 없습니다'); return; }
-  const days=[...db.days].sort((a,b)=>b.date.localeCompare(a.date)).map(dayToMd);
+  if(!db.entries.length && !db.questions.length){ toast('내보낼 내용이 없습니다'); return; }
+  const days=datesWithEntries().map(dateToMd);
+  const pts=db.patients.map(patientToMd);
   const qs=db.questions.map(questionToMd);
-  const txt=`# 임상회고 (${today()})\n\n# ── 일지 ──\n\n`+days.join('\n\n---\n\n')+`\n\n# ── 질문 ──\n\n`+qs.join('\n\n---\n\n');
+  const txt=`# 임상회고 (${today()})\n\n# ── 일지 ──\n\n`+days.join('\n\n---\n\n')+`\n\n# ── 환자 ──\n\n`+pts.join('\n\n---\n\n')+`\n\n# ── 질문 ──\n\n`+qs.join('\n\n---\n\n');
   download(new Blob([txt],{type:'text/markdown;charset=utf-8'}), '임상회고_전체_'+today()+'.md');
   toast('한 파일로 내보냈습니다');
 }
 function exportZip(){
   const files=[];
-  [...db.days].sort((a,b)=>b.date.localeCompare(a.date)).forEach(d=>files.push({name:'일지/'+d.date+'.md', content:dayToMd(d)}));
+  datesWithEntries().forEach(date=>files.push({name:'일지/'+date+'.md', content:dateToMd(date)}));
+  db.patients.forEach(p=>files.push({name:'환자/'+safeName(p.name||p.id)+'.md', content:patientToMd(p)}));
   db.questions.forEach(q=>files.push({name:'질문/'+q.id+'.md', content:questionToMd(q)}));
   if(!files.length){ toast('내보낼 내용이 없습니다'); return; }
   download(makeZip(files), '임상회고_'+today()+'.zip');
@@ -764,9 +1007,16 @@ function makeZip(files){
 }
 
 // ══════════════════════ Normalize ══════════════════════
+let _eidSeq=0;
 function normalize(v){
-  const out={days:[],questions:[]};
-  if(v && Array.isArray(v.days)) v.days.forEach(d=>out.days.push({date:d.date, q1:d.q1||'', q2:d.q2||'', q3:d.q3||'', created:d.created||d.date, updated:d.updated||d.date}));
+  const out={entries:[],patients:[],questions:[]};
+  // 환자
+  if(v && Array.isArray(v.patients)) v.patients.forEach(p=>out.patients.push({ id:p.id||('P-'+String(out.patients.length+1).padStart(4,'0')), name:p.name||'', region:p.region||'', tags:Array.isArray(p.tags)?p.tags:[], created:p.created||today(), updated:p.updated||p.created||today() }));
+  const mkEid=()=>'e-mig-'+(_eidSeq++).toString(36);
+  // entries (신 스키마)
+  if(v && Array.isArray(v.entries)) v.entries.forEach(e=>out.entries.push({ id:e.id||mkEid(), date:e.date, patientId:e.patientId||null, q1:e.q1||'', q2:e.q2||'', q3:e.q3||'', created:e.created||e.date, updated:e.updated||e.date }));
+  // 구 스키마 days → entries (환자 미지정)
+  if(v && Array.isArray(v.days)) v.days.forEach(d=>out.entries.push({ id:mkEid(), date:d.date, patientId:null, q1:d.q1||'', q2:d.q2||'', q3:d.q3||'', created:d.created||d.date, updated:d.updated||d.date }));
   const qarr = v && Array.isArray(v.questions) ? v.questions : [];
   qarr.forEach(q=>{
     let progress=Array.isArray(q.progress)?q.progress.slice():[];
@@ -778,7 +1028,7 @@ function normalize(v){
       if((q.반응||'').trim()) progress.push({date:q.updated||today(), kind:'반응', body:q.반응});
     }
     out.questions.push({ id:q.id||nextId(), title:q.title||q.question||'', status:STATUSES.includes(q.status)?q.status:'던짐',
-      region:q.region||'', tags:Array.isArray(q.tags)?q.tags:[], originDate:q.originDate||q.created||today(),
+      region:q.region||'', tags:Array.isArray(q.tags)?q.tags:[], originDate:q.originDate||q.created||today(), patientId:q.patientId||null,
       created:q.created||today(), updated:q.updated||q.created||today(), progress, 결론:q.결론||q.현재결론||'' });
   });
   return out;
@@ -787,15 +1037,16 @@ function normalize(v){
 // ══════════════════════ Wiring ══════════════════════
 document.getElementById('tabJournal').addEventListener('click',()=>{ state.view='journal'; render(); });
 document.getElementById('tabQuestions').addEventListener('click',()=>{ state.view='questions'; render(); });
+document.getElementById('tabPatients').addEventListener('click',()=>{ state.view='patients'; render(); });
 document.getElementById('brandBtn').addEventListener('click',()=>{ state.view='journal'; render(); });
 document.getElementById('menuBtn').addEventListener('click',openMenu);
 let searchT;
-document.getElementById('searchInp').addEventListener('input',e=>{ clearTimeout(searchT); searchT=setTimeout(()=>{ state.search=e.target.value.trim(); if(state.view==='questions') renderQuestions(); },120); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const root=document.getElementById('modalRoot'); if(root.innerHTML){ root.innerHTML=''; } else if(state.view==='detail'){ backFromDetail(); } } });
+document.getElementById('searchInp').addEventListener('input',e=>{ clearTimeout(searchT); searchT=setTimeout(()=>{ state.search=e.target.value.trim(); if(state.view==='questions') renderQuestions(); else if(state.view==='patients') renderPatients(); },120); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const root=document.getElementById('modalRoot'); if(root.innerHTML){ root.innerHTML=''; } else if(state.view==='detail'){ backFromDetail(); } else if(state.view==='pdetail'){ backFromPatient(); } } });
 
 async function init(){
   const v=await loadFromCloud();
-  db = v?normalize(v):{days:[],questions:[]};
+  db = v?normalize(v):{entries:[],patients:[],questions:[]};
   render();
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 }
