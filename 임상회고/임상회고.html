@@ -644,10 +644,10 @@ function fmtBarHtml(){
     <button class="efmt-btn" id="efmtBold" title="굵게 (Ctrl+B)"><b>B</b></button>
     <button class="efmt-btn" id="efmtUnderline" title="밑줄 (Ctrl+U)"><u>U</u></button>
     <div class="efmt-sep"></div>
-    <button class="efmt-fc" data-fc="" title="기본색(검정) (Alt+1)" style="color:var(--text-1)">가</button>
-    <button class="efmt-fc" data-fc="#dc2626" title="빨강 (Alt+2)" style="color:#dc2626">가</button>
-    <button class="efmt-fc" data-fc="#2563eb" title="파랑 (Alt+3)" style="color:#2563eb">가</button>
-    <button class="efmt-fc" data-fc="#7C3AED" title="보라 (Alt+4)" style="color:#7C3AED">가</button>
+    <button class="efmt-fc" data-fc="" title="기본색(검정)" style="color:var(--text-1)">가</button>
+    <button class="efmt-fc" data-fc="#dc2626" title="빨강" style="color:#dc2626">가</button>
+    <button class="efmt-fc" data-fc="#2563eb" title="파랑" style="color:#2563eb">가</button>
+    <button class="efmt-fc" data-fc="#7C3AED" title="보라" style="color:#7C3AED">가</button>
     <div class="efmt-sep"></div>
     <button class="efmt-hl" data-hl="#FFF59D" title="노란 하이라이트" style="background:#FFF59D"></button>
     <button class="efmt-hl" data-hl="#B3E5FC" title="파란 하이라이트" style="background:#B3E5FC"></button>
@@ -835,7 +835,6 @@ function bindRichBox(box, opts){
   box.addEventListener('paste',onPboxPaste);
   box.addEventListener('keydown',e=>{
     if(e.key==='Tab'){ e.preventDefault(); applyIndent(e.shiftKey?'out':'in'); return; }
-    if(e.altKey&&!e.ctrlKey){ const fcMap={Digit1:'',Digit2:'#dc2626',Digit3:'#2563eb',Digit4:'#7C3AED'}; if(e.code in fcMap){ e.preventDefault(); applyTextColor(fcMap[e.code]); return; } }
     if(e.ctrlKey||e.metaKey){ if(e.key==='b'){ e.preventDefault(); applyFmt('bold'); } else if(e.key==='u'){ e.preventDefault(); applyFmt('underline'); } }
   });
   box.addEventListener('blur',()=>{ if(box._commit()) saveData(); disarmFmtBarSoon(); });
