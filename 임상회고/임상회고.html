@@ -825,7 +825,7 @@ function bindRichBox(box, opts){
   opts=opts||{};
   box._commit=()=>{
     if(!opts.commit) return false;
-    let v=box.innerHTML;
+    let v=box.innerHTML.replace(/​/g,'');   // 라벨 앵커용 ZWSP는 저장/내보내기에서 제거
     if(isBlankHtml(v)) v='';
     else if(opts.template && htmlToText(v).trim()===htmlToText(opts.template).trim()) v='';
     return !!opts.commit(v);
@@ -891,6 +891,31 @@ function applyTextColor(color){
   else if(first&&last){ nr.setStartBefore(first); nr.setEndAfter(last); }
   sel.removeAllRanges(); sel.addRange(nr);
   pendingBox=t; scheduleAutoSave();
+}
+// 커서가 템플릿 라벨(.tpl-label) 끝 경계에 오면 라벨 밖으로 이동시켜, 이후 입력이 라벨에
+// 흡수되지 않고 기본서식으로 들어가게 함. 라벨 흡수는 "행바꿈 전 서식 미적용" 버그의 원인이기도 함.
+function snapCaretOutOfLabel(){
+  const sel=window.getSelection();
+  if(!sel.rangeCount || !sel.isCollapsed) return;
+  const r=sel.getRangeAt(0);
+  const node=r.startContainer;
+  const el=node.nodeType===3?node.parentElement:node; if(!el) return;
+  if(!el.closest('.pbox')) return;
+  const label=el.closest('.tpl-label'); if(!label) return;
+  const probe=document.createRange();
+  probe.selectNodeContents(label);
+  try{ probe.setStart(node, r.startOffset); }catch(e){ return; }
+  if(probe.toString().length!==0) return;   // 라벨 중간이면 편집 그대로 유지
+  // 라벨 바로 뒤에 ZWSP 앵커를 두고 그 안에서 입력되게 함(단순 커서 이동은 브라우저가
+  // 다시 라벨 span으로 흡수하므로, 기본서식 텍스트노드를 실제로 만들어 커서를 넣어야 함).
+  let anchor=label.nextSibling;
+  if(!(anchor && anchor.nodeType===3 && anchor.textContent.charCodeAt(0)===0x200B)){
+    anchor=document.createTextNode('​');
+    label.parentNode.insertBefore(anchor, label.nextSibling);
+  }
+  const nr=document.createRange();
+  nr.setStart(anchor, 1); nr.collapse(true);
+  sel.removeAllRanges(); sel.addRange(nr);
 }
 // 문단 들여쓰기/내어쓰기 (blockquote 대신 CSS 여백으로)
 function applyIndent(dir){ const t=_activeBox; if(!t) return; t.focus(); try{ document.execCommand('styleWithCSS',false,true); }catch(e){} document.execCommand(dir==='out'?'outdent':'indent'); try{ document.execCommand('styleWithCSS',false,false); }catch(e){} pendingBox=t; scheduleAutoSave(); }
@@ -1741,6 +1766,7 @@ async function init(){
   const v=await loadFromCloud();
   db = v?normalize(v):{entries:[],patients:[],questions:[],materials:[]};
   render();
+  document.addEventListener('selectionchange', snapCaretOutOfLabel);
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 }
 init();
