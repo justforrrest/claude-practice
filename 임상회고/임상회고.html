@@ -351,6 +351,37 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .mat-head h1{font-size:17px;font-weight:700;letter-spacing:-.3px;flex:1;}
 .mat-title{font-size:14px;font-weight:600;color:var(--text-1);line-height:1.5;}
 .mat-prev{font-size:12.5px;color:var(--text-3);line-height:1.55;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+/* 자료 목록: 좌측 종류 사이드바 + 컴팩트 행 + 종류별 접기 그룹 */
+.mat-layout{display:flex;gap:20px;align-items:flex-start;}
+.mat-side{width:200px;flex-shrink:0;position:sticky;top:0;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:8px;}
+.mat-main{flex:1;min-width:0;}
+.ms-item{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;background:none;border:none;border-radius:7px;font-size:13px;font-weight:500;color:var(--text-2);font-family:var(--font-sans);cursor:pointer;text-align:left;transition:background .1s,color .1s;}
+.ms-item:hover{background:var(--surface-2);}
+.ms-item.active{background:var(--violet-faint);color:var(--violet-d);font-weight:700;}
+.ms-item .ms-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ms-item .ms-n{font-size:11.5px;color:var(--text-4);font-weight:600;}
+.ms-item.active .ms-n{color:var(--violet-d);}
+.ms-sep{height:1px;background:var(--border);margin:6px 4px;}
+.ms-edit{color:var(--text-3);font-size:12px;}
+.mat-typechips{display:none;}
+.mgroup{margin-bottom:16px;}
+.mgroup-head{display:flex;align-items:center;gap:7px;width:100%;padding:4px 2px 7px;background:none;border:none;cursor:pointer;font-family:var(--font-sans);text-align:left;}
+.mgroup-head .mg-arrow{font-size:10px;color:var(--text-4);width:12px;transition:transform .12s;}
+.mgroup.collapsed .mg-arrow{transform:rotate(-90deg);}
+.mgroup-head .mg-title{font-size:12.5px;font-weight:700;color:var(--text-2);}
+.mgroup-head .mg-n{font-size:11.5px;font-weight:600;color:var(--text-4);background:var(--surface-2);border-radius:20px;padding:0 7px;}
+.mgroup.collapsed .mlist{display:none;}
+.mlist{background:var(--surface);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.mrow{display:flex;align-items:center;gap:10px;padding:0 14px;min-height:40px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+.mrow:last-child{border-bottom:none;}
+.mrow:hover{background:var(--violet-faint);}
+.mrow-title{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mrow-title.untitled{color:var(--text-4);font-weight:500;}
+.mrow-meta{display:flex;align-items:center;gap:5px;flex-shrink:0;margin-left:auto;font-size:11px;color:var(--text-4);}
+.mrow-meta .badge{font-size:10.5px;padding:1px 7px;}
+.mrow-date{font-family:var(--mono);font-size:11px;color:var(--text-4);min-width:38px;text-align:right;}
+.mrow-more{display:block;width:100%;padding:8px 14px;background:var(--surface-2);border:none;font-size:12px;font-weight:600;color:var(--violet-d);font-family:var(--font-sans);cursor:pointer;text-align:left;}
+.mrow-more:hover{background:var(--violet-faint);}
 .badge-mtype{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border-2);}
 .mtype-sel{border:1px solid var(--border-2);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;font-family:var(--font-sans);color:var(--text-2);background:var(--surface);outline:none;cursor:pointer;}
 .mtype-sel:focus{border-color:var(--violet-d);}
@@ -431,6 +462,11 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
   .journal-layout{flex-direction:column;gap:14px;}
   .journal-side{width:100%;position:static;}
   .journal-main .day{margin-bottom:0;}
+  .mat-side{display:none;}
+  .mat-typechips{display:flex;}
+  .mrow{flex-wrap:wrap;row-gap:3px;padding:9px 12px;}
+  .mrow-title{flex-basis:100%;}
+  .mrow-meta{margin-left:0;}
 }
 </style>
 </head>
@@ -612,7 +648,7 @@ function bindBlur(el,fn){ el.addEventListener('blur',()=>fn(el)); }
 
 // ══════════════════════ State ══════════════════════
 const _tD=new Date();
-const state = { view:'journal', currentId:null, currentPatientId:null, currentMaterialId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, matFilter:{type:null,region:null,tag:null,unlinked:false}, search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth(), fuOpen:new Set(), entryPage:0 };
+const state = { view:'journal', currentId:null, currentPatientId:null, currentMaterialId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, matFilter:{type:null,region:null,tag:null,unlinked:false}, matCollapsed:new Set(), search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth(), fuOpen:new Set(), entryPage:0 };
 const wrapEl = ()=>document.getElementById('wrap');
 
 function render(){
@@ -624,7 +660,7 @@ function render(){
   const searchable = state.view==='questions'||state.view==='patients'||state.view==='materials';
   searchWrap.hidden = !searchable;
   const si=document.getElementById('searchInp'); if(si) si.placeholder = state.view==='patients' ? '환자·별칭·부위 검색' : state.view==='materials' ? '자료 제목·내용 검색' : '질문·태그·부위 검색';
-  wrapEl().classList.toggle('wide', state.view==='journal');
+  wrapEl().classList.toggle('wide', state.view==='journal'||state.view==='materials');
   if(state.view==='journal') renderJournal();
   else if(state.view==='questions') renderQuestions();
   else if(state.view==='patients') renderPatients();
@@ -1619,13 +1655,17 @@ function renderMaterials(){
   // 삭제·이름변경된 종류로 남은 필터는 해제
   if(f.type && f.type!==UNTYPED && !db.matTypes.includes(f.type)) f.type=null;
   const list=all.filter(matchesM);
-  // 필터 칩: 종류(개수) / 부위 / 태그 / 연결 안 됨
+  // 종류 목록(개수): 사이드바(PC)와 상단 칩(모바일)에 같이 씀
   const cnt=t=>db.materials.filter(m=>(m.type||'')===t).length;
   const otherTypes=[...new Set(db.materials.map(m=>m.type).filter(t=>t&&!db.matTypes.includes(t)))];   // 목록에 없는 옛 종류도 표시
-  let fh=`<button class="fchip ${!f.type?'active':''}" data-mtype="">전체 ${db.materials.length}</button>`;
-  [...db.matTypes,...otherTypes].forEach(t=>{ const n=cnt(t); fh+=`<button class="fchip ${f.type===t?'active':''}" data-mtype="${esc(t)}">${esc(t)} ${n}</button>`; });
-  const nNone=cnt(''); if(nNone) fh+=`<button class="fchip ${f.type===UNTYPED?'active':''}" data-mtype="${UNTYPED}">미분류 ${nNone}</button>`;
-  fh+=`<button class="fchip-gear" id="mtEdit" title="종류 편집">⚙</button>`;
+  const typeKeys=[...db.matTypes,...otherTypes];
+  const nNone=cnt('');
+  const typeItems=[{key:'',label:'전체',n:db.materials.length}, ...typeKeys.map(t=>({key:t,label:t,n:cnt(t)})), ...(nNone?[{key:UNTYPED,label:'미분류',n:nNone}]:[])];
+  const isOn=k=>(f.type||'')===k;
+  const side=`<aside class="mat-side">`+typeItems.map((it,i)=>(i===1?'<div class="ms-sep"></div>':'')+`<button class="ms-item ${isOn(it.key)?'active':''}" data-mtype="${esc(it.key)}"><span class="ms-name">${esc(it.label)}</span><span class="ms-n">${it.n}</span></button>`).join('')
+    +`<div class="ms-sep"></div><button class="ms-item ms-edit" data-mtedit>⚙ 종류 편집</button></aside>`;
+  const chips=`<div class="qfilter mat-typechips">`+typeItems.map(it=>`<button class="fchip ${isOn(it.key)?'active':''}" data-mtype="${esc(it.key)}">${esc(it.label)} ${it.n}</button>`).join('')+`<button class="fchip-gear" data-mtedit title="종류 편집">⚙</button></div>`;
+  // 부위·태그·연결 안 됨 칩
   const regions=[...new Set(db.materials.map(m=>m.region).filter(Boolean))];
   const tags=[...new Set(db.materials.flatMap(m=>m.tags||[]))];
   const nUnlinked=db.materials.filter(m=>!(m.links||[]).length).length;
@@ -1633,29 +1673,45 @@ function renderMaterials(){
   if(regions.length){ fh2+='<span class="fchip-label">부위</span>'; regions.forEach(r=>fh2+=`<button class="fchip ${f.region===r?'active':''}" data-mregion="${esc(r)}">${esc(r)}${f.region===r?' <span class="x">×</span>':''}</button>`); }
   if(tags.length){ fh2+='<span class="fchip-label">태그</span>'; tags.forEach(t=>fh2+=`<button class="fchip ${f.tag===t?'active':''}" data-mtag="${esc(t)}">#${esc(t)}${f.tag===t?' <span class="x">×</span>':''}</button>`); }
   if(nUnlinked) fh2+=`<button class="fchip ${f.unlinked?'active':''}" data-munlinked>🔗 연결 안 됨 ${nUnlinked}</button>`;
-  let h=`<div class="mat-head"><h1>자료</h1><button class="btn-soft" id="newMat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg><span>새 자료</span></button></div>`;
-  h+=`<div class="qfilter">${fh}</div>`+(fh2?`<div class="qfilter">${fh2}</div>`:'');
-  if(!list.length) h+=`<div class="emptyline" style="text-align:center;padding:30px;">조건에 맞는 자료가 없습니다.</div>`;
-  else h+=list.map(m=>{
-    const prev=htmlToText(m.body).replace(/\s+/g,' ').trim().slice(0,140);
-    const meta=(m.type?`<span class="badge badge-mtype">${esc(m.type)}</span>`:'')+(m.region?`<span class="badge badge-region">${esc(m.region)}</span>`:'')+(m.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
-    const ln=(m.links||[]).length;
-    return `<div class="qcard" data-mid="${m.id}">
-      <div class="mat-title">${esc(m.title)||'<span style="color:var(--text-4)">(제목 없음)</span>'}</div>
-      ${prev?`<div class="mat-prev">${esc(prev)}</div>`:''}
-      ${meta?`<div class="qcard-meta">${meta}</div>`:''}
-      <div class="qcard-foot">${ln?`<span>연결 <b>${ln}</b></span>`:''}<span class="cf-date">${esc(m.updated)} 갱신</span></div>
-    </div>`;
-  }).join('');
-  wrapEl().innerHTML=h;
+  // 한 줄 행
+  // 종류는 그룹 헤더/사이드바에 이미 보이므로 행에는 종류 배지를 넣지 않음
+  const rowHtml=m=>{
+    const prev=htmlToText(m.body).replace(/\s+/g,' ').trim().slice(0,200);
+    const tg=m.tags||[];
+    const meta=(m.region?`<span class="badge badge-region">${esc(m.region)}</span>`:'')
+      +tg.slice(0,2).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')+(tg.length>2?`<span class="tag">+${tg.length-2}</span>`:'')
+      +((m.links||[]).length?`<span title="연결 ${m.links.length}">🔗${m.links.length}</span>`:'');
+    return `<div class="mrow" data-mid="${m.id}" title="${esc(prev)}">
+      <span class="mrow-title ${m.title?'':'untitled'}">${esc(m.title)||'(제목 없음)'}</span>
+      <span class="mrow-meta">${meta}<span class="mrow-date">${esc((m.updated||'').slice(5))}</span></span></div>`;
+  };
+  let body='';
+  if(!list.length) body=`<div class="emptyline" style="text-align:center;padding:30px;">조건에 맞는 자료가 없습니다.</div>`;
+  else if(f.type) body=`<div class="mlist">${list.map(rowHtml).join('')}</div>`;
+  else {
+    // '전체': 종류별 접기 그룹. 다른 필터·검색이 없으면 그룹당 최근 5개 + 더 보기
+    const narrowed=!!(state.search||f.region||f.tag||f.unlinked);
+    const LIMIT=5;
+    [...typeKeys,''].forEach(t=>{
+      const items=list.filter(m=>(m.type||'')===t); if(!items.length) return;
+      const key=t||UNTYPED, col=state.matCollapsed.has(key);
+      const shown=narrowed?items:items.slice(0,LIMIT), rest=items.length-shown.length;
+      body+=`<div class="mgroup ${col?'collapsed':''}">
+        <button class="mgroup-head" data-mgroup="${esc(key)}"><span class="mg-arrow">▾</span><span class="mg-title">${esc(t||'미분류')}</span><span class="mg-n">${items.length}</span></button>
+        <div class="mlist">${shown.map(rowHtml).join('')}${rest>0?`<button class="mrow-more" data-mtype="${esc(key)}">더 보기 ${rest} ▸</button>`:''}</div></div>`;
+    });
+  }
+  const head=`<div class="mat-head"><h1>자료</h1><button class="btn-soft" id="newMat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg><span>새 자료</span></button></div>`;
+  wrapEl().innerHTML=`<div class="mat-layout">${side}<div class="mat-main">${head}${chips}${fh2?`<div class="qfilter">${fh2}</div>`:''}${body}</div></div>`;
   const w=wrapEl();
   document.getElementById('newMat').onclick=createMaterial;
-  w.querySelectorAll('[data-mtype]').forEach(b=>b.addEventListener('click',()=>{ const t=b.dataset.mtype||null; f.type=f.type===t?null:t; renderMaterials(); }));
+  w.querySelectorAll('[data-mtype]').forEach(b=>b.addEventListener('click',()=>{ const t=b.dataset.mtype||null; f.type=(t&&f.type===t&&!b.classList.contains('mrow-more'))?null:t; document.querySelector('.scroll').scrollTop=0; renderMaterials(); }));
+  w.querySelectorAll('[data-mgroup]').forEach(b=>b.addEventListener('click',()=>{ const k=b.dataset.mgroup; state.matCollapsed.has(k)?state.matCollapsed.delete(k):state.matCollapsed.add(k); b.parentElement.classList.toggle('collapsed'); }));
   w.querySelectorAll('[data-mregion]').forEach(b=>b.addEventListener('click',()=>{ f.region=f.region===b.dataset.mregion?null:b.dataset.mregion; renderMaterials(); }));
   w.querySelectorAll('[data-mtag]').forEach(b=>b.addEventListener('click',()=>{ f.tag=f.tag===b.dataset.mtag?null:b.dataset.mtag; renderMaterials(); }));
   w.querySelector('[data-munlinked]')?.addEventListener('click',()=>{ f.unlinked=!f.unlinked; renderMaterials(); });
-  w.querySelector('#mtEdit').addEventListener('click',openMatTypesEdit);
-  w.querySelectorAll('.qcard[data-mid]').forEach(c=>c.addEventListener('click',()=>openMaterial(c.dataset.mid)));
+  w.querySelectorAll('[data-mtedit]').forEach(b=>b.addEventListener('click',openMatTypesEdit));
+  w.querySelectorAll('.mrow[data-mid]').forEach(c=>c.addEventListener('click',()=>openMaterial(c.dataset.mid)));
 }
 // 자료 종류 편집 모달: 이름 변경(자료도 함께 변경)·삭제(자료는 미분류)·순서·추가
 function openMatTypesEdit(){
