@@ -864,7 +864,44 @@ function applySubstitution(box){
 }
 // 서식 적용 (현재 활성 박스에)
 function applyFmt(cmd,val){ const t=_activeBox; if(!t) return; t.focus(); document.execCommand(cmd,false,val||null); pendingBox=t; scheduleAutoSave(); }
+// ── 글자색 변경 ── 선택을 줄(블록) 단위로 나눠, 각 조각을 감싼 색 span을 걷어낸 뒤 새 색으로 감쌈
+const _BLOCK_RE=/^(DIV|P|LI|UL|OL|H[1-6]|BLOCKQUOTE|PRE)$/;
+// extractContents가 남긴 빈 껍데기(자식 없는 요소) 제거. 빈 줄 <div><br></div>는 자식이 있으므로 유지
+function dropEmptyShells(root){ Array.from(root.querySelectorAll('*')).reverse().forEach(x=>{ if(!x.childNodes.length && !/^(BR|IMG|HR)$/.test(x.tagName)) x.remove(); }); }
+// 선택 끝이 다음 줄 맨 앞(offset 0)에, 시작이 이전 줄 맨 끝에 걸쳐 있으면 실제 글자 경계로 당김
+// (더블/트리플 클릭 시 흔함. 안 하면 줄 div가 복제돼 빈 줄이 생김)
+function trimRange(r,box){
+  const len=n=>n.nodeType===3?n.length:n.childNodes.length;
+  while(r.endOffset===0 && r.endContainer!==box && !r.endContainer.contains(r.startContainer)) r.setEndBefore(r.endContainer);
+  for(;;){ const c=r.endContainer,k=r.endOffset, p=c.nodeType===1&&k>0?c.childNodes[k-1]:null;
+    if(p&&p.nodeType===1&&p.contains(r.startContainer)) r.setEnd(p,p.childNodes.length); else break; }
+  while(r.startOffset===len(r.startContainer) && r.startContainer!==box && !r.startContainer.contains(r.endContainer)) r.setStartAfter(r.startContainer);
+  for(;;){ const c=r.startContainer,k=r.startOffset, n=c.nodeType===1?c.childNodes[k]:null;
+    if(n&&n.nodeType===1&&n.contains(r.endContainer)) r.setStart(n,0); else break; }
+  return r;
+}
+// 여러 줄에 걸친 선택을 줄마다 하나의 range로 분할
+function splitRangeByBlock(range,box){
+  const root=range.commonAncestorContainer;
+  if(root.nodeType===3) return [range];
+  const blockOf=n=>{ for(let c=n.parentNode;c&&c!==box;c=c.parentNode) if(c.nodeType===1&&_BLOCK_RE.test(c.tagName)) return c; return box; };
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT,{acceptNode:n=>(n.nodeType===3||n.tagName==='IMG')&&range.intersectsNode(n)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP});
+  const groups=[]; let g=null;
+  while(w.nextNode()){
+    const n=w.currentNode;
+    if(n===range.endContainer&&range.endOffset===0) continue;
+    if(n===range.startContainer&&n.nodeType===3&&range.startOffset===n.length) continue;
+    const b=blockOf(n);
+    if(!g||g.block!==b){ g={block:b,s:n,e:n}; groups.push(g); } else g.e=n;
+  }
+  if(groups.length<=1) return [range];
+  return groups.map(g=>{ const r=document.createRange();
+    if(g.s===range.startContainer) r.setStart(g.s,range.startOffset); else r.setStartBefore(g.s);
+    if(g.e===range.endContainer) r.setEnd(g.e,range.endOffset); else r.setEndAfter(g.e);
+    return r; });
+}
 // 선택 영역 위쪽(box 아래)의 색/라벨 조상을 [앞|선택|뒤]로 쪼개 선택 부분만 스타일 없이 꺼내고 새 range 반환
+// (안 하면 내용이 다시 그 색 span 안에 들어가 색이 유지됨)
 function liftStyledAncestors(range,box){
   const isStyled=el=>el&&el.nodeType===1&&el!==box&&(el.classList.contains('tpl-label')||(el.style&&el.style.color)||(el.tagName==='FONT'&&el.hasAttribute('color')));
   for(let guard=0;guard<20;guard++){
@@ -875,11 +912,11 @@ function liftStyledAncestors(range,box){
     const parent=S.parentNode;
     const left=S.cloneNode(false), right=S.cloneNode(false);
     const r1=document.createRange(); r1.setStart(S,0); r1.setEnd(range.startContainer,range.startOffset);
-    left.appendChild(r1.extractContents());
+    left.appendChild(r1.extractContents()); dropEmptyShells(left);
     const r2=document.createRange(); r2.setStart(range.endContainer,range.endOffset); r2.setEnd(S,S.childNodes.length);
-    right.appendChild(r2.extractContents());
-    if(left.textContent||left.querySelector('img')) parent.insertBefore(left,S);
-    if(right.textContent||right.querySelector('img')) parent.insertBefore(right,S.nextSibling);
+    right.appendChild(r2.extractContents()); dropEmptyShells(right);
+    if(left.textContent||left.querySelector('img,br')) parent.insertBefore(left,S);
+    if(right.textContent||right.querySelector('img,br')) parent.insertBefore(right,S.nextSibling);
     const frag=document.createDocumentFragment();
     while(S.firstChild) frag.appendChild(S.firstChild);
     const a=frag.firstChild, b=frag.lastChild;
@@ -889,35 +926,45 @@ function liftStyledAncestors(range,box){
   }
   return range;
 }
+// 한 줄 안의 range 하나에 색 적용. 삽입된 첫/끝 노드 반환
+function colorRange(range,t,color){
+  range=liftStyledAncestors(range,t);
+  const wrap=document.createElement('div');
+  wrap.appendChild(range.extractContents());   // 부분 선택 시 tpl-label span 자동 split
+  dropEmptyShells(wrap);
+  // 기존 라벨 클래스·인라인 색/볼드 제거
+  wrap.querySelectorAll('.tpl-label').forEach(el=>{ el.classList.remove('tpl-label'); if(!el.getAttribute('class')) el.removeAttribute('class'); });
+  wrap.querySelectorAll('[style]').forEach(el=>{ el.style.color=''; el.style.fontWeight=''; if(!el.getAttribute('style')) el.removeAttribute('style'); });
+  wrap.querySelectorAll('font[color]').forEach(el=>el.removeAttribute('color'));
+  wrap.querySelectorAll('span:not([style]):not([class]),font:not([color]):not([face]):not([size])').forEach(el=>el.replaceWith(...el.childNodes));
+  if(!wrap.firstChild) return null;
+  let node;
+  if(color){ node=document.createElement('span'); node.style.color=color; while(wrap.firstChild) node.appendChild(wrap.firstChild); }
+  else { node=document.createDocumentFragment(); while(wrap.firstChild) node.appendChild(wrap.firstChild); }
+  const first=color?node:node.firstChild, last=color?node:node.lastChild;   // fragment은 insert 후 비므로 미리 확보
+  // 한 줄 전체를 선택하면 박스가 완전히 비어 range가 무효화됨 → 빈 박스면 직접 append
+  if(!t.firstChild) t.appendChild(node);
+  else range.insertNode(node);
+  return {first,last};
+}
 // 선택 글자색 변경. color='' 이면 라벨 색·볼드 제거하고 기본 본문색으로. (클래스 색은 execCommand로 못 바꾸므로 DOM 정리)
 function applyTextColor(color){
   const t=_activeBox; if(!t){ toast('먼저 입력할 칸을 클릭하세요'); return; }
   t.focus();
   const sel=window.getSelection();
   if(!sel.rangeCount || sel.isCollapsed){ toast('색을 바꿀 부분을 드래그해 선택하세요'); return; }
-  const range=sel.getRangeAt(0);
-  if(!t.contains(range.commonAncestorContainer)){ toast('색을 바꿀 부분을 드래그해 선택하세요'); return; }
-  range=liftStyledAncestors(range,t);   // 선택을 감싼 색 span 밖으로 꺼냄 (안 하면 다시 그 span 안에 들어가 색 유지)
-  const wrap=document.createElement('div');
-  wrap.appendChild(range.extractContents());   // 부분 선택 시 tpl-label span 자동 split
-  // 기존 라벨 클래스·인라인 색/볼드 제거
-  wrap.querySelectorAll('.tpl-label').forEach(el=>{ el.classList.remove('tpl-label'); if(!el.getAttribute('class')) el.removeAttribute('class'); });
-  wrap.querySelectorAll('[style]').forEach(el=>{ el.style.color=''; el.style.fontWeight=''; if(!el.getAttribute('style')) el.removeAttribute('style'); });
-  wrap.querySelectorAll('font[color]').forEach(el=>el.removeAttribute('color'));
-  let node;
-  if(color){ node=document.createElement('span'); node.style.color=color; while(wrap.firstChild) node.appendChild(wrap.firstChild); }
-  else { node=document.createDocumentFragment(); while(wrap.firstChild) node.appendChild(wrap.firstChild); }
-  const first=node.firstChild, last=node.lastChild;   // fragment은 insert 후 비므로 미리 확보
-  // 한 줄 전체를 선택하면 박스가 완전히 비어 range가 무효화됨 → 빈 박스면 직접 append
-  if(!t.firstChild) t.appendChild(node);
-  else range.insertNode(node);
+  const range=trimRange(sel.getRangeAt(0).cloneRange(),t);
+  if(!t.contains(range.commonAncestorContainer) || range.collapsed){ toast('색을 바꿀 부분을 드래그해 선택하세요'); return; }
+  const segs=splitRangeByBlock(range,t);
+  let first=null,last=null;
+  for(let i=segs.length-1;i>=0;i--){   // 뒤 줄부터 처리해야 앞 줄 range가 흔들리지 않음
+    const res=colorRange(segs[i],t,color);
+    if(res){ if(!last) last=res.last; first=res.first; }
+  }
   // 분할 과정에서 생긴 빈 색/라벨 span 제거
-  t.querySelectorAll('span[style],span.tpl-label,font').forEach(el=>{ if(el!==node && !el.textContent && !el.querySelector('img,br')) el.remove(); });
-  // 새로 넣은 내용을 다시 선택 (연속 색 변경·이어쓰기 자연스럽게). span 자체를 선택해야 다음 색 변경 때 span째 교체됨
-  const nr=document.createRange();
-  if(color){ nr.selectNode(node); }
-  else if(first&&last){ nr.setStartBefore(first); nr.setEndAfter(last); }
-  sel.removeAllRanges(); sel.addRange(nr);
+  t.querySelectorAll('span[style],span.tpl-label,font').forEach(el=>{ if(!el.textContent && !el.querySelector('img,br')) el.remove(); });
+  // 바꾼 부분을 다시 선택 (연속 색 변경 시 span째 교체되도록 span 바깥 경계로)
+  if(first&&last&&first.isConnected&&last.isConnected){ const nr=document.createRange(); nr.setStartBefore(first); nr.setEndAfter(last); sel.removeAllRanges(); sel.addRange(nr); }
   pendingBox=t; scheduleAutoSave();
 }
 // 커서가 템플릿 라벨(.tpl-label) 끝 경계에 오면 라벨 밖으로 이동시켜, 이후 입력이 라벨에
