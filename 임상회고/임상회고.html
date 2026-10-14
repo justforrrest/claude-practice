@@ -954,8 +954,62 @@ function insertImageInto(box,dataUrl){
   pendingBox=box; scheduleAutoSave();
 }
 function onPboxPaste(e){
-  const box=e.currentTarget; const items=e.clipboardData&&e.clipboardData.items; if(!items) return;
-  for(const it of items){ if(it.type&&it.type.startsWith('image/')){ e.preventDefault(); const r=new FileReader(); r.onload=ev=>insertImageInto(box,ev.target.result); r.readAsDataURL(it.getAsFile()); return; } }
+  const box=e.currentTarget; const cd=e.clipboardData; const items=cd&&cd.items;
+  if(items){ for(const it of items){ if(it.type&&it.type.startsWith('image/')){ e.preventDefault(); const r=new FileReader(); r.onload=ev=>insertImageInto(box,ev.target.result); r.readAsDataURL(it.getAsFile()); return; } } }
+  if(!cd) return;
+  const html=cd.getData('text/html');
+  let frag;
+  if(html&&html.trim()){ frag=sanitizePastedHtml(html); }
+  else { const txt=cd.getData('text/plain'); if(txt==null) return; const d=document.createElement('div'); d.innerHTML=esc(txt).replace(/\n/g,'<br>'); frag=document.createDocumentFragment(); while(d.firstChild) frag.appendChild(d.firstChild); }
+  e.preventDefault();
+  insertFragInto(box,frag);
+}
+// 범위에 조각 삽입 + 커서를 끝으로 (이미지 삽입과 동일 패턴)
+function insertFragInto(box,frag){
+  box.focus();
+  const last=frag.lastChild;
+  const sel=window.getSelection();
+  if(sel.rangeCount && box.contains(sel.getRangeAt(0).startContainer)){
+    const range=sel.getRangeAt(0); range.deleteContents(); range.insertNode(frag);
+    if(last){ range.setStartAfter(last); range.collapse(true); sel.removeAllRanges(); sel.addRange(range); }
+  } else box.appendChild(frag);
+  pendingBox=box; scheduleAutoSave();
+}
+// 붙여넣기 HTML 정리: 기본 서식만 유지, 블록 래퍼·잡스타일 제거해 줄바뀜 과다 방지
+function sanitizePastedHtml(html){
+  const ALLOW=new Set(['H2','H3','B','STRONG','I','EM','U','S','UL','OL','LI','BR','HR','SPAN','A','IMG','TABLE','THEAD','TBODY','TR','TH','TD']);
+  const BLOCK=new Set(['P','DIV']);
+  const src=document.createElement('div'); src.innerHTML=html;
+  const out=document.createDocumentFragment();
+  const keepStyle=(el)=>{ const c=el.style.color, bg=el.style.backgroundColor; el.removeAttribute('style'); if(c)el.style.color=c; if(bg)el.style.backgroundColor=bg; if(!el.getAttribute('style'))el.removeAttribute('style'); };
+  const walk=(node,dest)=>{
+    for(const child of [...node.childNodes]){
+      if(child.nodeType===Node.TEXT_NODE){ dest.appendChild(document.createTextNode(child.textContent)); continue; }
+      if(child.nodeType!==Node.ELEMENT_NODE) continue;
+      const tag=child.tagName;
+      if(tag==='O:P'||tag==='STYLE'||tag==='SCRIPT'||tag==='META'||tag==='LINK') continue;
+      if(BLOCK.has(tag)){
+        const before=dest.childNodes.length;
+        walk(child,dest);
+        if(dest.childNodes.length>before){ const prev=dest.lastChild; if(!(prev&&prev.nodeName==='BR')) dest.appendChild(document.createElement('br')); }
+        continue;
+      }
+      if(!ALLOW.has(tag)){ walk(child,dest); continue; }
+      const el=document.createElement(tag.toLowerCase());
+      if(tag==='A'){ const href=child.getAttribute('href'); if(href)el.setAttribute('href',href); }
+      else if(tag==='IMG'){ const s=child.getAttribute('src'); if(s)el.setAttribute('src',s); }
+      else if(child.getAttribute('style')){ el.setAttribute('style',child.getAttribute('style')); keepStyle(el); }
+      if(tag==='IMG'){ dest.appendChild(el); continue; }
+      if(tag==='BR'||tag==='HR'){ dest.appendChild(el); continue; }
+      walk(child,el);
+      dest.appendChild(el);
+    }
+  };
+  walk(src,out);
+  // 선행·후행·중복 <br> 정리
+  while(out.firstChild&&out.firstChild.nodeName==='BR') out.removeChild(out.firstChild);
+  while(out.lastChild&&out.lastChild.nodeName==='BR') out.removeChild(out.lastChild);
+  return out;
 }
 // ── 표 삽입/편집 ──
 function insertTableInto(box, rows=2, cols=2){
