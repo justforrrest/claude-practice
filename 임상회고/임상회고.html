@@ -649,6 +649,7 @@ function fmtBarHtml(){
     <button class="efmt-fc" data-fc="#2563eb" title="파랑" style="color:#2563eb">가</button>
     <button class="efmt-fc" data-fc="#7C3AED" title="보라" style="color:#7C3AED">가</button>
     <div class="efmt-sep"></div>
+    <button class="efmt-hl" data-hl="transparent" title="하이라이트 지우기" style="background:var(--surface);color:var(--text-3);font-size:12px;line-height:1">✕</button>
     <button class="efmt-hl" data-hl="#FFF59D" title="노란 하이라이트" style="background:#FFF59D"></button>
     <button class="efmt-hl" data-hl="#B3E5FC" title="파란 하이라이트" style="background:#B3E5FC"></button>
     <button class="efmt-hl" data-hl="#C8E6C9" title="초록 하이라이트" style="background:#C8E6C9"></button>
@@ -863,6 +864,31 @@ function applySubstitution(box){
 }
 // 서식 적용 (현재 활성 박스에)
 function applyFmt(cmd,val){ const t=_activeBox; if(!t) return; t.focus(); document.execCommand(cmd,false,val||null); pendingBox=t; scheduleAutoSave(); }
+// 선택 영역 위쪽(box 아래)의 색/라벨 조상을 [앞|선택|뒤]로 쪼개 선택 부분만 스타일 없이 꺼내고 새 range 반환
+function liftStyledAncestors(range,box){
+  const isStyled=el=>el&&el.nodeType===1&&el!==box&&(el.classList.contains('tpl-label')||(el.style&&el.style.color)||(el.tagName==='FONT'&&el.hasAttribute('color')));
+  for(let guard=0;guard<20;guard++){
+    let cur=range.commonAncestorContainer; if(cur.nodeType===3) cur=cur.parentNode;
+    let S=null;
+    for(;cur&&cur!==box;cur=cur.parentNode) if(isStyled(cur)) S=cur;   // 가장 바깥 스타일 조상
+    if(!S) break;
+    const parent=S.parentNode;
+    const left=S.cloneNode(false), right=S.cloneNode(false);
+    const r1=document.createRange(); r1.setStart(S,0); r1.setEnd(range.startContainer,range.startOffset);
+    left.appendChild(r1.extractContents());
+    const r2=document.createRange(); r2.setStart(range.endContainer,range.endOffset); r2.setEnd(S,S.childNodes.length);
+    right.appendChild(r2.extractContents());
+    if(left.textContent||left.querySelector('img')) parent.insertBefore(left,S);
+    if(right.textContent||right.querySelector('img')) parent.insertBefore(right,S.nextSibling);
+    const frag=document.createDocumentFragment();
+    while(S.firstChild) frag.appendChild(S.firstChild);
+    const a=frag.firstChild, b=frag.lastChild;
+    if(!a){ S.remove(); break; }
+    parent.replaceChild(frag,S);
+    range=document.createRange(); range.setStartBefore(a); range.setEndAfter(b);
+  }
+  return range;
+}
 // 선택 글자색 변경. color='' 이면 라벨 색·볼드 제거하고 기본 본문색으로. (클래스 색은 execCommand로 못 바꾸므로 DOM 정리)
 function applyTextColor(color){
   const t=_activeBox; if(!t){ toast('먼저 입력할 칸을 클릭하세요'); return; }
@@ -871,6 +897,7 @@ function applyTextColor(color){
   if(!sel.rangeCount || sel.isCollapsed){ toast('색을 바꿀 부분을 드래그해 선택하세요'); return; }
   const range=sel.getRangeAt(0);
   if(!t.contains(range.commonAncestorContainer)){ toast('색을 바꿀 부분을 드래그해 선택하세요'); return; }
+  range=liftStyledAncestors(range,t);   // 선택을 감싼 색 span 밖으로 꺼냄 (안 하면 다시 그 span 안에 들어가 색 유지)
   const wrap=document.createElement('div');
   wrap.appendChild(range.extractContents());   // 부분 선택 시 tpl-label span 자동 split
   // 기존 라벨 클래스·인라인 색/볼드 제거
@@ -884,9 +911,11 @@ function applyTextColor(color){
   // 한 줄 전체를 선택하면 박스가 완전히 비어 range가 무효화됨 → 빈 박스면 직접 append
   if(!t.firstChild) t.appendChild(node);
   else range.insertNode(node);
-  // 새로 넣은 내용을 다시 선택 (연속 색 변경·이어쓰기 자연스럽게)
+  // 분할 과정에서 생긴 빈 색/라벨 span 제거
+  t.querySelectorAll('span[style],span.tpl-label,font').forEach(el=>{ if(el!==node && !el.textContent && !el.querySelector('img,br')) el.remove(); });
+  // 새로 넣은 내용을 다시 선택 (연속 색 변경·이어쓰기 자연스럽게). span 자체를 선택해야 다음 색 변경 때 span째 교체됨
   const nr=document.createRange();
-  if(color){ nr.selectNodeContents(node); }
+  if(color){ nr.selectNode(node); }
   else if(first&&last){ nr.setStartBefore(first); nr.setEndAfter(last); }
   sel.removeAllRanges(); sel.addRange(nr);
   pendingBox=t; scheduleAutoSave();
