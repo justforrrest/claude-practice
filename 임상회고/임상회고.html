@@ -648,7 +648,7 @@ function bindBlur(el,fn){ el.addEventListener('blur',()=>fn(el)); }
 
 // ══════════════════════ State ══════════════════════
 const _tD=new Date();
-const state = { view:'journal', currentId:null, currentPatientId:null, currentMaterialId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, matFilter:{type:null,region:null,tag:null,unlinked:false}, matCollapsed:new Set(), search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth(), fuOpen:new Set(), entryPage:0 };
+const state = { view:'journal', currentId:null, currentPatientId:null, currentMaterialId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, matFilter:{type:null,region:null,tag:null}, matCollapsed:new Set(), search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth(), fuOpen:new Set(), entryPage:0 };
 const wrapEl = ()=>document.getElementById('wrap');
 
 function render(){
@@ -1633,7 +1633,6 @@ function matchesM(m){
   if(f.type===UNTYPED ? m.type : (f.type && m.type!==f.type)) return false;
   if(f.region && m.region!==f.region) return false;
   if(f.tag && !(m.tags||[]).includes(f.tag)) return false;
-  if(f.unlinked && (m.links||[]).length) return false;
   if(!state.search) return true;
   const s=state.search.toLowerCase();
   return [m.title, m.type, m.region, (m.tags||[]).join(' '), htmlToText(m.body)].join(' ').toLowerCase().includes(s);
@@ -1668,11 +1667,9 @@ function renderMaterials(){
   // 부위·태그·연결 안 됨 칩
   const regions=[...new Set(db.materials.map(m=>m.region).filter(Boolean))];
   const tags=[...new Set(db.materials.flatMap(m=>m.tags||[]))];
-  const nUnlinked=db.materials.filter(m=>!(m.links||[]).length).length;
   let fh2='';
   if(regions.length){ fh2+='<span class="fchip-label">부위</span>'; regions.forEach(r=>fh2+=`<button class="fchip ${f.region===r?'active':''}" data-mregion="${esc(r)}">${esc(r)}${f.region===r?' <span class="x">×</span>':''}</button>`); }
   if(tags.length){ fh2+='<span class="fchip-label">태그</span>'; tags.forEach(t=>fh2+=`<button class="fchip ${f.tag===t?'active':''}" data-mtag="${esc(t)}">#${esc(t)}${f.tag===t?' <span class="x">×</span>':''}</button>`); }
-  if(nUnlinked) fh2+=`<button class="fchip ${f.unlinked?'active':''}" data-munlinked>🔗 연결 안 됨 ${nUnlinked}</button>`;
   // 한 줄 행
   // 종류는 그룹 헤더/사이드바에 이미 보이므로 행에는 종류 배지를 넣지 않음
   const rowHtml=m=>{
@@ -1690,7 +1687,7 @@ function renderMaterials(){
   else if(f.type) body=`<div class="mlist">${list.map(rowHtml).join('')}</div>`;
   else {
     // '전체': 종류별 접기 그룹. 다른 필터·검색이 없으면 그룹당 최근 5개 + 더 보기
-    const narrowed=!!(state.search||f.region||f.tag||f.unlinked);
+    const narrowed=!!(state.search||f.region||f.tag);
     const LIMIT=5;
     [...typeKeys,''].forEach(t=>{
       const items=list.filter(m=>(m.type||'')===t); if(!items.length) return;
@@ -1709,7 +1706,6 @@ function renderMaterials(){
   w.querySelectorAll('[data-mgroup]').forEach(b=>b.addEventListener('click',()=>{ const k=b.dataset.mgroup; state.matCollapsed.has(k)?state.matCollapsed.delete(k):state.matCollapsed.add(k); b.parentElement.classList.toggle('collapsed'); }));
   w.querySelectorAll('[data-mregion]').forEach(b=>b.addEventListener('click',()=>{ f.region=f.region===b.dataset.mregion?null:b.dataset.mregion; renderMaterials(); }));
   w.querySelectorAll('[data-mtag]').forEach(b=>b.addEventListener('click',()=>{ f.tag=f.tag===b.dataset.mtag?null:b.dataset.mtag; renderMaterials(); }));
-  w.querySelector('[data-munlinked]')?.addEventListener('click',()=>{ f.unlinked=!f.unlinked; renderMaterials(); });
   w.querySelectorAll('[data-mtedit]').forEach(b=>b.addEventListener('click',openMatTypesEdit));
   w.querySelectorAll('.mrow[data-mid]').forEach(c=>c.addEventListener('click',()=>openMaterial(c.dataset.mid)));
 }
