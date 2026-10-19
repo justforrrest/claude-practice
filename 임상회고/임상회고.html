@@ -475,10 +475,10 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 <header class="app-header">
   <div class="brand" id="brandBtn">임상회고</div>
   <div class="tabs">
-    <button class="tab active" id="tabJournal">일지</button>
+    <button class="tab active" id="tabMaterials">자료</button>
+    <button class="tab" id="tabJournal">일지</button>
     <button class="tab" id="tabQuestions">질문</button>
     <button class="tab" id="tabPatients">환자</button>
-    <button class="tab" id="tabMaterials">자료</button>
   </div>
   <div class="search-wrap" id="searchWrap" hidden>
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -648,7 +648,7 @@ function bindBlur(el,fn){ el.addEventListener('blur',()=>fn(el)); }
 
 // ══════════════════════ State ══════════════════════
 const _tD=new Date();
-const state = { view:'journal', currentId:null, currentPatientId:null, currentMaterialId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, matFilter:{type:null,region:null,tag:null}, matCollapsed:new Set(), search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth(), fuOpen:new Set(), entryPage:0 };
+const state = { view:'materials', currentId:null, currentPatientId:null, currentMaterialId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, matFilter:{type:null,region:null,tag:null}, matCollapsed:new Set(), search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth(), fuOpen:new Set(), entryPage:0 };
 const wrapEl = ()=>document.getElementById('wrap');
 
 function render(){
