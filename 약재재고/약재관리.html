@@ -614,11 +614,12 @@ function renderStock(){
   const stock=calcStock();
   const baseHerbs=visibleHerbs();
   const zeroCount=baseHerbs.filter(h=>stock[h]<=0).length;
-  const lowCount=baseHerbs.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]>0&&stock[h]<m;}).length;
+  const isLow=h=>{const s=stock[h],m=getMinStock(h);return s<0||(m>0&&s>0&&s<m);};
+  const lowCount=baseHerbs.filter(isLow).length;
   let herbs=baseHerbs;
   if(stockConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===stockConsonant);
   if(stockSearch)herbs=herbs.filter(h=>h.includes(stockSearch));
-  if(showLowOnly)herbs=herbs.filter(h=>{const m=getMinStock(h);return m>0&&stock[h]>0&&stock[h]<m;});
+  if(showLowOnly)herbs=herbs.filter(isLow);
   if(showZeroOnly)herbs=herbs.filter(h=>stock[h]<=0);
   if(showUnder600)herbs=herbs.filter(h=>stock[h]<600);
   el.innerHTML=`
