@@ -136,9 +136,11 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .pbox .tpl-label{color:var(--violet-d);font-weight:600;}
 .pbox.mat-body h2,.pbox.mat-body h3{color:var(--violet-d);}
 /* 문서 표 */
-.pbox table.doc-table{border-collapse:collapse;width:100%;margin:8px 0;font-size:13px;}
-.pbox table.doc-table td,.pbox table.doc-table th{border:1px solid var(--border-2);padding:6px 9px;vertical-align:top;min-width:44px;line-height:1.5;}
-.pbox table.doc-table th{background:var(--surface-2);font-weight:700;text-align:left;}
+.pbox table,.rich-html table{border-collapse:collapse;width:100%;margin:8px 0;font-size:13px;}
+.pbox td,.pbox th,.rich-html td,.rich-html th{border:1px solid var(--border-2);padding:6px 9px;vertical-align:top;min-width:44px;line-height:1.5;}
+.pbox th,.rich-html th{background:var(--surface-2);font-weight:700;text-align:left;}
+/* 붙여넣은 서식이 카드 폭을 넘지 않게 */
+.pbox *,.rich-html *{max-width:100%;}
 /* 프레임 있는 리치 에디터 (결론·진행·자료 본문) */
 .pbox.framed{background:var(--surface-2);border:1px solid var(--border-2);border-radius:9px;padding:10px 12px;transition:border-color .14s,box-shadow .14s;}
 .pbox.framed:focus{border-color:var(--violet-d);box-shadow:0 0 0 2px var(--violet-light);background:var(--surface);}
@@ -224,7 +226,7 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .pt-qn{flex-shrink:0;width:16px;height:16px;border-radius:50%;background:var(--violet-faint);color:var(--violet-d);font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:1px;}
 .pt-qt{min-width:0;}
 /* 읽기 전용 리치 HTML 표시 (타임라인 등) */
-.rich-html{font-size:12.5px;line-height:1.6;color:var(--text-2);}
+.rich-html{font-size:12.5px;line-height:1.6;color:var(--text-2);word-break:break-word;overflow-wrap:anywhere;}
 .rich-html img{max-width:100%;border-radius:6px;margin:4px 0;display:block;}
 .rich-html h2{font-size:14px;font-weight:700;margin:5px 0 2px;}
 .rich-html h3{font-size:13px;font-weight:700;margin:4px 0 2px;}
@@ -1124,6 +1126,7 @@ function sanitizePastedHtml(html){
       }
       if(!ALLOW.has(tag)){ walk(child,dest); continue; }
       const el=document.createElement(tag.toLowerCase());
+      if(tag==='TABLE') el.className='doc-table';
       if(tag==='A'){ const href=child.getAttribute('href'); if(href)el.setAttribute('href',href); }
       else if(tag==='IMG'){ const s=child.getAttribute('src'); if(s)el.setAttribute('src',s); }
       else if(child.getAttribute('style')){ el.setAttribute('style',child.getAttribute('style')); keepStyle(el); }
