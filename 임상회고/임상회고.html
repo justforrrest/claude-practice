@@ -404,6 +404,22 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 .prog-del:hover{background:#fef2f2;color:#dc2626;}
 .prog-trig-inp{color:var(--amber)!important;flex:1;min-width:0;resize:none;overflow:hidden;white-space:pre-wrap;line-height:1.5;font-size:12.5px;}
 .emptyline{font-size:12.5px;color:var(--text-4);padding:6px 2px;}
+/* 처방(처방관리 연동, 읽기 전용) */
+.day-rx{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border-2);}
+.rxref{padding:9px 11px;border-radius:9px;background:var(--surface-2);margin-bottom:6px;cursor:pointer;transition:background .1s;}
+.rxref:hover{background:var(--violet-faint);}
+.rx-top{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.rx-top .pchip{font-size:11.5px;padding:2px 9px;}
+.rx-name{font-size:13px;font-weight:600;color:var(--text-1);}
+.rx-meta{font-size:11px;color:var(--text-4);}
+.rx-start{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--violet-d);background:var(--surface);border:1px solid var(--border-2);border-radius:7px;padding:3px 9px;cursor:pointer;font-family:var(--font-sans);}
+.rx-start:hover{background:var(--violet-faint);}
+.rx-herbs{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
+.rx-herb{font-size:11.5px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1px 7px;color:var(--text-2);}
+.rx-herb.diff{color:var(--violet-d);background:var(--violet-faint);border-color:transparent;font-weight:600;}
+.rx-note{font-size:12px;color:var(--text-3);margin-top:6px;white-space:pre-wrap;line-height:1.5;}
+.badge-rx{background:#ecfdf5;color:#047857;}
+.pt-item.pt-rx{background:var(--surface-2);}
 
 /* add panel */
 .addpanel{background:var(--surface);border:1px dashed var(--border-2);border-radius:10px;padding:13px;margin-bottom:12px;}
@@ -450,6 +466,7 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
 @media (max-width:720px){
   .app-header{gap:8px;padding:10px 13px;flex-wrap:wrap;}
   .brand{font-size:17px;}
+  .tab{padding:6px 10px;}
   .search-wrap{order:5;flex-basis:100%;max-width:none;}
   .btn-primary span,.btn-soft span{display:none;}
   .btn-primary,.btn-soft{padding:8px 11px;}
@@ -481,6 +498,7 @@ body{background:var(--bg);font-family:var(--font-sans);color:var(--text-1);displ
     <button class="tab" id="tabJournal">일지</button>
     <button class="tab" id="tabQuestions">질문</button>
     <button class="tab" id="tabPatients">환자</button>
+    <button class="tab" id="tabHerbal">한약</button>
   </div>
   <div class="search-wrap" id="searchWrap" hidden>
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -648,9 +666,69 @@ function lastHypVersion(q){ let v=0; (q.progress||[]).forEach(p=>{ if(p.kind==='
 let toastT; function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),1900); }
 function bindBlur(el,fn){ el.addEventListener('blur',()=>fn(el)); }
 
+// ══════════════════════ 처방관리 연동 (읽기 전용) ══════════════════════
+// 처방관리.html이 저장한 users/{코드}/data/rx_* 문서를 읽기만 함. db에는 저장하지 않음.
+const RX_LINK_LS_KEY = 'rx-link-code';   // 임상회고 전용 설정 (없으면 처방관리의 b6ix_sync)
+let rxData = { code:'', prescriptions:[], patients:[] };
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function rxLinkCode(){ return (lsGet(RX_LINK_LS_KEY)||lsGet('b6ix_sync')||'').trim().toUpperCase(); }
+async function loadRxData(){
+  const code=rxLinkCode(); rxData={ code, prescriptions:[], patients:[] };
+  if(!code) return;
+  const get=async key=>{
+    try{ const d=await _fdb.collection('users').doc(code).collection('data').doc(key).get(); if(d.exists) return d.data().value; }catch(e){}
+    // 오프라인: 같은 코드로 저장된 처방관리 로컬 데이터가 있으면 사용
+    if((lsGet('b6ix_sync')||'').toUpperCase()===code){ try{ return JSON.parse(lsGet(key)||'null'); }catch(e){} }
+    return null;
+  };
+  const [rx,pt]=await Promise.all([get('rx_prescriptions_v1'), get('rx_patients_v1')]);
+  rxData.prescriptions=Array.isArray(rx)?rx.filter(r=>r&&r.date):[];
+  rxData.patients=Array.isArray(pt)?pt:[];
+}
+function rxPatOf(r){ return rxData.patients.find(p=>p.id===r.patientId) || { name:r.patientName||'', birth:'', gender:'' }; }
+// 처방 환자 → 회고 환자 (실명 + 생년월일 둘 다 있으면 일치해야 함)
+function reflPatientForRx(r){
+  const rp=rxPatOf(r), name=(rp.name||r.patientName||'').trim(); if(!name) return null;
+  const rb=normalizeBirth(rp.birth||'');
+  const cands=db.patients.filter(p=>(p.name||'').trim()===name && !(rb && p.birth && p.birth!==rb));
+  if(cands.length<=1) return cands[0]||null;
+  return (rb && cands.find(p=>p.birth===rb)) || null;
+}
+function rxSort(a,b){ return a.date.localeCompare(b.date); }
+function rxOn(date){ return rxData.prescriptions.filter(r=>r.date===date); }
+function rxForPatient(pid){ return rxData.prescriptions.filter(r=>{ const p=reflPatientForRx(r); return p&&p.id===pid; }).sort(rxSort); }
+// 처방명 → 묶음 기준 이름들 ("청훈화담탕, 증미이진탕"·"A+B" → 2개, "(녹용)"·가감·가미 제거)
+function rxBaseName(s){ return (s||'').replace(/\(.*?\)|（.*?）/g,'').replace(/\s+/g,'').replace(/(가감|가미|변방)$/,'').replace(/\d+$/,'').trim(); }
+function rxFormulas(r){ const out=(r.diagnosis||'').split(/[,，、+＋]/).map(rxBaseName).filter(Boolean); return out.length?out:['(처방명 없음)']; }
+function rxGroups(){
+  const m=new Map();
+  rxData.prescriptions.forEach(r=>rxFormulas(r).forEach(n=>{ if(!m.has(n)) m.set(n,[]); m.get(n).push(r); }));
+  return [...m.entries()].map(([name,rxs])=>({ name, rxs:rxs.sort(rxSort) }));
+}
+function rxSessionLabel(r){ const p=[]; if(r.sessionCur&&r.sessionTotal) p.push(r.sessionCur+'/'+r.sessionTotal+'회차'); else if(r.sessionCur) p.push(r.sessionCur+'회차'); if(r.days) p.push(r.days+'일분'); return p.join(' · '); }
+function rxHerbKey(name){ return (name||'').replace(/\d+$/,'').trim(); }   // "진피1"→"진피" (등급 표기 무시)
+// diffSet: 같은 처방 묶음에서 공통이 아닌(가감된) 약재 → 강조
+function rxHerbsHtml(r,diffSet){ const hs=r.herbs||[]; if(!hs.length) return ''; return `<div class="rx-herbs">${hs.map(h=>`<span class="rx-herb ${diffSet&&diffSet.has(rxHerbKey(h.herb))?'diff':''}">${esc(h.herb)}${h.qtyPerPack?' '+esc(h.qtyPerPack):''}</span>`).join('')}</div>`; }
+function rxPatientChip(r){
+  const p=reflPatientForRx(r), name=rxPatOf(r).name||r.patientName||'';
+  if(p) return `<button class="pchip" data-patient="${p.id}">${esc(name)}</button>`;
+  return `<span class="pchip pchip-static pchip-empty" title="임상회고에 같은 이름의 환자가 없습니다">${esc(name||'(이름 없음)')}</span>`;
+}
+// 처방 → 그 날짜에 이 환자 회고 시작 (회고 환자 없으면 실명으로 생성)
+function startEntryFromRx(rid){
+  const r=rxData.prescriptions.find(x=>x.id===rid); if(!r) return;
+  let p=reflPatientForRx(r);
+  if(!p){ const rp=rxPatOf(r); p=createPatient((rp.name||r.patientName||'').trim(), { birth:normalizeBirth(rp.birth||''), sex:(rp.gender==='남'||rp.gender==='여')?rp.gender:'' }); }
+  let e=entriesOn(r.date).find(x=>x.patientId===p.id);
+  if(!e){ e={id:nextEntryId(), date:r.date, patientId:p.id, q1:'',q2:'',q3:'', created:new Date().toISOString(), updated:today()}; db.entries.push(e); }
+  touchPatient(p); saveData();
+  gotoDate(r.date); state.entryPage=Math.max(0,entriesOn(r.date).findIndex(x=>x.id===e.id)); renderJournal();
+  toast('회고를 시작합니다');
+}
+
 // ══════════════════════ State ══════════════════════
 const _tD=new Date();
-const state = { view:'materials', currentId:null, currentPatientId:null, currentMaterialId:null, filter:{status:null,region:null,tag:null,staleOnly:false}, matFilter:{type:null,region:null,tag:null}, matCollapsed:new Set(), search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth(), fuOpen:new Set(), entryPage:0 };
+const state = { view:'materials', currentId:null, currentPatientId:null, currentMaterialId:null, currentRxGroup:null, rxOpen:new Set(), filter:{status:null,region:null,tag:null,staleOnly:false}, matFilter:{type:null,region:null,tag:null}, matCollapsed:new Set(), search:'', selectedDate:today(), calY:_tD.getFullYear(), calM:_tD.getMonth(), fuOpen:new Set(), entryPage:0 };
 const wrapEl = ()=>document.getElementById('wrap');
 
 function render(){
@@ -659,9 +737,10 @@ function render(){
   document.getElementById('tabQuestions').classList.toggle('active', state.view==='questions'||state.view==='detail');
   document.getElementById('tabPatients').classList.toggle('active', state.view==='patients'||state.view==='pdetail');
   document.getElementById('tabMaterials').classList.toggle('active', state.view==='materials'||state.view==='mdetail');
-  const searchable = state.view==='questions'||state.view==='patients'||state.view==='materials';
+  document.getElementById('tabHerbal').classList.toggle('active', state.view==='herbal'||state.view==='hdetail');
+  const searchable = state.view==='questions'||state.view==='patients'||state.view==='materials'||state.view==='herbal';
   searchWrap.hidden = !searchable;
-  const si=document.getElementById('searchInp'); if(si) si.placeholder = state.view==='patients' ? '환자·별칭·부위 검색' : state.view==='materials' ? '자료 제목·내용 검색' : '질문·태그·부위 검색';
+  const si=document.getElementById('searchInp'); if(si) si.placeholder = state.view==='patients' ? '환자·별칭·부위 검색' : state.view==='materials' ? '자료 제목·내용 검색' : state.view==='herbal' ? '처방명·환자·약재 검색' : '질문·태그·부위 검색';
   wrapEl().classList.toggle('wide', state.view==='journal'||state.view==='materials');
   if(state.view==='journal') renderJournal();
   else if(state.view==='questions') renderQuestions();
@@ -669,6 +748,8 @@ function render(){
   else if(state.view==='pdetail') renderPatientDetail();
   else if(state.view==='materials') renderMaterials();
   else if(state.view==='mdetail') renderMaterialDetail();
+  else if(state.view==='herbal') renderHerbal();
+  else if(state.view==='hdetail') renderHerbalDetail();
   else renderDetail();
 }
 
@@ -678,6 +759,7 @@ function activeDateSet(){
   const set=new Set();
   db.entries.forEach(e=>{ if(entryHasContent(e)) set.add(e.date); });
   db.questions.forEach(q=>{ if(q.originDate) set.add(q.originDate); (q.progress||[]).forEach(p=>{ if(p.date) set.add(p.date); }); });
+  rxData.prescriptions.forEach(r=>set.add(r.date));
   return set;
 }
 function renderJournal(){
@@ -787,6 +869,18 @@ function dayHtml(date){
   } else {
     h+=`<div class="ptext empty" style="margin-top:10px;">이 날 기록이 없습니다. <b>＋ 환자 회고</b>로 회고를 시작하세요.</div>`;
   }
+  // 그날 처방 (처방관리 연동)
+  const rxs=rxOn(date);
+  if(rxs.length){
+    h+=`<div class="day-rx"><div class="day-qs-label">이 날의 처방</div>`;
+    rxs.forEach(r=>{
+      const p=reflPatientForRx(r), hasEntry=p && entries.some(e=>e.patientId===p.id), open=state.rxOpen.has(r.id), meta=rxSessionLabel(r);
+      h+=`<div class="rxref" data-rxtoggle="${esc(r.id)}"><div class="rx-top">${rxPatientChip(r)}<span class="rx-name">${esc(r.diagnosis||'(처방명 없음)')}</span>${meta?`<span class="rx-meta">${esc(meta)}</span>`:''}
+        ${hasEntry?'':`<button class="rx-start" data-rxstart="${esc(r.id)}">＋ 이 환자 회고</button>`}</div>
+        ${open?rxHerbsHtml(r)+(r.note?`<div class="rx-note">${esc(r.note)}</div>`:''):''}</div>`;
+    });
+    h+=`</div>`;
+  }
   // 그날 연결된 질문 / 진행 (날짜 단위)
   const born=questionsBornOn(date), progs=progressOn(date);
   if(born.length || progs.length){
@@ -854,7 +948,9 @@ function bindJournal(){
   w.querySelectorAll('[data-entrytab]').forEach(b=>b.addEventListener('click',()=>{ state.entryPage=+b.dataset.entrytab; renderJournal(); }));
   w.querySelectorAll('[data-entrynav]').forEach(b=>b.addEventListener('click',()=>{ state.entryPage += (b.dataset.entrynav==='next'?1:-1); renderJournal(); }));
   w.querySelectorAll('[data-add-entry]').forEach(b=>b.addEventListener('click',()=>openAddEntry(b.dataset.addEntry)));
-  w.querySelectorAll('[data-patient]').forEach(b=>b.addEventListener('click',()=>openPatient(b.dataset.patient)));
+  w.querySelectorAll('[data-patient]').forEach(b=>b.addEventListener('click',ev=>{ ev.stopPropagation(); openPatient(b.dataset.patient); }));
+  w.querySelectorAll('[data-rxtoggle]').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.rxtoggle; if(state.rxOpen.has(id)) state.rxOpen.delete(id); else state.rxOpen.add(id); renderJournal(); }));
+  w.querySelectorAll('[data-rxstart]').forEach(b=>b.addEventListener('click',ev=>{ ev.stopPropagation(); startEntryFromRx(b.dataset.rxstart); }));
   w.querySelectorAll('[data-assign]').forEach(b=>b.addEventListener('click',()=>openAssignPatient(b.dataset.assign)));
   w.querySelectorAll('[data-fu]').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.fu; if(state.fuOpen.has(id)) state.fuOpen.delete(id); else state.fuOpen.add(id); renderJournal(); }));
   w.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',()=>gotoDate(b.dataset.goto)));
@@ -1553,12 +1649,12 @@ function renderPatients(){
   let h='';
   if(!list.length){ h=`<div class="emptyline" style="text-align:center;padding:30px;">조건에 맞는 환자가 없습니다.</div>`; }
   else h=list.map(p=>{
-    const n=patientEntries(p.id).length, qn=patientQuestions(p.id).length, last=patientLastDate(p.id);
+    const n=patientEntries(p.id).length, qn=patientQuestions(p.id).length, rn=rxForPatient(p.id).length, last=patientLastDate(p.id);
     const meta=patientMetaLabel(p);
     return `<div class="qcard" data-pid="${p.id}">
       <div class="qcard-top"><span class="pchip pchip-static"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>${esc(p.name||'(이름 없음)')}</span>
         ${meta?`<span class="badge badge-region">${esc(meta)}</span>`:''}</div>
-      <div class="qcard-foot"><span>회고 <b>${n}</b></span><span>질문 <b>${qn}</b></span><span class="cf-date">${last?esc(last)+' 마지막':'기록 없음'}</span></div>
+      <div class="qcard-foot"><span>회고 <b>${n}</b></span><span>질문 <b>${qn}</b></span>${rn?`<span>처방 <b>${rn}</b></span>`:''}<span class="cf-date">${last?esc(last)+' 마지막':'기록 없음'}</span></div>
     </div>`;
   }).join('');
   wrapEl().innerHTML=h;
@@ -1568,6 +1664,7 @@ function renderPatientDetail(){
   const p=getPatient(state.currentPatientId); if(!p){ state.view='patients'; render(); return; }
   const es=patientEntries(p.id).slice().reverse();   // 최신 위로
   const qs=patientQuestions(p.id);
+  const rxs=rxForPatient(p.id);
   const last=patientLastDate(p.id);
   const ageHint=p.birth ? (patientAge(p)!=null?'· 만 '+patientAge(p)+'세':'') : (p.age!=null?'세':'');
   let h=`<button class="detail-back" id="pBack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>뒤로</button>
@@ -1577,12 +1674,21 @@ function renderPatientDetail(){
         <span class="badge badge-region"><input class="badge-inp" id="pBirth" value="${esc(ageInputValue(p))}" placeholder="나이" size="${Math.max(ageInputValue(p).length,2)}"><span id="pAgeHint">${ageHint}</span></span>
         <div class="sex-toggle sex-sm" id="pSex"><button type="button" class="sex-opt ${p.sex==='남'?'active':''}" data-sex="남">남</button><button type="button" class="sex-opt ${p.sex==='여'?'active':''}" data-sex="여">여</button></div>
       </div>
-      <div class="qcard-foot"><span>회고 <b>${es.length}</b></span><span>질문 <b>${qs.length}</b></span><span class="cf-date">${last?esc(last)+' 마지막':'기록 없음'}</span></div>
+      <div class="qcard-foot"><span>회고 <b>${es.length}</b></span><span>질문 <b>${qs.length}</b></span>${rxs.length?`<span>처방 <b>${rxs.length}</b></span>`:''}<span class="cf-date">${last?esc(last)+' 마지막':'기록 없음'}</span></div>
     </div>
 
     <div class="section"><div class="sec-head"><span class="sec-title">회고 타임라인</span><span class="sec-hint">날짜순 경과 · 클릭하면 그 날 일지로</span></div>`;
-  if(!es.length) h+=`<div class="emptyline">아직 이 환자의 회고가 없습니다.</div>`;
-  else es.forEach(e=>{
+  // 회고 + 처방을 한 날짜축에 (최신 위로, 같은 날은 처방이 회고 아래)
+  const items=[...es.map(e=>({date:e.date,e})), ...rxs.map(r=>({date:r.date,r}))].sort((a,b)=>b.date.localeCompare(a.date) || (a.e?-1:1)-(b.e?-1:1));
+  if(!items.length) h+=`<div class="emptyline">아직 이 환자의 회고가 없습니다.</div>`;
+  else items.forEach(({e,r})=>{
+    if(r){
+      const meta=rxSessionLabel(r);
+      h+=`<div class="pt-item pt-rx" data-goto="${r.date}"><div class="pt-date">${r.date} (${dow(r.date)}) <span class="pt-rel">${relLabel(r.date)}</span></div>
+        <div class="rx-top"><span class="badge badge-rx">처방</span><span class="rx-name">${esc(r.diagnosis||'(처방명 없음)')}</span>${meta?`<span class="rx-meta">${esc(meta)}</span>`:''}</div>
+        ${rxHerbsHtml(r)}${r.note?`<div class="rx-note">${esc(r.note)}</div>`:''}</div>`;
+      return;
+    }
     h+=`<div class="pt-item" data-goto="${e.date}"><div class="pt-date">${e.date} (${dow(e.date)}) <span class="pt-rel">${relLabel(e.date)}</span></div>`;
     PROMPTS.forEach((pr,i)=>{ const raw=e[pr.key]||''; if(!isBlankHtml(raw)) h+=`<div class="pt-q"><span class="pt-qn">${i+1}</span><div class="pt-qt rich-html">${toHtml(raw)}</div></div>`; });
     if(!entryHasContent(e)) h+=`<div class="pt-q" style="color:var(--text-4)">(내용 없음)</div>`;
@@ -1617,6 +1723,84 @@ function renderPatientDetail(){
     db.questions.forEach(q=>{ if(q.patientId===p.id) q.patientId=null; });
     db.patients=db.patients.filter(x=>x.id!==p.id); saveData(); state.view='patients'; render(); toast('환자 삭제됨');
   }));
+}
+
+// ══════════════════════ 한약 (처방관리 연동, 처방명별) ══════════════════════
+function openRxGroup(name){ state.view='hdetail'; state.currentRxGroup=name; document.querySelector('.scroll').scrollTop=0; render(); }
+function matchesRxGroup(g){
+  if(!state.search) return true;
+  const s=state.search.toLowerCase();
+  return g.name.toLowerCase().includes(s) || g.rxs.some(r=>[r.diagnosis, rxPatOf(r).name||r.patientName, (r.herbs||[]).map(x=>x.herb).join(' ')].join(' ').toLowerCase().includes(s));
+}
+function renderHerbal(){
+  if(!rxData.code || !rxData.prescriptions.length){
+    wrapEl().innerHTML=`<div class="empty-wrap">
+      <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="var(--violet-d)" stroke-width="1.4"><path d="M5 11h14l-1.5 8.5a2 2 0 0 1-2 1.5h-7a2 2 0 0 1-2-1.5z"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      <div><h2>${rxData.code?'불러온 처방이 없습니다':'처방관리와 연결되지 않았습니다'}</h2><p>처방관리에서 등록한 처방이 여기 처방명별로 모입니다. 메뉴의 <b>처방관리 연결 코드</b>에 처방관리의 동기화 코드를 입력하세요.</p></div>
+      <button class="btn-ghost" id="goRxLink">연결 코드 입력</button></div>`;
+    document.getElementById('goRxLink').onclick=openRxLinkModal;
+    return;
+  }
+  const list=rxGroups().filter(matchesRxGroup).sort((a,b)=>b.rxs[b.rxs.length-1].date.localeCompare(a.rxs[a.rxs.length-1].date));
+  let h='';
+  if(!list.length) h=`<div class="emptyline" style="text-align:center;padding:30px;">조건에 맞는 처방이 없습니다.</div>`;
+  else h=list.map(g=>{
+    const pts=new Set(g.rxs.map(r=>(rxPatOf(r).name||r.patientName||'').trim())).size;
+    const last=g.rxs[g.rxs.length-1].date;
+    return `<div class="qcard" data-rxgroup="${esc(g.name)}">
+      <div class="qcard-title">${esc(g.name)}</div>
+      <div class="qcard-foot"><span>처방 <b>${g.rxs.length}</b></span><span>환자 <b>${pts}</b></span><span class="cf-date">${esc(last)} 마지막</span></div>
+    </div>`;
+  }).join('');
+  wrapEl().innerHTML=h;
+  wrapEl().querySelectorAll('[data-rxgroup]').forEach(c=>c.addEventListener('click',()=>openRxGroup(c.dataset.rxgroup)));
+}
+function renderHerbalDetail(){
+  const g=rxGroups().find(x=>x.name===state.currentRxGroup); if(!g){ state.view='herbal'; render(); return; }
+  // 묶음 처방의 절반 미만에만 들어간 약재 = 가감된 약재 (2건 이상일 때만 강조, 등급 숫자 무시)
+  let diff=null;
+  if(g.rxs.length>1){
+    const cnt=new Map();
+    g.rxs.forEach(r=>new Set((r.herbs||[]).map(x=>rxHerbKey(x.herb))).forEach(k=>cnt.set(k,(cnt.get(k)||0)+1)));
+    diff=new Set([...cnt].filter(([,n])=>n<g.rxs.length/2).map(([k])=>k));
+  }
+  const pts=new Set(g.rxs.map(r=>(rxPatOf(r).name||r.patientName||'').trim())).size;
+  let h=`<button class="detail-back" id="hBack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>뒤로</button>
+    <div class="qcard pdetail-card">
+      <div class="qcard-title">${esc(g.name)}</div>
+      <div class="qcard-foot"><span>처방 <b>${g.rxs.length}</b></span><span>환자 <b>${pts}</b></span>${diff&&diff.size?`<span><span class="rx-herb diff">강조</span> = 가감된 약재</span>`:''}</div>
+    </div>
+    <div class="section"><div class="sec-head"><span class="sec-title">처방 기록</span><span class="sec-hint">최신순 · 클릭하면 그 날 일지로</span></div>`;
+  g.rxs.slice().reverse().forEach(r=>{
+    const p=reflPatientForRx(r), meta=rxSessionLabel(r);
+    const after=p ? patientEntries(p.id).filter(e=>e.date>=r.date).length : 0;
+    h+=`<div class="pt-item pt-rx" data-goto="${r.date}"><div class="pt-date">${r.date} (${dow(r.date)}) <span class="pt-rel">${relLabel(r.date)}</span></div>
+      <div class="rx-top">${rxPatientChip(r)}${rxBaseName(r.diagnosis)!==g.name?`<span class="rx-name">${esc(r.diagnosis)}</span>`:''}${meta?`<span class="rx-meta">${esc(meta)}</span>`:''}${p?`<span class="rx-meta">이후 회고 ${after}</span>`:''}</div>
+      ${rxHerbsHtml(r,diff)}${r.note?`<div class="rx-note">${esc(r.note)}</div>`:''}</div>`;
+  });
+  h+=`</div>`;
+  wrapEl().innerHTML=h;
+  const w=wrapEl();
+  w.querySelector('#hBack').addEventListener('click',()=>{ state.view='herbal'; state.currentRxGroup=null; render(); });
+  w.querySelectorAll('[data-patient]').forEach(b=>b.addEventListener('click',ev=>{ ev.stopPropagation(); openPatient(b.dataset.patient); }));
+  w.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',()=>gotoDate(b.dataset.goto)));
+}
+function openRxLinkModal(){
+  const root=document.getElementById('modalRoot');
+  root.innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:400px;">
+    <div class="modal-head"><span class="modal-title">처방관리 연결 코드</span><button class="modal-close" id="mc">×</button></div>
+    <div class="modal-body"><div class="mfield"><label>처방관리의 동기화 코드 (6자리)</label>
+      <input id="rxcInp" maxlength="6" value="${esc(rxLinkCode())}" style="text-transform:uppercase;letter-spacing:4px;text-align:center;font-size:20px;font-weight:700;color:var(--violet-d);" autocomplete="off" spellcheck="false">
+      <div class="sub">처방관리 화면의 동기화 코드를 입력하세요. 처방은 읽기만 하며, 처방관리 데이터는 바뀌지 않습니다.</div></div></div>
+    <div class="modal-foot"><button class="btn-ghost" id="rxcCancel">취소</button><button class="btn-primary" id="rxcSave">연결</button></div></div></div>`;
+  const close=()=>root.innerHTML='';
+  root.querySelector('#mc').onclick=close; root.querySelector('#rxcCancel').onclick=close;
+  root.querySelector('#ov').addEventListener('mousedown',e=>{ if(e.target.id==='ov') close(); });
+  root.querySelector('#rxcSave').onclick=async()=>{
+    const code=root.querySelector('#rxcInp').value.trim().toUpperCase(); if(code.length<4){ toast('코드를 확인하세요'); return; }
+    try{ localStorage.setItem(RX_LINK_LS_KEY,code); }catch(e){}
+    close(); toast('처방 불러오는 중…'); await loadRxData(); render(); toast(`처방 ${rxData.prescriptions.length}건을 불러왔습니다`);
+  };
 }
 
 // ══════════════════════ 자료 (공부 아카이브) ══════════════════════
@@ -1875,6 +2059,7 @@ function openMenu(){
       <div style="font-size:11.5px;color:var(--text-4);line-height:1.55;margin-bottom:10px;">이 코드를 다른 기기에 입력하면 같은 데이터가 동기화됩니다. (공부노트와 코드 공유)</div>
       <div class="menu-list">
         <button class="menu-item" id="miSync"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg><div><div>동기화 코드 변경</div><div class="mi-sub">다른 기기의 코드로 연결</div></div></button>
+        <button class="menu-item" id="miRxLink"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><div><div>처방관리 연결 코드</div><div class="mi-sub">${rxData.code?esc(rxData.code)+' · 처방 '+rxData.prescriptions.length+'건':'연결 안 됨'}</div></div></button>
         <div class="divider"></div>
         <button class="menu-item" id="miZip"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><div><div>전체 .md 내보내기 (zip)</div><div class="mi-sub">일지/*.md · 질문/*.md · 옵시디언·백업용</div></div></button>
         <button class="menu-item" id="miOne"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><div><div>하나의 .md로 내보내기</div><div class="mi-sub">전체를 한 파일로 · Claude에게 통째로</div></div></button>
@@ -1885,9 +2070,10 @@ function openMenu(){
   root.querySelector('#mc').onclick=close;
   root.querySelector('#ov').addEventListener('mousedown',e=>{ if(e.target.id==='ov') close(); });
   root.querySelector('#miSync').onclick=()=>{ close(); openSyncModal(); };
+  root.querySelector('#miRxLink').onclick=()=>{ close(); openRxLinkModal(); };
   root.querySelector('#miZip').onclick=()=>{ close(); exportZip(); };
   root.querySelector('#miOne').onclick=()=>{ close(); exportOneFile(); };
-  root.querySelector('#miReload').onclick=async()=>{ close(); toast('불러오는 중…'); const v=await loadFromCloud(); if(v){ db=normalize(v); render(); } toast('최신 내용을 불러왔습니다'); };
+  root.querySelector('#miReload').onclick=async()=>{ close(); toast('불러오는 중…'); const [v]=await Promise.all([loadFromCloud(), loadRxData()]); if(v) db=normalize(v); render(); toast('최신 내용을 불러왔습니다'); };
 }
 function openSyncModal(){
   const root=document.getElementById('modalRoot');
@@ -1924,6 +2110,8 @@ function patientToMd(p, imgCb){
   patientEntries(p.id).forEach(e=>{ b.push(`## ${e.date} (${dow(e.date)})`); PROMPTS.forEach((pr,i)=>{ const v=htmlToMd(e[pr.key]||'', imgCb); if(v) b.push(`- **${i+1}. ${pr.title}**`, v, ''); }); b.push(''); });
   const qs=patientQuestions(p.id);
   if(qs.length){ b.push('## 연결된 질문'); qs.forEach(q=>b.push(`- [${q.status}] ${q.title} (${q.id})`)); }
+  const rxs=rxForPatient(p.id);
+  if(rxs.length){ b.push('', '## 처방'); rxs.forEach(r=>{ const meta=rxSessionLabel(r); b.push(`- ${r.date} **${r.diagnosis||'(처방명 없음)'}**${meta?' · '+meta:''}`); const hs=(r.herbs||[]).map(x=>x.herb+(x.qtyPerPack?' '+x.qtyPerPack:'')).join(', '); if(hs) b.push('  - '+hs); if(r.note) b.push('  - 메모: '+r.note.replace(/\n/g,' ')); }); }
   return fm.join('\n')+'\n'+b.join('\n');
 }
 function datesWithEntries(){ return [...new Set(db.entries.map(e=>e.date))].sort((a,b)=>b.localeCompare(a)); }
@@ -2039,11 +2227,12 @@ document.getElementById('tabJournal').addEventListener('click',()=>{ state.view=
 document.getElementById('tabQuestions').addEventListener('click',()=>{ state.view='questions'; render(); });
 document.getElementById('tabPatients').addEventListener('click',()=>{ state.view='patients'; render(); });
 document.getElementById('tabMaterials').addEventListener('click',()=>{ state.view='materials'; render(); });
+document.getElementById('tabHerbal').addEventListener('click',()=>{ state.view='herbal'; render(); });
 document.getElementById('brandBtn').addEventListener('click',()=>{ state.view='journal'; render(); });
 document.getElementById('menuBtn').addEventListener('click',openMenu);
 let searchT;
-document.getElementById('searchInp').addEventListener('input',e=>{ clearTimeout(searchT); searchT=setTimeout(()=>{ state.search=e.target.value.trim(); if(state.view==='questions') renderQuestions(); else if(state.view==='patients') renderPatients(); else if(state.view==='materials') renderMaterials(); },120); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const root=document.getElementById('modalRoot'); if(root.innerHTML){ root.innerHTML=''; } else if(state.view==='detail'){ backFromDetail(); } else if(state.view==='pdetail'){ backFromPatient(); } else if(state.view==='mdetail'){ backFromMaterials(); } } });
+document.getElementById('searchInp').addEventListener('input',e=>{ clearTimeout(searchT); searchT=setTimeout(()=>{ state.search=e.target.value.trim(); if(state.view==='questions') renderQuestions(); else if(state.view==='patients') renderPatients(); else if(state.view==='materials') renderMaterials(); else if(state.view==='herbal') renderHerbal(); },120); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const root=document.getElementById('modalRoot'); if(root.innerHTML){ root.innerHTML=''; } else if(state.view==='detail'){ backFromDetail(); } else if(state.view==='pdetail'){ backFromPatient(); } else if(state.view==='mdetail'){ backFromMaterials(); } else if(state.view==='hdetail'){ state.view='herbal'; state.currentRxGroup=null; render(); } } });
 
 // ── 저장 버튼 / 자동저장 flush ──
 document.getElementById('saveBtn').addEventListener('click',()=>{
@@ -2076,7 +2265,7 @@ window.addEventListener('resize',positionOverlay);
 document.querySelector('.scroll').addEventListener('scroll',positionOverlay,true);
 
 async function init(){
-  const v=await loadFromCloud();
+  const [v]=await Promise.all([loadFromCloud(), loadRxData()]);
   db = v?normalize(v):emptyDb();
   render();
   document.addEventListener('selectionchange', snapCaretOutOfLabel);
