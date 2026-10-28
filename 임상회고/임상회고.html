@@ -1147,7 +1147,20 @@ function applyIndent(dir){ const t=_activeBox; if(!t) return; t.focus(); try{ do
 function toggleHeading(tag){ const t=_activeBox; if(!t) return; t.focus();
   const sel=window.getSelection(); const cur=sel.rangeCount?sel.getRangeAt(0).startContainer:null;
   const el=cur?(cur.nodeType===Node.TEXT_NODE?cur.parentElement:cur):null; const active=el?el.closest('h1,h2,h3'):null;
-  document.execCommand('formatBlock',false,(active&&active.tagName.toLowerCase()===tag)?'div':tag); pendingBox=t; scheduleAutoSave(); }
+  document.execCommand('formatBlock',false,(active&&active.tagName.toLowerCase()===tag)?'div':tag);
+  // 제목 안 글자색 span/font 제거 → 제목 색(자료=보라)으로 통일
+  const s2=window.getSelection(); const c2=s2.rangeCount?s2.getRangeAt(0).startContainer:null;
+  const e2=c2?(c2.nodeType===Node.TEXT_NODE?c2.parentElement:c2):null; const h=e2?e2.closest('h2,h3'):null;
+  if(h&&t.contains(h)) clearHeadingColor(h);
+  pendingBox=t; scheduleAutoSave(); }
+function clearHeadingColor(h){
+  h.querySelectorAll('span,font').forEach(el=>{
+    if(el.tagName==='FONT') el.removeAttribute('color');
+    if(el.style) el.style.color='';
+    if(!el.getAttribute('style')) el.removeAttribute('style');
+    if(!el.attributes.length){ while(el.firstChild) el.parentNode.insertBefore(el.firstChild,el); el.remove(); }
+  });
+}
 function bindFmtBar(){
   const bar=document.getElementById('efmtBar'); if(!bar) return;
   bar.querySelectorAll('[data-heading]').forEach(btn=>btn.addEventListener('mousedown',e=>{ e.preventDefault(); toggleHeading(btn.dataset.heading); }));
@@ -1207,7 +1220,10 @@ function sanitizePastedHtml(html){
   const BLOCK=new Set(['P','DIV']);
   const src=document.createElement('div'); src.innerHTML=html;
   const out=document.createDocumentFragment();
-  const keepStyle=(el)=>{ const c=el.style.color, bg=el.style.backgroundColor; el.removeAttribute('style'); if(c)el.style.color=c; if(bg)el.style.backgroundColor=bg; if(!el.getAttribute('style'))el.removeAttribute('style'); };
+  // 검정 계열(기본 글자색)은 버림 → 제목 색·기본색이 일관되게 적용
+  const isDefaultColor=(c)=>{ if(!c) return true; if(/windowtext|black|inherit|initial|currentcolor/i.test(c)) return true;
+    const m=c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/); return !!m&&+m[1]<60&&+m[2]<60&&+m[3]<60; };
+  const keepStyle=(el)=>{ const c=el.style.color, bg=el.style.backgroundColor; el.removeAttribute('style'); if(c&&!isDefaultColor(c))el.style.color=c; if(bg)el.style.backgroundColor=bg; if(!el.getAttribute('style'))el.removeAttribute('style'); };
   const walk=(node,dest)=>{
     for(const child of [...node.childNodes]){
       if(child.nodeType===Node.TEXT_NODE){ dest.appendChild(document.createTextNode(child.textContent)); continue; }
