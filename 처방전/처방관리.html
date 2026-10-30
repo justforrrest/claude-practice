@@ -1155,7 +1155,7 @@ async function saveRx(){
     days:Number(document.getElementById('rx-days-display')?.value)||0,
     packs,
     totalPacks,
-    herbs:herbs.map(r=>({herb:r.herb,suchi:r.suchi||'',qtyPerPack:Number(r.qty),unitPrice:r.unitPrice??getPrice(r.herb)})),
+    herbs:herbs.map(r=>({herb:r.herb,suchi:r.suchi||'',qtyPerPack:Number(r.qty),unitPrice:r.unitPrice??getPrice(r.herb)})).sort((a,b)=>b.qtyPerPack-a.qtyPerPack),
     fees,totalPrice,
     packMl:parseNum(document.getElementById('rx-water-pack-ml')?.value)||rxConfig.decoction_ml||110,
     note:document.getElementById('rx-note').value.trim(),
@@ -1630,7 +1630,7 @@ function showRefRxModal(patId,patName){
     detailEl.innerHTML=`
       <div style="padding:.875rem 1rem;border-bottom:1px solid var(--border)">
         <div style="font-size:13px;font-weight:600;color:var(--text-1)">${rx.diagnosis||'-'}</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px">${rx.date} · ${packs}첩${rx.totalPacks?' / '+rx.totalPacks+'팩':''}</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px">${rx.date} · ${packs}첩${rx.totalPacks?' / '+rx.totalPacks+'팩':''} · 1첩 ${fmt(rx.herbs.reduce((s,h)=>s+Number(h.qtyPerPack||0),0))}g</div>
         ${rx.note?`<div style="font-size:12px;color:var(--text-2);margin-top:4px;white-space:pre-wrap">${rx.note}</div>`:''}
       </div>
       <div style="flex:1;overflow-y:auto;padding:.875rem 1rem">
@@ -1793,7 +1793,8 @@ function loadRefRx(rxId){
     const packs=rx.packs||20;
     const totalPacks=rx.totalPacks;
     const prev=(rx.herbs||[]).map(h=>({herb:(h.herb||'').trim(),g:Number(h.qtyPerPack)||0}));
-    const prevTotalG=prev.reduce((s,p)=>s+p.g,0)*packs;
+    const prevPackG=prev.reduce((s,p)=>s+p.g,0);
+    const prevTotalG=prevPackG*packs;
     const cur=curHerbList();
     const curMap=new Map();cur.forEach(c=>{if(!curMap.has(c.herb))curMap.set(c.herb,c);});
     const prevSet=new Set(prev.map(p=>p.herb));
@@ -1824,6 +1825,7 @@ function loadRefRx(rxId){
         (rx.days?`<span><b>${rx.days}</b>일</span>`:'')+
         `<span><b>${packs}</b>첩</span>`+
         (totalPacks?`<span><b>${totalPacks}</b>팩</span>`:'')+
+        `<span>1첩 <b>${fmt(prevPackG)}</b>g</span>`+
         `<span>총 <b>${fmt(prevTotalG)}</b>g</span>`+
         `<span><b>${prev.length}</b>종</span>`+
       `</div>`;
