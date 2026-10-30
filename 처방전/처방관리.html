@@ -583,6 +583,7 @@ function attachRowListeners(tr){
     if(!nameInput.value.trim()){
       rxHerbs=rxHerbs.filter(r=>r.id!==rid);
       tr.remove();
+      renumberHerbRows();
       calcSummary();
       if(rxHerbs.length===0)addHerbRow('','','',undefined,false);
       return;
@@ -594,6 +595,7 @@ function attachRowListeners(tr){
     autoCategory();
   });
   qtyInput.addEventListener('focus',e=>e.target.select());
+  qtyInput.addEventListener('blur',()=>setTimeout(sortHerbRows,0));
   qtyInput.addEventListener('input',()=>{
     const row=rxHerbs.find(r=>r.id===rid);
     if(row)row.qty=qtyInput.value;
@@ -607,6 +609,7 @@ function attachRowListeners(tr){
       const prevInput=idx>0?allTrs[idx-1].querySelector('.rx-name'):null;
       rxHerbs=rxHerbs.filter(r=>r.id!==rid);
       tr.remove();
+      renumberHerbRows();
       calcSummary();
       if(prevInput){prevInput.focus();const l=prevInput.value.length;prevInput.setSelectionRange(l,l);}
     }
@@ -619,6 +622,7 @@ function attachRowListeners(tr){
       const prevInput=idx>0?allTrs[idx-1].querySelector('.rx-qty'):null;
       rxHerbs=rxHerbs.filter(r=>r.id!==rid);
       tr.remove();
+      renumberHerbRows();
       calcSummary();
       if(rxHerbs.length===0)addHerbRow('','','',undefined,true);
       else if(prevInput){prevInput.focus();prevInput.select();}
@@ -634,6 +638,7 @@ function attachRowListeners(tr){
   tr.querySelector('.rx-del').addEventListener('click',()=>{
     rxHerbs=rxHerbs.filter(r=>r.id!==rid);
     tr.remove();
+    renumberHerbRows();
     calcSummary();
     if(rxHerbs.length===0)addHerbRow('','','',undefined,true);
   });
@@ -662,6 +667,28 @@ function addHerbRow(herb='',suchi='',qty='',unitPrice=undefined,focus=false){
   if(focus)setTimeout(()=>tr.querySelector('.rx-name').focus(),30);
 }
 
+function renumberHerbRows(){
+  document.querySelectorAll('#rx-herb-tbody tr[data-rid]').forEach((tr,i)=>{tr.firstElementChild.textContent=i+1;});
+}
+
+// 첩당g 내림차순 재정렬 (같은 g·빈 행은 기존 순서 유지)
+let herbSorting=false;
+function sortHerbRows(){
+  const tbody=document.getElementById('rx-herb-tbody');
+  if(!tbody||herbSorting)return;
+  herbSorting=true;
+  rxHerbs.sort((a,b)=>(Number(b.qty)||0)-(Number(a.qty)||0));
+  const ae=document.activeElement;
+  const trMap=new Map([...tbody.querySelectorAll('tr[data-rid]')].map(tr=>[tr.dataset.rid,tr]));
+  rxHerbs.forEach(r=>{const tr=trMap.get(r.id);if(tr)tbody.appendChild(tr);});
+  renumberHerbRows();
+  if(ae&&tbody.contains(ae)&&document.activeElement!==ae){
+    ae.focus();
+    if(ae.classList.contains('rx-qty'))ae.select();
+  }
+  herbSorting=false;
+}
+
 function renderRegister(){
   const el=document.getElementById('view-register');
   const isEdit=!!editingRxId;
@@ -676,8 +703,9 @@ function renderRegister(){
     <!-- 좌측: 약재 목록 -->
     <div style="flex:1;min-width:0">
       <div class="card" style="margin-bottom:0">
-        <div style="margin-bottom:.75rem">
+        <div style="margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center">
           <span class="section-title" style="margin:0">약재 목록</span>
+          <button type="button" class="btn btn-ghost btn-sm" id="rx-herb-reset">초기화</button>
         </div>
         <div class="tbl-wrap">
           <table class="rx-table">
@@ -1004,7 +1032,7 @@ function renderRegister(){
   const initHerbs=[...rxHerbs];
   rxHerbs=[];
   if(initHerbs.length===0) addHerbRow('','','',undefined,false);
-  else initHerbs.forEach(r=>addHerbRow(r.herb,r.suchi||'',r.qty,r.unitPrice,false));
+  else{initHerbs.forEach(r=>addHerbRow(r.herb,r.suchi||'',r.qty,r.unitPrice,false));sortHerbRows();}
   calcSummary();
 
   // 첩수·팩수 변경 시 총량·합계 업데이트
@@ -1108,6 +1136,13 @@ function renderRegister(){
     .forEach(id=>{document.getElementById(id)?.addEventListener('focus',e=>e.target.select());});
 
   document.getElementById('rx-save').addEventListener('click',saveRx);
+  document.getElementById('rx-herb-reset').addEventListener('click',()=>{
+    if(rxHerbs.some(r=>r.herb||r.qty)&&!confirm('입력된 약재를 모두 지울까요?'))return;
+    rxHerbs=[];
+    document.getElementById('rx-herb-tbody').innerHTML='';
+    addHerbRow('','','',undefined,true);
+    calcSummary();
+  });
   if(isEdit) document.getElementById('rx-cancel').addEventListener('click',()=>{editingRxId=null;rxHerbs=[];switchTab('history');});
 }
 
@@ -1692,6 +1727,7 @@ function loadRefRx(rxId){
   const tbody=document.getElementById('rx-herb-tbody');
   if(tbody)tbody.innerHTML='';
   herbs.forEach(r=>addHerbRow(r.herb,r.suchi||'',r.qty,r.unitPrice,false));
+  sortHerbRows();
   calcSummary();
   document.getElementById('ref-rx-modal-overlay').classList.remove('open');
   showToast('처방을 불러왔습니다.');
