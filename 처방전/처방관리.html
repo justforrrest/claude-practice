@@ -595,7 +595,6 @@ function attachRowListeners(tr){
     autoCategory();
   });
   qtyInput.addEventListener('focus',e=>e.target.select());
-  qtyInput.addEventListener('blur',()=>setTimeout(sortHerbRows,0));
   qtyInput.addEventListener('input',()=>{
     const row=rxHerbs.find(r=>r.id===rid);
     if(row)row.qty=qtyInput.value;
@@ -672,21 +671,14 @@ function renumberHerbRows(){
 }
 
 // 첩당g 내림차순 재정렬 (같은 g·빈 행은 기존 순서 유지)
-let herbSorting=false;
+// 표 안에서 입력 중이면 정렬하지 않음 → 포커스가 표 밖으로 나갈 때 정렬
 function sortHerbRows(){
   const tbody=document.getElementById('rx-herb-tbody');
-  if(!tbody||herbSorting)return;
-  herbSorting=true;
+  if(!tbody||tbody.contains(document.activeElement))return;
   rxHerbs.sort((a,b)=>(Number(b.qty)||0)-(Number(a.qty)||0));
-  const ae=document.activeElement;
   const trMap=new Map([...tbody.querySelectorAll('tr[data-rid]')].map(tr=>[tr.dataset.rid,tr]));
   rxHerbs.forEach(r=>{const tr=trMap.get(r.id);if(tr)tbody.appendChild(tr);});
   renumberHerbRows();
-  if(ae&&tbody.contains(ae)&&document.activeElement!==ae){
-    ae.focus();
-    if(ae.classList.contains('rx-qty'))ae.select();
-  }
-  herbSorting=false;
 }
 
 function renderRegister(){
@@ -1136,6 +1128,10 @@ function renderRegister(){
     .forEach(id=>{document.getElementById(id)?.addEventListener('focus',e=>e.target.select());});
 
   document.getElementById('rx-save').addEventListener('click',saveRx);
+  const herbTbody=document.getElementById('rx-herb-tbody');
+  herbTbody.addEventListener('focusout',()=>{
+    setTimeout(()=>{if(!herbTbody.contains(document.activeElement))sortHerbRows();},0);
+  });
   document.getElementById('rx-herb-reset').addEventListener('click',()=>{
     if(rxHerbs.some(r=>r.herb||r.qty)&&!confirm('입력된 약재를 모두 지울까요?'))return;
     rxHerbs=[];
