@@ -1718,6 +1718,16 @@ function showRefRxModal(patId,patName){
 function loadRefRx(rxId){
   const rx=prescriptionsData.find(r=>r.id===rxId);
   if(!rx)return;
+  // 처방 정보 — 약재 행보다 먼저 채워야 총량g가 불러온 첩수로 계산됨
+  const set=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null&&v!=='')el.value=v;};
+  set('rx-diagnosis',rx.diagnosis);
+  set('rx-packs',rx.packs);
+  set('rx-total-packs',rx.totalPacks);
+  set('rx-freq',rx.dosageFreq);
+  set('rx-timing',rx.dosageTiming);
+  if(rx.packMl)set('rx-water-pack-ml',fmtW(rx.packMl));
+  if(rx.days)set('rx-days-display',rx.days);
+  else if(rx.totalPacks&&rx.dosageFreq)set('rx-days-display',String(Math.floor(rx.totalPacks/rx.dosageFreq)));
   const herbs=rx.herbs.map(h=>({id:uid(),herb:h.herb,suchi:h.suchi||'',qty:h.qtyPerPack,unitPrice:h.unitPrice}));
   rxHerbs=[];
   const tbody=document.getElementById('rx-herb-tbody');
