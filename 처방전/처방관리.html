@@ -114,6 +114,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 #rx-cmp-summary .rc-sum-sub{color:var(--text-3);}
 #rx-cmp-summary b{font-weight:600;color:var(--text-1);}
 #rx-cmp-summary .rc-sum-sub b{color:var(--text-2);}
+#rx-cmp-summary .rc-sum-note{white-space:pre-wrap;color:var(--text-2);background:#F7F7F8;border-radius:6px;padding:5px 8px;font-size:12px;line-height:1.5;max-height:90px;overflow-y:auto;}
 #rx-cmp-table-wrap{flex:1;overflow-y:auto;min-height:120px;}
 #rx-cmp-table-wrap table{width:100%;border-collapse:collapse;font-size:12px;}
 #rx-cmp-table-wrap th{position:sticky;top:0;background:var(--surface);text-align:right;padding:5px 8px;font-size:11px;font-weight:600;color:var(--text-3);border-bottom:1px solid var(--border);z-index:1;}
@@ -1870,7 +1871,8 @@ function loadRefRx(rxId){
         `<span>1첩 <b>${fmt(prevPackG)}</b>g</span>`+
         `<span>총 <b>${fmt(prevTotalG)}</b>g</span>`+
         `<span><b>${prev.length}</b>종</span>`+
-      `</div>`;
+      `</div>`+
+      (rx.note?`<div class="rc-sum-note">${String(rx.note).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:'');
   }
 
   sel.addEventListener('change',()=>{selId=sel.value;refresh();});
