@@ -2284,7 +2284,7 @@ function renderSupplies(){
     <div class="section-title">구매 등록</div>
     <div class="form-row" style="gap:8px;">
       <div class="form-group" style="min-width:120px"><label>날짜</label><input type="date" id="pc-date" value="${todayStr()}" style="width:100%"></div>
-      <div class="form-group grow" style="min-width:120px"><label>품목명</label><input type="text" id="pc-name" placeholder="예) A4용지" style="width:100%"></div>
+      <div class="form-group grow" style="min-width:120px"><label>품목명</label><input type="text" id="pc-name" list="pc-name-list" autocomplete="off" placeholder="예) A4용지" style="width:100%"><datalist id="pc-name-list">${purchaseNameOptions()}</datalist><div id="pc-fill-hint" style="font-size:11px;color:var(--violet-d);margin-top:3px;min-height:0"></div></div>
       <div class="form-group" style="width:72px;min-width:64px"><label>수량</label><input type="number" id="pc-qty" min="0" step="1" placeholder="0" style="width:100%"></div>
       <div class="form-group" style="width:60px;min-width:52px"><label>단위</label><input type="text" id="pc-unit" value="개" style="width:100%"></div>
       <div class="form-group" style="width:104px;min-width:88px"><label>금액 (원)</label><input type="number" id="pc-amount" min="0" step="1" placeholder="0" style="width:100%"></div>
@@ -2348,6 +2348,12 @@ function renderSupplies(){
     await save(KEYS.supplies,suppliesData);
     renderSupplies();
   });
+  // 이전 구매 내역 자동 채우기: datalist 선택 또는 blur/Enter 시에만 (타이핑 중 한글 조합 보존)
+  const pcNameEl=document.getElementById('pc-name');
+  pcNameEl.addEventListener('input',e=>{
+    if(!e.inputType||e.inputType==='insertReplacementText')fillFromLastPurchase(pcNameEl.value);
+  });
+  pcNameEl.addEventListener('change',()=>fillFromLastPurchase(pcNameEl.value));
   ['pc-name','pc-qty','pc-amount','pc-supplier','pc-note'].forEach(id=>{
     document.getElementById(id).addEventListener('keydown',e=>{
       if(e.key==='Enter'&&!e.isComposing)document.getElementById('pc-submit').click();
@@ -2355,6 +2361,41 @@ function renderSupplies(){
   });
 
   renderPurchaseTbody();
+}
+
+// 품목명 자동완성 옵션 (중복 제거, 최근 구매순)
+function purchaseNameOptions(){
+  const seen=new Set();
+  return [...suppliesData]
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)))
+    .map(r=>(r.name||'').trim())
+    .filter(n=>n&&!seen.has(n)&&seen.add(n))
+    .map(n=>`<option value="${n.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}"></option>`)
+    .join('');
+}
+
+// 같은 품목의 가장 최근 구매 내역으로 빈 칸 채우기
+function fillFromLastPurchase(name){
+  const hint=document.getElementById('pc-fill-hint');
+  const n=(name||'').trim();
+  const last=n?[...suppliesData]
+    .filter(r=>(r.name||'').trim()===n)
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||String(b.id).localeCompare(String(a.id)))[0]:null;
+  if(!last){if(hint)hint.textContent='';return;}
+  const setIfEmpty=(id,val,isDefault)=>{
+    const el=document.getElementById(id);
+    if(!el||val===undefined||val===null||val==='')return;
+    const cur=el.value.trim();
+    if(cur===''||(isDefault&&isDefault(cur)))el.value=val;
+  };
+  setIfEmpty('pc-qty',last.qty||'');
+  setIfEmpty('pc-unit',last.unit,cur=>cur==='개');
+  setIfEmpty('pc-amount',last.amount||'');
+  setIfEmpty('pc-supplier',last.supplier);
+  setIfEmpty('pc-note',last.note);
+  if(hint)hint.textContent=`이전 구매(${last.date||'-'}) 내역으로 채움`;
+  const qtyEl=document.getElementById('pc-qty');
+  if(qtyEl){qtyEl.focus();qtyEl.select();}
 }
 
 function savePurchaseField(id,field,value){
@@ -2428,6 +2469,7 @@ function completeWaitlist(id){
     const noteEl=document.getElementById('pc-note');
     if(nameEl)nameEl.value=fillName;
     if(noteEl)noteEl.value=fillNote;
+    fillFromLastPurchase(fillName);
     const qtyEl=document.getElementById('pc-qty');
     if(qtyEl)qtyEl.focus();
     document.getElementById('pc-submit')?.scrollIntoView({behavior:'smooth',block:'center'});
