@@ -608,19 +608,21 @@ function calcStock(){
 }
 
 /* ── 재고현황 ── */
-let stockSearch='',showLowOnly=false,showZeroOnly=false,stockConsonant='',showUnder600=false;
+let stockSearch='',showLowOnly=false,showZeroOnly=false,stockConsonant='',showUnder600=false,showNegOnly=false;
 function renderStock(){
   const el=document.getElementById('view-stock');
   const stock=calcStock();
   const baseHerbs=visibleHerbs();
   const zeroCount=baseHerbs.filter(h=>stock[h]<=0).length;
-  const isLow=h=>{const s=stock[h],m=getMinStock(h);return s<0||(m>0&&s>0&&s<m);};
+  const isLow=h=>{const s=stock[h],m=getMinStock(h);return m>0&&s>0&&s<m;};
   const lowCount=baseHerbs.filter(isLow).length;
+  const negCount=baseHerbs.filter(h=>stock[h]<0).length;
   let herbs=baseHerbs;
   if(stockConsonant)herbs=herbs.filter(h=>getChoseong(h[0])===stockConsonant);
   if(stockSearch)herbs=herbs.filter(h=>h.includes(stockSearch));
   if(showLowOnly)herbs=herbs.filter(isLow);
   if(showZeroOnly)herbs=herbs.filter(h=>stock[h]<=0);
+  if(showZeroOnly&&showNegOnly)herbs=herbs.filter(h=>stock[h]<0);
   if(showUnder600)herbs=herbs.filter(h=>stock[h]<600);
   el.innerHTML=`
   <div class="stats">
@@ -634,6 +636,7 @@ function renderStock(){
         <button class="pl-cho-btn${!stockConsonant?' active':''}" data-st-cho="">전체</button>
         ${['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'].map(c=>`<button class="pl-cho-btn${stockConsonant===c?' active':''}" data-st-cho="${c}">${c}</button>`).join('')}
       </div>
+      ${showZeroOnly?`<button class="pl-cho-btn${showNegOnly?' active':''}" data-st-neg style="flex:none;white-space:nowrap;">- 용량 (${negCount})</button>`:''}
       <button class="pl-cho-btn${showUnder600?' active':''}" data-st-under600 style="flex:none;white-space:nowrap;">600g 미만</button>
       <input class="search-input" id="stock-search" placeholder="약재명 검색..." value="${stockSearch}" style="width:150px;min-width:0;flex:none;">
     </div>
@@ -661,6 +664,7 @@ function renderStock(){
   el.querySelectorAll('[data-st-filter]').forEach(card=>{
     card.addEventListener('click',()=>{
       const f=card.dataset.stFilter;
+      showNegOnly=false;
       if(f==='all'){showLowOnly=false;showZeroOnly=false;}
       else if(f==='low'){showLowOnly=true;showZeroOnly=false;}
       else if(f==='zero'){showZeroOnly=true;showLowOnly=false;}
@@ -672,6 +676,8 @@ function renderStock(){
   });
   const u6=el.querySelector('[data-st-under600]');
   if(u6)u6.addEventListener('click',()=>{showUnder600=!showUnder600;renderStock();});
+  const negBtn=el.querySelector('[data-st-neg]');
+  if(negBtn)negBtn.addEventListener('click',()=>{showNegOnly=!showNegOnly;renderStock();});
 
   el.querySelectorAll('.pl-herb-name').forEach(td=>{
     td.addEventListener('click',e=>{e.stopPropagation();window._plMemoPop.show(td.dataset.herb,td);});
